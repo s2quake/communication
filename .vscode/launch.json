@@ -10,7 +10,17 @@
             "request": "launch",
             "program": "${workspaceFolder}/JSSoft.Communication/Server-MEF/bin/Debug/netcoreapp3.0/Server.dll",
             "args": [
-                "--verbose"
+            ],
+            "cwd": "${workspaceFolder}/JSSoft.Communication",
+            "console": "externalTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Launch (client)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/JSSoft.Communication/Client-MEF/bin/Debug/netcoreapp3.0/Client.dll",
+            "args": [
             ],
             "cwd": "${workspaceFolder}/JSSoft.Communication",
             "console": "externalTerminal",
