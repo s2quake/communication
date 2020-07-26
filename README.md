@@ -4,11 +4,12 @@
 
 <https://github.com/grpc/grpc> 를 사용하여 구현한 통신 모듈입니다.
 
-## 도구
+## 개발 환경
 
-[.NET Core 3.0.100-preview7-012821](https://dotnet.microsoft.com/download/dotnet-core/3.0)
-
-[Visual Studio Code](https://code.visualstudio.com/)
+```plain
+Visual Studio Code
+.NET Core 3.0
+```
 
 ## 빌드
 
