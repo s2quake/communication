@@ -8,7 +8,7 @@
 
 ```plain
 Visual Studio Code
-.NET Core 3.0
+.NET Core 3.1
 ```
 
 ## 빌드
@@ -16,15 +16,15 @@ Visual Studio Code
 ```plain
 git clone https://github.com/s2quake/communication.git --recursive
 cd communication
-dotnet build JSSoft.Communication --framework netcoreapp3.0
+dotnet build JSSoft.Communication --framework netcoreapp3.1
 ```
 
 ## 실행
 
 ```plain
-dotnet run --project JSSoft.Communication/Server-MEF --framework netcoreapp3.0
+dotnet run --project JSSoft.Communication/Server-MEF --framework netcoreapp3.1
 
-dotnet run --project JSSoft.Communication/Client-MEF --framework netcoreapp3.0
+dotnet run --project JSSoft.Communication/Client-MEF --framework netcoreapp3.1
 ```
 
 ## 솔루션 구성
@@ -71,11 +71,9 @@ MEF 을(를) 사용하지 않고 필요한 인스턴스를 직접 생성하여 �
 
 ### 1. 도구 설치
 
-아래의 링크로 이동하여 .NET Core 3.0과 Visual Studio Code를 설치합니다.
+아래의 링크로 이동하여 .NET Core 3.1과 Visual Studio Code를 설치합니다.
 
-본 예제 작성시에 .NET Core 버전은 3.0.100-preview7-012821 입니다.
-
-[.NET Core 3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0)
+[.NET Core 3.1](https://dotnet.microsoft.com/download/dotnet-core/3.1)
 
 [Visual Studio Code](https://code.visualstudio.com/)
 
@@ -104,13 +102,13 @@ cd communication
 ## 4. 소스 빌드
 
 ```plain
-dotnet build --framework netcoreapp3.0 JSSoft.Communication
+dotnet build --framework netcoreapp3.1 JSSoft.Communication
 ```
 
 ## 5. 서버 실행
 
 ```plain
-dotnet run --project JSSoft.Communication/Server-MEF --framework netcoreapp3.0
+dotnet run --project JSSoft.Communication/Server-MEF --framework netcoreapp3.1
 ```
 
 ## 6. 클라이언트 실행
@@ -118,7 +116,7 @@ dotnet run --project JSSoft.Communication/Server-MEF --framework netcoreapp3.0
 새로운 terminal이나 PowerShell을 실행하여 소스 경로로 이동하여 아래의 명령을 실행합니다.
 
 ```plain
-dotnet run --project JSSoft.Communication/Client-MEF --framework netcoreapp3.0
+dotnet run --project JSSoft.Communication/Client-MEF --framework netcoreapp3.1
 ```
 
 ## 간단한 예제를 작성해보면서 무엇인지 알아보기
@@ -383,17 +381,17 @@ namespace Client_Test
 새로운 terminal이나 PowerShell 실행후 소스 경로에서 아래의 명령을 실행하여 빌드합니다.
 
 ```plain
-dotnet build --framework netcoreapp3.0
+dotnet build --framework netcoreapp3.1
 ```
 
 빌드가 완료된 후에 아래의 명령을 실행하여 서버를 실행합니다.
 
 ```plain
-dotnet run --project Server-Test --framework netcoreapp3.0
+dotnet run --project Server-Test --framework netcoreapp3.1
 ```
 
 다시 새로운 terminal이나 PowerShell 실행후 소스 경로에서 아래의 명령을 실행하여 클라이언트를 실행합니다.
 
 ```plain
-dotnet run --projet Client-Test --framework netcoreapp3.0
+dotnet run --projet Client-Test --framework netcoreapp3.1
 ```
