@@ -8,8 +8,8 @@
             "name": "launch-server",
             "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceFolder}/exe/Debug/netcoreapp3.1/server/Server.dll",
-            "cwd": "${workspaceFolder}/exe/Debug/netcoreapp3.1/server",
+            "program": "${workspaceFolder}/JSSoft.Communication/Server-MEF/bin/Debug/netcoreapp3.1/server.dll",
+            "cwd": "${workspaceFolder}/JSSoft.Communication/Server-MEF/bin/Debug/netcoreapp3.1",
             "console": "externalTerminal",
             "stopAtEntry": false
         },
@@ -17,8 +17,8 @@
             "name": "launch-client",
             "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceFolder}/exe/Debug/netcoreapp3.1/client/Client.dll",
-            "cwd": "${workspaceFolder}/exe/Debug/netcoreapp3.1/client",
+            "program": "${workspaceFolder}/JSSoft.Communication/Client-MEF/bin/Debug/netcoreapp3.1/client.dll",
+            "cwd": "${workspaceFolder}/JSSoft.Communication/Client-MEF/bin/Debug/netcoreapp3.1",
             "console": "externalTerminal",
             "stopAtEntry": false
         }
