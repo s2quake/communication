@@ -5,20 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "launch-server",
-            "type": "coreclr",
-            "request": "launch",
-            "program": "${workspaceFolder}/JSSoft.Communication/Server-MEF/bin/Debug/netcoreapp3.1/server.dll",
-            "cwd": "${workspaceFolder}/JSSoft.Communication/Server-MEF/bin/Debug/netcoreapp3.1",
-            "console": "externalTerminal",
-            "stopAtEntry": false
-        },
-        {
             "name": "launch-client",
             "type": "coreclr",
             "request": "launch",
+            "preLaunchTask": "build client",
             "program": "${workspaceFolder}/JSSoft.Communication/Client-MEF/bin/Debug/netcoreapp3.1/client.dll",
+            "args": [
+                "--host",
+                "localhost"
+            ],
             "cwd": "${workspaceFolder}/JSSoft.Communication/Client-MEF/bin/Debug/netcoreapp3.1",
+            "stopAtEntry": false,
+            "console": "externalTerminal"
+        },
+        {
+            "name": "launch-server",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build all",
+            "program": "${workspaceFolder}/JSSoft.Communication/Server-MEF/bin/Debug/netcoreapp3.1/server.dll",
+            "args": [
+                "--verbose"
+            ],
+            "cwd": "${workspaceFolder}/JSSoft.Communication/Server-MEF/bin/Debug/netcoreapp3.1",
             "console": "externalTerminal",
             "stopAtEntry": false
         }
