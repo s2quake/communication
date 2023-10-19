@@ -319,7 +319,7 @@ namespace Client_Test
 
         protected override void OnServiceCreated(IMyService service)
         {
-            this.Service = service;
+            Service = service;
         }
     }
 }

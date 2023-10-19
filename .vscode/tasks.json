@@ -5,7 +5,7 @@
     "tasks": [
         {
             "label": "build client",
-            "command": "dotnet build ./JSSoft.Communication/Client-MEF --framework netcoreapp3.1",
+            "command": "dotnet build ./JSSoft.Communication/Client-MEF --framework net7.0",
             "type": "shell",
             "group": "build",
             "presentation": {
@@ -15,7 +15,7 @@
         },
         {
             "label": "build server",
-            "command": "dotnet build ./JSSoft.Communication/Server-MEF --framework netcoreapp3.1",
+            "command": "dotnet build ./JSSoft.Communication/Server-MEF --framework net7.0",
             "type": "shell",
             "group": "build",
             "presentation": {
@@ -25,7 +25,7 @@
         },
         {
             "label": "build all",
-            "command": "dotnet build --framework netcoreapp3.1",
+            "command": "dotnet build --framework net7.0",
             "type": "shell",
             "group": "build",
             "presentation": {

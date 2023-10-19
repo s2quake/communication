@@ -8,13 +8,12 @@
             "name": "launch-client",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build client",
-            "program": "${workspaceFolder}/JSSoft.Communication/Client-MEF/bin/Debug/netcoreapp3.1/client.dll",
+            "program": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Client/bin/Debug/net7.0/client.dll",
             "args": [
                 "--host",
                 "localhost"
             ],
-            "cwd": "${workspaceFolder}/JSSoft.Communication/Client-MEF/bin/Debug/netcoreapp3.1",
+            "cwd": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Client/bin/Debug/net7.0",
             "stopAtEntry": false,
             "console": "externalTerminal"
         },
@@ -22,13 +21,12 @@
             "name": "launch-server",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build all",
-            "program": "${workspaceFolder}/JSSoft.Communication/Server-MEF/bin/Debug/netcoreapp3.1/server.dll",
+            "program": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Server/bin/Debug/net7.0/server.dll",
             "args": [
                 "--verbose"
             ],
-            "cwd": "${workspaceFolder}/JSSoft.Communication/Server-MEF/bin/Debug/netcoreapp3.1",
-            "console": "externalTerminal",
+            "cwd": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Server/bin/Debug/net7.0",
+            "console": "integratedTerminal",
             "stopAtEntry": false
         }
     ]
