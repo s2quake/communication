@@ -7,3 +7,6 @@
 [submodule "JSSoft.Library.Commands"]
 	path = JSSoft.Library.Commands
 	url = ../../s2quake/JSSoft.Library.Commands.git
+[submodule "build"]
+	path = build
+	url = ../build.git

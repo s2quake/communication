@@ -8,12 +8,12 @@
             "name": "launch-client",
             "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Client/bin/Debug/net7.0/client.dll",
+            "program": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Client/bin/Debug/netstandard2.1/client.dll",
             "args": [
                 "--host",
                 "localhost"
             ],
-            "cwd": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Client/bin/Debug/net7.0",
+            "cwd": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Client/bin/Debug/netstandard2.1",
             "stopAtEntry": false,
             "console": "externalTerminal"
         },
@@ -21,11 +21,11 @@
             "name": "launch-server",
             "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Server/bin/Debug/net7.0/server.dll",
+            "program": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Server/bin/Debug/netstandard2.1/server.dll",
             "args": [
                 "--verbose"
             ],
-            "cwd": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Server/bin/Debug/net7.0",
+            "cwd": "${workspaceFolder}/JSSoft.Communication/JSSoft.Communication.Server/bin/Debug/netstandard2.1",
             "console": "integratedTerminal",
             "stopAtEntry": false
         }
