@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,27 +26,22 @@ public class EmptyLogger : ILogger
 {
     public void Debug(object message)
     {
-
     }
 
     public void Info(object message)
     {
-
     }
 
     public void Error(object message)
     {
-
     }
 
     public void Warn(object message)
     {
-
     }
 
     public void Fatal(object message)
     {
-
     }
 
     public static readonly EmptyLogger Default = new();

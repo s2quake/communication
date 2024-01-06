@@ -89,6 +89,7 @@ public class Dispatcher : IDisposable
     {
         if (_cancellationTokenSource.IsCancellationRequested == true)
             throw new OperationCanceledException();
+
         if (CheckAccess() == true)
         {
             action();
@@ -113,6 +114,7 @@ public class Dispatcher : IDisposable
     {
         if (_cancellationTokenSource.IsCancellationRequested == true)
             throw new OperationCanceledException();
+
         task.Start(Scheduler);
         return await task;
     }

@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,9 @@ using System.Collections.Concurrent;
 
 namespace JSSoft.Communication.Grpc;
 
-sealed class PeerCollection : ConcurrentDictionary<string, Peer>
+sealed class PeerCollection(IInstanceContext instanceContext) : ConcurrentDictionary<string, Peer>
 {
-    private readonly IInstanceContext _instanceContext;
-
-    public PeerCollection(IInstanceContext instanceContext)
-    {
-        _instanceContext = instanceContext;
-    }
+    private readonly IInstanceContext _instanceContext = instanceContext;
 
     public void Add(Peer item)
     {

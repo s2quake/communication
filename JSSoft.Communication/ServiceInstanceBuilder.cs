@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,7 @@ namespace JSSoft.Communication;
 sealed class ServiceInstanceBuilder
 {
     private const string ns = "JSSoft.Communication.Runtime";
-    private readonly Dictionary<string, Type> _typeByName = new();
+    private readonly Dictionary<string, Type> _typeByName = [];
     private readonly AssemblyBuilder _assemblyBuilder;
     private readonly ModuleBuilder _moduleBuilder;
 

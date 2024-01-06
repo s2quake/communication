@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- MIT License
 
-Copyright (c) 2019 Jeesu Choi
+Copyright (c) 2024 Jeesu Choi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ SOFTWARE. -->
 	  <RepositoryType>git</RepositoryType>
 	  <RepositoryUrl>https://github.com/s2quake/communication</RepositoryUrl>
 	  <LicenseUrl>https://github.com/s2quake/communication/blob/main/LICENSE.md</LicenseUrl>
-	  <Copyright>Copyright (c) 2019 Jeesu Choi</Copyright>
+	  <Copyright>Copyright (c) 2024 Jeesu Choi</Copyright>
 	  <Description>grpc-based communication library for crema project</Description>
 	  <Authors>s2quake</Authors>
 	  <PackageProjectUrl>https://github.com/s2quake/communication</PackageProjectUrl>

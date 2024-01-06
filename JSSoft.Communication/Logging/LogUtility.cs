@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,56 +20,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using Google.Protobuf.WellKnownTypes;
-
 namespace JSSoft.Communication.Logging;
 
 public static class LogUtility
 {
-    private static ILogger logger = TraceLogger.Default;
-    private static LogLevel logLevel = LogLevel.Fatal;
+    public static ILogger Logger { get; set; } = TraceLogger.Default;
 
-    public static ILogger Logger
-    {
-        get => logger;
-        set => logger = value;
-    }
-
-    public static LogLevel LogLevel
-    {
-        get => logLevel;
-        set => logLevel = value;
-    }
+    public static LogLevel LogLevel { get; set; } = LogLevel.Fatal;
 
     public static void Debug(object message)
     {
-        if (logLevel >= LogLevel.Debug)
+        if (LogLevel >= LogLevel.Debug)
             LoggerInternal.Debug(message);
     }
 
     public static void Info(object message)
     {
-        if (logLevel >= LogLevel.Info)
+        if (LogLevel >= LogLevel.Info)
             LoggerInternal.Info(message);
     }
 
     public static void Error(object message)
     {
-        if (logLevel >= LogLevel.Error)
+        if (LogLevel >= LogLevel.Error)
             LoggerInternal.Error(message);
     }
 
     public static void Warn(object message)
     {
-        if (logLevel >= LogLevel.Warn)
+        if (LogLevel >= LogLevel.Warn)
             LoggerInternal.Warn(message);
     }
 
     public static void Fatal(object message)
     {
-        if (logLevel >= LogLevel.Fatal)
+        if (LogLevel >= LogLevel.Fatal)
             LoggerInternal.Fatal(message);
     }
 
-    private static ILogger LoggerInternal => logger ?? EmptyLogger.Default;
+    private static ILogger LoggerInternal => Logger ?? EmptyLogger.Default;
 }

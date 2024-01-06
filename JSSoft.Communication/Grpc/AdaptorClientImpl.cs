@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,17 +28,10 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Grpc;
 
-class AdaptorClientImpl : Adaptor.AdaptorClient, IPeer
+sealed class AdaptorClientImpl(Channel channel, Guid id, IServiceHost[] serviceHosts) : Adaptor.AdaptorClient(channel), IPeer
 {
     private static readonly TimeSpan Timeout = new(0, 0, 15);
     private Timer? _timer;
-
-    public AdaptorClientImpl(Channel channel, Guid id, IServiceHost[] serviceHosts)
-        : base(channel)
-    {
-        ID = id;
-        ServiceHosts = serviceHosts;
-    }
 
     public async Task OpenAsync(CancellationToken cancellationToken)
     {
@@ -69,11 +62,11 @@ class AdaptorClientImpl : Adaptor.AdaptorClient, IPeer
         _timer = null;
     }
 
-    public Guid ID { get; }
+    public Guid ID { get; } = id;
 
     public Guid Token { get; private set; }
 
-    public IServiceHost[] ServiceHosts { get; }
+    public IServiceHost[] ServiceHosts { get; } = serviceHosts;
 
     private async void Timer_TimerCallback(object? state)
     {

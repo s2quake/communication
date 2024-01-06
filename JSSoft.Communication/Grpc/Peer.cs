@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,27 +20,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using JSSoft.Communication.Logging;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace JSSoft.Communication.Grpc;
 
 sealed class Peer : IPeer, IDisposable
 {
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
-    private CancellationToken _cancellationToken;
     private bool _isDisposed;
 
     public Peer(Guid id, IServiceHost[] serviceHosts)
     {
         ID = id;
         ServiceHosts = serviceHosts;
-        Ping();
+        Ping(DateTime.UtcNow);
         foreach (var item in serviceHosts)
         {
-            PollReplyItems.Add(item, new PollReplyItemCollection());
+            PollReplyItems.Add(item, []);
         }
     }
 
@@ -53,22 +49,8 @@ sealed class Peer : IPeer, IDisposable
         {
             PollReplyItems.Remove(item);
         }
-        _cancellationToken = _cancellationTokenSource.Token;
-        _cancellationTokenSource.Cancel();
-        _cancellationTokenSource.Dispose();
         _isDisposed = true;
         GC.SuppressFinalize(this);
-    }
-
-    public void Abort()
-    {
-        _cancellationTokenSource.Cancel();
-        LogUtility.Debug($"{ID} Aborted.");
-    }
-
-    public void Ping()
-    {
-        PingTime = DateTime.UtcNow;
     }
 
     public void Ping(DateTime dateTime)
@@ -88,7 +70,5 @@ sealed class Peer : IPeer, IDisposable
 
     public Dictionary<IServiceHost, object> Services => Descriptor?.Services ?? [];
 
-    public Dictionary<IServiceHost, PollReplyItemCollection> PollReplyItems { get; } = new Dictionary<IServiceHost, PollReplyItemCollection>();
-
-    public CancellationToken Cancellation => _cancellationToken;
+    public Dictionary<IServiceHost, PollReplyItemCollection> PollReplyItems { get; } = [];
 }

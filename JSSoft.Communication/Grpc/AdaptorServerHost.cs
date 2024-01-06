@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -135,31 +135,29 @@ sealed class AdaptorServerHost : IAdaptorHost
 
     public async Task Poll(IAsyncStreamReader<PollRequest> requestStream, IServerStreamWriter<PollReply> responseStream, ServerCallContext context)
     {
-        try
+        var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource!.Token, context.CancellationToken);
+        while (await requestStream.MoveNext(cancellationTokenSource.Token))
         {
-            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource!.Token, context.CancellationToken);
-            while (await requestStream.MoveNext(cancellationTokenSource.Token))
+            var reply = new PollReply { Code = int.MinValue };
+            var token = requestStream.Current.Token;
+            if (Peers.TryGetValue(token, out var peer) == true)
             {
-                var reply = new PollReply() { Code = int.MinValue };
-                var token = requestStream.Current.Token;
-                if (Peers.TryGetValue(token, out var peer) == true)
+                lock (peer)
                 {
                     var services = peer.ServiceHosts;
                     foreach (var item in services)
                     {
-                        var items = Poll2(peer, item);
+                        var callbacks = peer.PollReplyItems[item];
+                        var items = callbacks.Flush();
                         reply.Items.AddRange(items);
                     }
                 }
-                else
-                {
-                    reply.Code = 0;
-                }
-                await responseStream.WriteAsync(reply);
             }
-        }
-        catch
-        {
+            else
+            {
+                reply.Code = 0;
+            }
+            await responseStream.WriteAsync(reply);
         }
     }
 
@@ -202,15 +200,6 @@ sealed class AdaptorServerHost : IAdaptorHost
                     callbacks.Add(pollItem);
                 }
             }
-        }
-    }
-
-    private PollReplyItem[] Poll2(Peer peer, IServiceHost service)
-    {
-        lock (peer)
-        {
-            var callbacks = peer.PollReplyItems[service];
-            return callbacks.Flush();
         }
     }
 

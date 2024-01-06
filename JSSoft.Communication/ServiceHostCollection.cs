@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,17 +20,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace JSSoft.Communication;
 
-public class ServiceHostCollection : Dictionary<string, IServiceHost>
+public class ServiceHostCollection(IEnumerable<IServiceHost> serviceHosts) : IReadOnlyDictionary<string, IServiceHost>
 {
-    public ServiceHostCollection(IEnumerable<IServiceHost> serviceHosts)
+    private readonly Dictionary<string, IServiceHost> _serviceHostByName = serviceHosts.ToDictionary(item => item.Name);
+
+    public IServiceHost this[string key] => _serviceHostByName[key];
+
+    public IEnumerable<string> Keys => _serviceHostByName.Keys;
+
+    public IEnumerable<IServiceHost> Values => _serviceHostByName.Values;
+
+    public int Count => _serviceHostByName.Count;
+
+    public bool ContainsKey(string key) => _serviceHostByName.ContainsKey(key);
+
+    public bool TryGetValue(string key, [MaybeNullWhen(false)] out IServiceHost value)
     {
-        foreach (var item in serviceHosts)
-        {
-            Add(item.Name, item);
-        }
+        return _serviceHostByName.TryGetValue(key, out value);
     }
+
+    #region IEnumerable
+
+    IEnumerator<KeyValuePair<string, IServiceHost>> IEnumerable<KeyValuePair<string, IServiceHost>>.GetEnumerator()
+        => _serviceHostByName.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator()
+        => _serviceHostByName.GetEnumerator();
+
+    #endregion
 }

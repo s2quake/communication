@@ -1,6 +1,6 @@
 param(
     [string]$OutputPath = "",
-    [string]$Framework = "net7.0",
+    [string]$Framework = "net8.0",
     [string]$KeyPath = "",
     [string]$LogPath = ""
 )

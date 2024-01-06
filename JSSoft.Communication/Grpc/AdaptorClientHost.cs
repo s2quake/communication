@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Grpc;
 
-class AdaptorClientHost : IAdaptorHost
+sealed class AdaptorClientHost : IAdaptorHost
 {
     private readonly IServiceContext _serviceContext;
     private readonly IInstanceContext _instanceContext;
@@ -103,11 +103,6 @@ class AdaptorClientHost : IAdaptorHost
 
     public event EventHandler<CloseEventArgs>? Disconnected;
 
-    protected virtual void OnDisconnected(CloseEventArgs e)
-    {
-        Disconnected?.Invoke(this, e);
-    }
-
     private async Task PollAsync(CancellationToken cancellationToken)
     {
         if (_adaptorImpl == null)
@@ -147,7 +142,7 @@ class AdaptorClientHost : IAdaptorHost
             _task = null;
             await _adaptorImpl.AbortAsync();
             _adaptorImpl = null;
-            OnDisconnected(new CloseEventArgs(closeCode));
+            Disconnected?.Invoke(this, new(closeCode));
         }
     }
 

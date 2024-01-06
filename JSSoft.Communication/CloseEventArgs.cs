@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,12 +24,7 @@ using System;
 
 namespace JSSoft.Communication;
 
-public sealed class CloseEventArgs : EventArgs
+public sealed class CloseEventArgs(int closeCode) : EventArgs
 {
-    public CloseEventArgs(int closeCode)
-    {
-        CloseCode = closeCode;
-    }
-
-    public int CloseCode { get; }
+    public int CloseCode { get; } = closeCode;
 }

@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,9 @@ using System.Collections.Generic;
 
 namespace JSSoft.Communication.Grpc;
 
-class PollReplyItemCollection : IEnumerable<PollReplyItem>, IReadOnlyList<PollReplyItem>
+sealed class PollReplyItemCollection : IEnumerable<PollReplyItem>, IReadOnlyList<PollReplyItem>
 {
-    private readonly List<PollReplyItem> _itemList = new();
+    private readonly List<PollReplyItem> _itemList = [];
 
     public PollReplyItemCollection()
     {

@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,17 +29,11 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication;
 
-sealed class InstanceContext : IInstanceContext, IPeer
+sealed class InstanceContext(ServiceContextBase serviceContext) : IInstanceContext, IPeer
 {
     private readonly ConcurrentDictionary<IPeer, PeerDescriptor> _descriptorByPeer = new();
     private readonly PeerDescriptor _descriptor = new();
-    private readonly ServiceContextBase _serviceContext;
-
-    public InstanceContext(ServiceContextBase serviceContext)
-    {
-        _serviceContext = serviceContext;
-        ID = Guid.NewGuid();
-    }
+    private readonly ServiceContextBase _serviceContext = serviceContext;
 
     public void InitializeInstance()
     {
@@ -117,5 +111,5 @@ sealed class InstanceContext : IInstanceContext, IPeer
         return query.SingleOrDefault();
     }
 
-    public Guid ID { get; }
+    public Guid ID { get; } = Guid.NewGuid();
 }

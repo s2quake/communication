@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +25,14 @@ using System;
 namespace JSSoft.Communication;
 
 [ServiceContext(IsServer = false)]
-public abstract class ClientContextBase : ServiceContextBase
+public abstract class ClientContextBase(params IServiceHost[] serviceHosts) : ServiceContextBase(serviceHosts)
 {
-    protected ClientContextBase(params IServiceHost[] serviceHosts)
-        : base(serviceHosts)
-    {
-    }
-
     public override IAdaptorHostProvider AdaptorHostProvider => Communication.AdaptorHostProvider.Default;
 
     public override ISerializerProvider SerializerProvider => JsonSerializerProvider.Default;
 
     public override object? GetService(Type serviceType)
     {
-        
         return base.GetService(serviceType);
     }
 }

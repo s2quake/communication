@@ -1,6 +1,6 @@
 // MIT License
 // 
-// Copyright (c) 2019 Jeesu Choi
+// Copyright (c) 2024 Jeesu Choi
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace JSSoft.Communication;
 
@@ -28,7 +30,11 @@ public sealed class PeerDescriptor
 {
     public void Dispose()
     {
-        Callbacks.DisposeAll();
+        var items = Callbacks.Values.OfType<IDisposable>().ToArray();
+        foreach (var item in items)
+        {
+            item.Dispose();
+        }
     }
 
     public void AddInstance(IServiceHost serviceHost, object service, object callback)
@@ -45,7 +51,7 @@ public sealed class PeerDescriptor
         return value;
     }
 
-    public Dictionary<IServiceHost, object> Services { get; } = new Dictionary<IServiceHost, object>();
+    public Dictionary<IServiceHost, object> Services { get; } = [];
 
-    public Dictionary<IServiceHost, object> Callbacks { get; } = new Dictionary<IServiceHost, object>();
+    public Dictionary<IServiceHost, object> Callbacks { get; } = [];
 }

@@ -42,44 +42,6 @@ public sealed class DispatcherScheduler : TaskScheduler
         _cancellationTokenSource = cancellationTokenSource;
     }
 
-    public int ProcessAll()
-    {
-        return Process(int.MaxValue);
-    }
-
-    public int Process(int milliseconds)
-    {
-        _dispatcher.VerifyAccess();
-        if (_isRunning == true)
-            throw new InvalidOperationException("SchedulerIsAlreadyRunning");
-
-        var dateTime = DateTime.Now;
-        var completion = 0;
-        var count = _taskQueue.Count;
-        while (_taskQueue.TryDequeue(out var task))
-        {
-            TryExecuteTask(task);
-            completion++;
-            var span = DateTime.Now - dateTime;
-            if (span.TotalMilliseconds > milliseconds || completion >= count)
-                break;
-        }
-        return completion;
-    }
-
-    public bool ProcessOnce()
-    {
-        _dispatcher.VerifyAccess();
-        if (_isRunning == true)
-            throw new InvalidOperationException("SchedulerIsAlreadyRunning");
-
-        if (_taskQueue.TryDequeue(out var task) == true)
-        {
-            TryExecuteTask(task);
-        }
-        return _taskQueue.Count != 0;
-    }
-
     protected override IEnumerable<Task> GetScheduledTasks() => _taskQueue;
 
     protected override void QueueTask(Task task)
@@ -136,7 +98,7 @@ public sealed class DispatcherScheduler : TaskScheduler
                 {
                     try
                     {
-                        _executionEventSet.WaitOne();
+                        _executionEventSet.WaitOne(1000);
                     }
                     catch (ObjectDisposedException)
                     {
