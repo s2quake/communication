@@ -3,23 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29025.244
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication", "JSSoft.Communication\JSSoft.Communication\JSSoft.Communication.csproj", "{46F9FF22-9DEB-4D24-84C1-5FD07F2A1993}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication", "JSSoft.Communication\JSSoft.Communication.csproj", "{46F9FF22-9DEB-4D24-84C1-5FD07F2A1993}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication.Server", "JSSoft.Communication\JSSoft.Communication.Server\JSSoft.Communication.Server.csproj", "{49BBC2E5-4CE6-47EA-A427-0C3E88F22E19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication.Server", "JSSoft.Communication.Server\JSSoft.Communication.Server.csproj", "{49BBC2E5-4CE6-47EA-A427-0C3E88F22E19}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication.Client", "JSSoft.Communication\JSSoft.Communication.Client\JSSoft.Communication.Client.csproj", "{CD2B8A1E-F105-4847-B820-8637C50670AD}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Library", "JSSoft.Library\JSSoft.Library\JSSoft.Library.csproj", "{0BC47439-89C7-4F86-B5F5-BC9430B3174F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Library.Commands", "JSSoft.Library.Commands\JSSoft.Library.Commands\JSSoft.Library.Commands.csproj", "{AA8621C5-5D8E-4255-A49D-F47C9AF69163}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Library.Random", "JSSoft.Library\JSSoft.Library.Random\JSSoft.Library.Random.csproj", "{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JSSoft.Library.Commands/JSSoft.Library.Commands", "JSSoft.Library.Commands\JSSoft.Library.Commands", "{FF436C9B-23EE-4F06-80D2-FD64681974AC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JSSoft.Library.Commands", "JSSoft.Library.Commands", "{5EB6F466-3313-42EC-BB8E-0E16D510DBFD}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSSoft.Library.Terminals", "JSSoft.Library.Commands\JSSoft.Library.Terminals\JSSoft.Library.Terminals.csproj", "{C4745159-CD97-4492-8C6E-6D556E951EDB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication.Client", "JSSoft.Communication.Client\JSSoft.Communication.Client.csproj", "{CD2B8A1E-F105-4847-B820-8637C50670AD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,54 +55,6 @@ Global
 		{CD2B8A1E-F105-4847-B820-8637C50670AD}.Release|x64.Build.0 = Release|Any CPU
 		{CD2B8A1E-F105-4847-B820-8637C50670AD}.Release|x86.ActiveCfg = Release|Any CPU
 		{CD2B8A1E-F105-4847-B820-8637C50670AD}.Release|x86.Build.0 = Release|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Debug|x64.Build.0 = Debug|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Debug|x86.Build.0 = Debug|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Release|x64.ActiveCfg = Release|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Release|x64.Build.0 = Release|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Release|x86.ActiveCfg = Release|Any CPU
-		{0BC47439-89C7-4F86-B5F5-BC9430B3174F}.Release|x86.Build.0 = Release|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Debug|x64.Build.0 = Debug|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Debug|x86.Build.0 = Debug|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Release|x64.ActiveCfg = Release|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Release|x64.Build.0 = Release|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Release|x86.ActiveCfg = Release|Any CPU
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163}.Release|x86.Build.0 = Release|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Debug|x64.Build.0 = Debug|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Debug|x86.Build.0 = Debug|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Release|x64.ActiveCfg = Release|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Release|x64.Build.0 = Release|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Release|x86.ActiveCfg = Release|Any CPU
-		{8355BA0E-7D0F-41ED-9E3B-817B08F829CE}.Release|x86.Build.0 = Release|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Debug|x64.Build.0 = Debug|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Debug|x86.Build.0 = Debug|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Release|x64.ActiveCfg = Release|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Release|x64.Build.0 = Release|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Release|x86.ActiveCfg = Release|Any CPU
-		{C4745159-CD97-4492-8C6E-6D556E951EDB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -133,9 +73,5 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31A49F4B-E896-49EF-989A-CF426E43F01B}
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{AA8621C5-5D8E-4255-A49D-F47C9AF69163} = {FF436C9B-23EE-4F06-80D2-FD64681974AC}
-		{C4745159-CD97-4492-8C6E-6D556E951EDB} = {5EB6F466-3313-42EC-BB8E-0E16D510DBFD}
 	EndGlobalSection
 EndGlobal
