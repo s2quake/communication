@@ -25,13 +25,12 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.Services;
 
 [Export(typeof(IServiceHost))]
-class DataServiceHost : ClientServiceHostBase<IDataService>
+class DataServiceHost : ClientServiceHost<IDataService>
 {
     private readonly DataService _dataService;
 
     [ImportingConstructor]
     public DataServiceHost(DataService dataService)
-        : base()
     {
         _dataService = dataService;
     }

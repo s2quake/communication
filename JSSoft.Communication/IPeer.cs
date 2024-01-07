@@ -20,11 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System;
-
 namespace JSSoft.Communication;
 
 public interface IPeer
 {
-    Guid ID { get; }
+    string Id { get; }
 }

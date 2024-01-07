@@ -26,13 +26,13 @@ using System.Threading.Tasks;
 namespace JSSoft.Communication.Services;
 
 [Export(typeof(IServiceHost))]
-class UserServiceHost : ClientServiceHostBase<IUserService, IUserServiceCallback>
+class UserServiceHost : ClientServiceHost<IUserService, IUserServiceCallback>
 {
     private readonly UserService _userService;
 
     [ImportingConstructor]
     public UserServiceHost(UserService userService)
-        : base()
+        : base(userService)
     {
         _userService = userService;
     }

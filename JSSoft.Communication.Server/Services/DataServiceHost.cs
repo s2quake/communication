@@ -22,20 +22,15 @@
 
 using System;
 using System.ComponentModel.Composition;
-using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Services;
 
 [Export(typeof(IServiceHost))]
-class DataServiceHost : ServerServiceHostBase<IDataService>, IDisposable
+[method: ImportingConstructor]
+class DataServiceHost(DataService dataService)
+    : ServerServiceHost<IDataService>(dataService), IDisposable
 {
-    private readonly DataService _dataService;
-
-    [ImportingConstructor]
-    public DataServiceHost(DataService dataService)
-    {
-        _dataService = dataService;
-    }
+    private readonly DataService _dataService = dataService;
 
     public void Dispose()
     {

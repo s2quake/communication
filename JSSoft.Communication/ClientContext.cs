@@ -20,12 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System;
+
 namespace JSSoft.Communication;
 
-[ServiceContext(IsServer = true)]
-public abstract class ServerContextBase(params IServiceHost[] serviceHosts) : ServiceContextBase(serviceHosts)
+[ServiceContext(IsServer = false)]
+public class ClientContext(params IServiceHost[] serviceHosts) : ServiceContextBase(serviceHosts)
 {
     public override IAdaptorHostProvider AdaptorHostProvider => Communication.AdaptorHostProvider.Default;
 
     public override ISerializerProvider SerializerProvider => JsonSerializerProvider.Default;
+
+    public override object? GetService(Type serviceType)
+    {
+        return base.GetService(serviceType);
+    }
 }

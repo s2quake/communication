@@ -32,7 +32,7 @@ sealed class PeerCollection(IInstanceContext instanceContext) : ConcurrentDictio
     {
         var descriptor = _instanceContext.CreateInstance(item);
         item.Descriptor = descriptor;
-        TryAdd($"{item.ID}", item);
+        TryAdd(item.Id, item);
     }
 
     public void Remove(string id, string reason)

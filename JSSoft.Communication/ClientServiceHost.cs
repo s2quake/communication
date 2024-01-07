@@ -25,25 +25,33 @@ using System;
 namespace JSSoft.Communication;
 
 [ServiceHost(IsServer = false)]
-public abstract class ClientServiceHostBase<TService, TCallback>
+public class ClientServiceHost<TService, TCallback>
     : ServiceHostBase
     where TService : class
     where TCallback : class
 {
+    private readonly TCallback _callback;
     private TService? _service;
 
-    protected ClientServiceHostBase()
+    public ClientServiceHost(TCallback callback)
         : base(typeof(TService), typeof(TCallback))
     {
+        _callback = callback;
+    }
+
+    public ClientServiceHost()
+        : base(typeof(TService), typeof(TCallback))
+    {
+        if (typeof(TService).IsAssignableFrom(this.GetType()) == false)
+            throw new InvalidOperationException();
+        _callback = (this as TCallback)!;
     }
 
     protected TService Service => _service ?? throw new InvalidOperationException();
 
     protected virtual TCallback CreateCallback(IPeer peer, TService service)
     {
-        if (typeof(TCallback).IsAssignableFrom(this.GetType()) == true)
-            return (this as TCallback)!;
-        throw new NotImplementedException();
+        return _callback;
     }
 
     protected virtual void DestroyCallback(IPeer peer, TCallback callback)
@@ -64,13 +72,14 @@ public abstract class ClientServiceHostBase<TService, TCallback>
 }
 
 [ServiceHost(IsServer = false)]
-public abstract class ClientServiceHostBase<TService>
-    : ServiceHostBase where TService : class
+public class ClientServiceHost<TService>
+    : ServiceHostBase
+    where TService : class
 {
     private TService? _service;
 
-    protected ClientServiceHostBase()
-        : base(typeof(TService), typeof(void))
+    public ClientServiceHost()
+        : base(serviceType: typeof(TService), callbackType: typeof(void))
     {
     }
 
@@ -95,25 +104,5 @@ public abstract class ClientServiceHostBase<TService>
     {
         OnServiceDestroyed(peer);
         _service = null;
-    }
-}
-
-[ServiceHost(IsServer = false)]
-public class ClientServiceHost<TService>
-    : ServiceHostBase
-    where TService : class
-{
-    public ClientServiceHost()
-        : base(serviceType: typeof(TService), callbackType: typeof(void))
-    {
-    }
-
-    private protected override object CreateInstance(IPeer peer, object obj)
-    {
-        return new object();
-    }
-
-    private protected override void DestroyInstance(IPeer peer, object obj)
-    {
     }
 }

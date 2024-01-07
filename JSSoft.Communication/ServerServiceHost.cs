@@ -25,25 +25,33 @@ using System;
 namespace JSSoft.Communication;
 
 [ServiceHost(IsServer = true)]
-public abstract class ServerServiceHostBase<TService, TCallback>
+public class ServerServiceHost<TService, TCallback>
     : ServiceHostBase
     where TService : class
     where TCallback : class
 {
+    private readonly TService _service;
     private TCallback? _callback;
 
-    protected ServerServiceHostBase()
+    public ServerServiceHost(TService service)
         : base(typeof(TService), typeof(TCallback))
     {
+        _service = service;
+    }
+
+    public ServerServiceHost()
+        : base(typeof(TService), typeof(TCallback))
+    {
+        if (typeof(TService).IsAssignableFrom(this.GetType()) == false)
+            throw new InvalidOperationException();
+        _service = (this as TService)!;
     }
 
     public TCallback Callback => _callback ?? throw new InvalidOperationException();
 
     protected virtual TService CreateService(IPeer peer)
     {
-        if (typeof(TService).IsAssignableFrom(this.GetType()) == true)
-            return (this as TService)!;
-        return Activator.CreateInstance<TService>();
+        return _service;
     }
 
     protected virtual void DestroyService(IPeer peer, TService service)
@@ -64,47 +72,28 @@ public abstract class ServerServiceHostBase<TService, TCallback>
 }
 
 [ServiceHost(IsServer = true)]
-public abstract class ServerServiceHostBase<TService>
-    : ServiceHostBase
+public class ServerServiceHost<TService> : ServiceHostBase
     where TService : class
 {
-    protected ServerServiceHostBase()
-        : base(typeof(TService), typeof(void))
+    private readonly TService? _service;
+
+    public ServerServiceHost(TService service)
+        : base(serviceType: typeof(TService), callbackType: typeof(void))
     {
+        _service = service;
+    }
+
+    public ServerServiceHost()
+        : base(serviceType: typeof(TService), callbackType: typeof(void))
+    {
+        if (typeof(TService).IsAssignableFrom(this.GetType()) == false)
+            throw new InvalidOperationException();
+        _service = this as TService;
     }
 
     protected virtual TService CreateService(IPeer peer)
     {
-        if (typeof(TService).IsAssignableFrom(this.GetType()) == true)
-            return (this as TService)!;
-        throw new NotImplementedException();
-    }
-
-    protected virtual void DestroyService(IPeer peer, TService service)
-    {
-    }
-
-    private protected override object CreateInstance(IPeer peer, object obj)
-    {
-        return CreateService(peer);
-    }
-
-    private protected override void DestroyInstance(IPeer peer, object obj)
-    {
-        DestroyService(peer, (TService)obj);
-    }
-}
-
-[ServiceHost(IsServer = true)]
-public class ServerServiceHost<TService>(TService service)
-    : ServiceHostBase(serviceType: typeof(TService), callbackType: typeof(void))
-    where TService : class
-{
-    private readonly TService _service = service;
-
-    protected virtual TService CreateService(IPeer peer)
-    {
-        return _service;
+        return _service!;
     }
 
     protected virtual void DestroyService(IPeer peer, TService service)

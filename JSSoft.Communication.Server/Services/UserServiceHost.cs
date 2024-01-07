@@ -25,12 +25,13 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.Services;
 
 [Export(typeof(IServiceHost))]
-class UserServiceHost : ServerServiceHostBase<IUserService, IUserServiceCallback>
+class UserServiceHost : ServerServiceHost<IUserService, IUserServiceCallback>
 {
     private readonly UserService _userService;
 
     [ImportingConstructor]
     public UserServiceHost(UserService userService)
+        : base(userService)
     {
         _userService = userService;
     }

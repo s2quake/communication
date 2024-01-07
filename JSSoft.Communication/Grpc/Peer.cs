@@ -29,9 +29,9 @@ sealed class Peer : IPeer, IDisposable
 {
     private bool _isDisposed;
 
-    public Peer(Guid id, IServiceHost[] serviceHosts)
+    public Peer(string id, IServiceHost[] serviceHosts)
     {
-        ID = id;
+        Id = id;
         ServiceHosts = serviceHosts;
         Ping(DateTime.UtcNow);
         foreach (var item in serviceHosts)
@@ -58,7 +58,23 @@ sealed class Peer : IPeer, IDisposable
         PingTime = dateTime;
     }
 
-    public Guid ID { get; }
+    internal PollReply Collect()
+    {
+        var reply = new PollReply() { Code = int.MinValue };
+        lock (this)
+        {
+            var services = ServiceHosts;
+            foreach (var item in services)
+            {
+                var callbacks = PollReplyItems[item];
+                var items = callbacks.Flush();
+                reply.Items.AddRange(items);
+            }
+        }
+        return reply;
+    }
+
+    public string Id { get; }
 
     public IServiceHost[] ServiceHosts { get; }
 

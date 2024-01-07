@@ -25,7 +25,7 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.ConsoleApp;
 
 [Export(typeof(IServiceContext))]
-class ServerContext : ServerContextBase
+class ServerContext : Communication.ServerContext
 {
     [ImportingConstructor]
     public ServerContext([ImportMany] IServiceHost[] serviceHosts)

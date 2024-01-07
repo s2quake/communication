@@ -29,7 +29,7 @@ using JSSoft.Communication.Services;
 namespace JSSoft.Communication.ConsoleApp;
 
 [Export(typeof(IServiceContext))]
-class ClientContext : ClientContextBase
+class ClientContext : Communication.ClientContext
 {
     [ImportingConstructor]
     public ClientContext([ImportMany] IServiceHost[] serviceHosts)

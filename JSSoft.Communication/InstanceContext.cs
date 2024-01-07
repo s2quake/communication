@@ -111,5 +111,5 @@ sealed class InstanceContext(ServiceContextBase serviceContext) : IInstanceConte
         return query.SingleOrDefault();
     }
 
-    public Guid ID { get; } = Guid.NewGuid();
+    public string Id { get; } = "i";
 }

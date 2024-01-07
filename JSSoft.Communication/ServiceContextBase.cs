@@ -306,10 +306,30 @@ public abstract class ServiceContextBase : IServiceContext
         LogUtility.Debug(message);
     }
 
-    private void AdaptorHost_Disconnected(object? sender, CloseEventArgs e)
+    private async void AdaptorHost_Disconnected(object? sender, CloseEventArgs e)
     {
-        ServiceState = ServiceState.Faulted;
+        var closeCode = e.CloseCode;
+        var cancellationToken = CancellationToken.None;
+        ServiceState = ServiceState.Closing;
+        // await _adaptorHost!.CloseAsync(closeCode, cancellationToken);
+        Debug($"{AdaptorHostProvider!.Name} Adaptor closed.");
+        _instanceContext.ReleaseInstance();
+        foreach (var item in ServiceHosts.Values.Reverse())
+        {
+            await item.CloseAsync(_token!, cancellationToken);
+            Debug($"{item.Name} Service closed.");
+        }
+        // _adaptorHost.Disconnected -= AdaptorHost_Disconnected;
+        if (_adaptorHost != null)
+            await _adaptorHost.DisposeAsync();
         _adaptorHost = null;
+        _serializer = null;
+        _dispatcher?.Dispose();
+        _dispatcher = null;
+        _token = ServiceToken.Empty;
+        ServiceState = ServiceState.None;
+        OnClosed(new CloseEventArgs(closeCode));
+        Debug($"Service Context closed: ({closeCode}).");
     }
 
     #region IServiceHost

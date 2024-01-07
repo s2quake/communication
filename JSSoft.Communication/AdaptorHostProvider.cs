@@ -34,9 +34,9 @@ sealed class AdaptorHostProvider : IAdaptorHostProvider
         // Environment.SetEnvironmentVariable("GRPC_TRACE", "all");
         // global::Grpc.Core.GrpcEnvironment.SetLogger(new global::Grpc.Core.Logging.ConsoleLogger());
 
-        if (serviceContext is ServerContextBase serverContextBase)
+        if (serviceContext is ServerContext serverContextBase)
             return new Grpc.AdaptorServerHost(serverContextBase, instanceContext);
-        else if (serviceContext is ClientContextBase clientContextBase)
+        else if (serviceContext is ClientContext clientContextBase)
             return new Grpc.AdaptorClientHost(clientContextBase, instanceContext);
         throw new NotImplementedException();
     }

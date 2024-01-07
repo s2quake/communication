@@ -28,21 +28,18 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Grpc;
 
-sealed class AdaptorClientImpl(Channel channel, Guid id, IServiceHost[] serviceHosts) : Adaptor.AdaptorClient(channel), IPeer
+sealed class AdaptorClientImpl(Channel channel, string id, IServiceHost[] serviceHosts)
+    : Adaptor.AdaptorClient(channel), IPeer
 {
     private static readonly TimeSpan Timeout = new(0, 0, 15);
     private Timer? _timer;
 
     public async Task OpenAsync(CancellationToken cancellationToken)
     {
-        var request = await Task.Run(() =>
-        {
-            var serviceNames = ServiceHosts.Select(item => item.Name).ToArray();
-            var req = new OpenRequest() { Time = DateTime.UtcNow.Ticks };
-            req.ServiceNames.AddRange(serviceNames);
-            return req;
-        }, cancellationToken);
-        var reply = await base.OpenAsync(request, cancellationToken: cancellationToken);
+        var serviceNames = ServiceHosts.Select(item => item.Name).ToArray();
+        var request = new OpenRequest() { Time = DateTime.UtcNow.Ticks };
+        request.ServiceNames.AddRange(serviceNames);
+        var reply = await OpenAsync(request, cancellationToken: cancellationToken);
         Token = Guid.Parse(reply.Token);
         _timer = new Timer(Timer_TimerCallback, null, TimeSpan.Zero, Timeout);
     }
@@ -52,7 +49,7 @@ sealed class AdaptorClientImpl(Channel channel, Guid id, IServiceHost[] serviceH
         if (_timer != null)
             await _timer.DisposeAsync();
         _timer = null;
-        await base.CloseAsync(new CloseRequest() { Token = Token.ToString() }, cancellationToken: cancellationToken);
+        await CloseAsync(new CloseRequest() { Token = $"{Token}" }, cancellationToken: cancellationToken);
     }
 
     public async Task AbortAsync()
@@ -62,7 +59,7 @@ sealed class AdaptorClientImpl(Channel channel, Guid id, IServiceHost[] serviceH
         _timer = null;
     }
 
-    public Guid ID { get; } = id;
+    public string Id { get; } = id;
 
     public Guid Token { get; private set; }
 

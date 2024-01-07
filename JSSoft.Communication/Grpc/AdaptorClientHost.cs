@@ -58,7 +58,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         try
         {
             _channel = new Channel($"{host}:{port}", ChannelCredentials.Insecure);
-            _adaptorImpl = new AdaptorClientImpl(_channel, Guid.NewGuid(), _serviceHosts.Values.ToArray());
+            _adaptorImpl = new AdaptorClientImpl(_channel, "c", _serviceHosts.Values.ToArray());
             await _adaptorImpl.OpenAsync(cancellationToken);
             _descriptor = _instanceContext.CreateInstance(_adaptorImpl);
             _cancellationTokenSource = new CancellationTokenSource();
@@ -112,14 +112,15 @@ sealed class AdaptorClientHost : IAdaptorHost
         try
         {
             using var call = _adaptorImpl.Poll();
-            while (!cancellationToken.IsCancellationRequested)
+            while (cancellationToken.IsCancellationRequested != true)
             {
                 var request = new PollRequest()
                 {
                     Token = $"{_adaptorImpl.Token}"
                 };
                 await call.RequestStream.WriteAsync(request);
-                var s = await call.ResponseStream.MoveNext();
+                if (await call.ResponseStream.MoveNext() == false)
+                    return;
                 var reply = call.ResponseStream.Current;
                 if (reply.Code != int.MinValue)
                 {
@@ -130,7 +131,6 @@ sealed class AdaptorClientHost : IAdaptorHost
                 reply.Items.Clear();
             }
             await call.RequestStream.CompleteAsync();
-            await call.ResponseStream.MoveNext();
         }
         catch (Exception e)
         {
@@ -140,7 +140,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         if (closeCode != int.MinValue)
         {
             _task = null;
-            await _adaptorImpl.AbortAsync();
+            await _adaptorImpl.CloseAsync(CancellationToken.None);
             _adaptorImpl = null;
             Disconnected?.Invoke(this, new(closeCode));
         }
