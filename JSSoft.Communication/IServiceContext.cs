@@ -30,21 +30,23 @@ namespace JSSoft.Communication;
 
 public interface IServiceContext : IServiceProvider
 {
-    Task<Guid> OpenAsync(CancellationToken cancellationToken);
-
-    Task CloseAsync(Guid token, int closeCode, CancellationToken cancellationToken);
-
-    Task AbortAsync(Guid token);
-
     IReadOnlyDictionary<string, IServiceHost> ServiceHosts { get; }
 
     string Host { get; set; }
 
     int Port { get; set; }
 
+    Guid Id { get; }
+
     Dispatcher Dispatcher { get; }
 
     ServiceState ServiceState { get; }
+
+    Task<Guid> OpenAsync(CancellationToken cancellationToken);
+
+    Task CloseAsync(Guid token, int closeCode, CancellationToken cancellationToken);
+
+    Task AbortAsync(Guid token);
 
     event EventHandler Opened;
 

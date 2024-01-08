@@ -35,18 +35,12 @@ using JSSoft.Terminals.Hosting;
 namespace JSSoft.Communication.ConsoleApp;
 
 [Export]
-sealed class SystemTerminal : SystemTerminalBase
+[method: ImportingConstructor]
+sealed class SystemTerminal(Application application, CommandContext commandContext) : SystemTerminalBase
 {
     private static readonly string postfix = TerminalEnvironment.IsWindows() == true ? ">" : "$ ";
-    private readonly Application _application;
-    private readonly CommandContext _commandContext;
-
-    [ImportingConstructor]
-    public SystemTerminal(Application application, CommandContext commandContext)
-    {
-        _application = application;
-        _commandContext = commandContext;
-    }
+    private readonly Application _application = application;
+    private readonly CommandContext _commandContext = commandContext;
 
     // public static IShell Create()
     // {

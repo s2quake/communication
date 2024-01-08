@@ -22,7 +22,7 @@
 
 namespace JSSoft.Communication;
 
-class JsonSerializerProvider : ISerializerProvider
+sealed class JsonSerializerProvider : ISerializerProvider
 {
     public const string DefaultName = "json";
 

@@ -27,12 +27,7 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.ConsoleApp;
 
 [Export(typeof(CommandContext))]
-sealed class CommandContext : CommandContextBase
+[method: ImportingConstructor]
+sealed class CommandContext([ImportMany] IEnumerable<ICommand> commands) : CommandContextBase(commands)
 {
-    [ImportingConstructor]
-    public CommandContext([ImportMany] IEnumerable<ICommand> commands)
-        : base(commands)
-    {
-
-    }
 }

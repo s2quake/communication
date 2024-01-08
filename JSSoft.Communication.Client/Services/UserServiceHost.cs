@@ -26,16 +26,10 @@ using System.Threading.Tasks;
 namespace JSSoft.Communication.Services;
 
 [Export(typeof(IServiceHost))]
-class UserServiceHost : ClientServiceHost<IUserService, IUserServiceCallback>
+[method: ImportingConstructor]
+class UserServiceHost(UserService userService) : ClientServiceHost<IUserService, IUserServiceCallback>(userService)
 {
-    private readonly UserService _userService;
-
-    [ImportingConstructor]
-    public UserServiceHost(UserService userService)
-        : base(userService)
-    {
-        _userService = userService;
-    }
+    private readonly UserService _userService = userService;
 
     protected override IUserServiceCallback CreateCallback(IPeer peer, IUserService service)
     {

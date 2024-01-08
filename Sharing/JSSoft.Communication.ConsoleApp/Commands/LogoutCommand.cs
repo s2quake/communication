@@ -31,17 +31,11 @@ using System.Threading.Tasks;
 namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
-sealed class LogoutCommand : CommandAsyncBase
+[method: ImportingConstructor]
+sealed class LogoutCommand(Application application, Lazy<IUserService> userService) : CommandAsyncBase
 {
-    private readonly Application _application;
-    private readonly Lazy<IUserService> _userService;
-
-    [ImportingConstructor]
-    public LogoutCommand(Application application, Lazy<IUserService> userService)
-    {
-        _application = application;
-        _userService = userService;
-    }
+    private readonly Application _application = application;
+    private readonly Lazy<IUserService> _userService = userService;
 
     public override bool IsEnabled => _application.UserToken != Guid.Empty;
 

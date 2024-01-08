@@ -30,17 +30,11 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
-class UserCommand : CommandMethodBase
+[method: ImportingConstructor]
+class UserCommand(Application application, Lazy<IUserService> userService) : CommandMethodBase
 {
-    private readonly Application _application;
-    private readonly Lazy<IUserService> _userService;
-
-    [ImportingConstructor]
-    public UserCommand(Application application, Lazy<IUserService> userService)
-    {
-        _application = application;
-        _userService = userService;
-    }
+    private readonly Application _application = application;
+    private readonly Lazy<IUserService> _userService = userService;
 
     [CommandMethod]
     public Task CreateAsync(string userID, string password, Authority authority = Authority.Member)

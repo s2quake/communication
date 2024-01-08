@@ -30,17 +30,11 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
-class DataCommand : CommandMethodBase
+[method: ImportingConstructor]
+class DataCommand(Application application, Lazy<IDataService> dataServiceLazy) : CommandMethodBase
 {
-    private readonly Application _application;
-    private readonly Lazy<IDataService> _dataServiceLazy;
-
-    [ImportingConstructor]
-    public DataCommand(Application application, Lazy<IDataService> dataServiceLazy)
-    {
-        _application = application;
-        _dataServiceLazy = dataServiceLazy;
-    }
+    private readonly Application _application = application;
+    private readonly Lazy<IDataService> _dataServiceLazy = dataServiceLazy;
 
     [CommandMethod]
     public Task CreateAsync(string dataBaseName)

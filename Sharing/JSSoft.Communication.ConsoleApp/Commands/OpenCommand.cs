@@ -30,17 +30,11 @@ using System.Threading.Tasks;
 namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
-sealed class OpenCommand : CommandAsyncBase
+[method: ImportingConstructor]
+sealed class OpenCommand(IServiceContext serviceHost, Application application) : CommandAsyncBase
 {
-    private readonly IServiceContext _serviceHost;
-    private readonly Application _application ;
-
-    [ImportingConstructor]
-    public OpenCommand(IServiceContext serviceHost, Application application)
-    {
-        _serviceHost = serviceHost;
-        _application = application;
-    }
+    private readonly IServiceContext _serviceHost = serviceHost;
+    private readonly Application _application = application;
 
     public override bool IsEnabled => _serviceHost.ServiceState == ServiceState.None;
 

@@ -24,7 +24,8 @@ using System.Collections.Concurrent;
 
 namespace JSSoft.Communication.Grpc;
 
-sealed class PeerCollection(IInstanceContext instanceContext) : ConcurrentDictionary<string, Peer>
+sealed class PeerCollection(IInstanceContext instanceContext)
+    : ConcurrentDictionary<string, Peer>
 {
     private readonly IInstanceContext _instanceContext = instanceContext;
 
@@ -35,9 +36,18 @@ sealed class PeerCollection(IInstanceContext instanceContext) : ConcurrentDictio
         TryAdd(item.Id, item);
     }
 
-    public void Remove(string id, string reason)
+    public void Remove(string id)
     {
-        Logging.LogUtility.Debug($"{id} {reason}");
+        if (TryRemove(id, out var peer) == true)
+        {
+            _instanceContext.DestroyInstance(peer);
+            peer.Descriptor = null;
+            peer.Dispose();
+        }
+    }
+
+    public void Detach(string id)
+    {
         if (TryRemove(id, out var peer) == true)
         {
             _instanceContext.DestroyInstance(peer);

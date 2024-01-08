@@ -32,12 +32,19 @@ sealed class AdaptorClientImpl(Channel channel, string id, IServiceHost[] servic
     : Adaptor.AdaptorClient(channel), IPeer
 {
     private static readonly TimeSpan Timeout = new(0, 0, 15);
+    private readonly string _id = id;
     private Timer? _timer;
+
+    public string Id { get; } = id;
+
+    public Guid Token { get; private set; }
+
+    public IServiceHost[] ServiceHosts { get; } = serviceHosts;
 
     public async Task OpenAsync(CancellationToken cancellationToken)
     {
         var serviceNames = ServiceHosts.Select(item => item.Name).ToArray();
-        var request = new OpenRequest() { Time = DateTime.UtcNow.Ticks };
+        var request = new OpenRequest() { Time = DateTime.UtcNow.Ticks, Token = _id };
         request.ServiceNames.AddRange(serviceNames);
         var reply = await OpenAsync(request, cancellationToken: cancellationToken);
         Token = Guid.Parse(reply.Token);
@@ -58,12 +65,6 @@ sealed class AdaptorClientImpl(Channel channel, string id, IServiceHost[] servic
             await _timer.DisposeAsync();
         _timer = null;
     }
-
-    public string Id { get; } = id;
-
-    public Guid Token { get; private set; }
-
-    public IServiceHost[] ServiceHosts { get; } = serviceHosts;
 
     private async void Timer_TimerCallback(object? state)
     {

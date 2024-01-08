@@ -55,6 +55,8 @@ sealed class ServiceInstanceBuilder
         }
     }
 
+    public AssemblyName AssemblyName { get; }
+
     public Type CreateType(string name, Type baseType, Type interfaceType)
     {
         var fullName = $"{AssemblyName}.{name}";
@@ -65,8 +67,6 @@ sealed class ServiceInstanceBuilder
         }
         return _typeByName[fullName];
     }
-
-    public AssemblyName AssemblyName { get; }
 
     private static Type CreateType(ModuleBuilder moduleBuilder, string typeName, Type baseType, Type interfaceType)
     {

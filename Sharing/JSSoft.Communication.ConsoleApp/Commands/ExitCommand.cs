@@ -31,15 +31,10 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
-sealed class ExitCommand : CommandAsyncBase
+[method: ImportingConstructor]
+sealed class ExitCommand(IApplication application) : CommandAsyncBase
 {
-    private readonly IApplication _application;
-
-    [ImportingConstructor]
-    public ExitCommand(IApplication application)
-    {
-        _application = application;
-    }
+    private readonly IApplication _application = application;
 
     [CommandPropertyRequired(DefaultValue = 0)]
     public int ExitCode

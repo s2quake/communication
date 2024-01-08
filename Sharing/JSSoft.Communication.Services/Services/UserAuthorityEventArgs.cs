@@ -22,13 +22,7 @@
 
 namespace JSSoft.Communication.Services;
 
-public class UserAuthorityEventArgs : UserEventArgs
+public class UserAuthorityEventArgs(string userID, Authority authority) : UserEventArgs(userID)
 {
-    public UserAuthorityEventArgs(string userID, Authority authority)
-        : base(userID)
-    {
-        Authority = authority;
-    }
-
-    public Authority Authority { get; }
+    public Authority Authority { get; } = authority;
 }

@@ -29,10 +29,6 @@ sealed class PollReplyItemCollection : IEnumerable<PollReplyItem>, IReadOnlyList
 {
     private readonly List<PollReplyItem> _itemList = [];
 
-    public PollReplyItemCollection()
-    {
-    }
-
     public void Add(PollReplyItem item)
     {
         _itemList.Add(item);

@@ -48,6 +48,16 @@ public sealed class MethodDescriptor
         ShortName = methodInfo.Name;
     }
 
+    public string Name { get; }
+
+    public string ShortName { get; }
+
+    public Type[] ParameterTypes { get; }
+
+    public Type ReturnType { get; }
+
+    public bool IsAsync { get; }
+
     public async Task<(string, Type, object?)> InvokeAsync(IServiceProvider serviceProvider, object instance, object?[] args)
     {
         try
@@ -65,16 +75,6 @@ public sealed class MethodDescriptor
             return (e.GetType().AssemblyQualifiedName!, e.GetType(), e);
         }
     }
-
-    public string Name { get; }
-
-    public string ShortName { get; }
-
-    public Type[] ParameterTypes { get; }
-
-    public Type ReturnType { get; }
-
-    public bool IsAsync { get; }
 
     internal static string GenerateName(MethodInfo methodInfo)
     {

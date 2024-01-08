@@ -38,21 +38,84 @@ public abstract class ServiceContextBase : IServiceContext
     private readonly ServiceInstanceBuilder? _instanceBuilder;
     private readonly InstanceContext _instanceContext;
     private readonly bool _isServer;
-    public abstract IAdaptorHostProvider AdaptorHostProvider { get; }
-    public abstract ISerializerProvider SerializerProvider { get; }
+    private readonly string _t;
     private ISerializer? _serializer;
     private IAdaptorHost? _adaptorHost;
     private string _host = DefaultHost;
     private int _port = DefaultPort;
     private ServiceToken? _token;
     private Dispatcher? _dispatcher;
+    private ServiceState _serviceState;
 
     protected ServiceContextBase(IServiceHost[] serviceHost)
     {
         ServiceHosts = new ServiceHostCollection(serviceHost);
         _isServer = IsServer(this);
+        _t = _isServer ? "👨" : "👩";
         _instanceBuilder = ServiceInstanceBuilder.Create();
         _instanceContext = new InstanceContext(this);
+    }
+
+    public abstract IAdaptorHostProvider AdaptorHostProvider { get; }
+
+    public abstract ISerializerProvider SerializerProvider { get; }
+
+    public string AdaptorHostType { get; set; } = Communication.AdaptorHostProvider.DefaultName;
+
+    public string SerializerType { get; set; } = JsonSerializerProvider.DefaultName;
+
+    public ServiceHostCollection ServiceHosts { get; }
+
+    public ServiceState ServiceState
+    {
+        get => _serviceState;
+        private set
+        {
+            if (_serviceState != value)
+            {
+                Debug($"{this} {nameof(ServiceState)}.{_serviceState} => {nameof(ServiceState)}.{value}");
+                _serviceState = value;
+            }
+        }
+    }
+
+    public string Host
+    {
+        get => _host;
+        set
+        {
+            if (ServiceState != ServiceState.None)
+                throw new InvalidOperationException($"cannot set host. service state is '{ServiceState}'.");
+            _host = value;
+        }
+    }
+
+    public int Port
+    {
+        get => _port;
+        set
+        {
+            if (ServiceState != ServiceState.None)
+                throw new InvalidOperationException($"cannot set port. service state is '{ServiceState}'.");
+            _port = value;
+        }
+    }
+
+    public Guid Id { get; } = Guid.NewGuid();
+
+    public Dispatcher Dispatcher
+    {
+        get
+        {
+            if (_dispatcher == null)
+                throw new InvalidOperationException();
+            return _dispatcher;
+        }
+    }
+
+    public override string ToString()
+    {
+        return $"{_t}[{Id}]";
     }
 
     public async Task<Guid> OpenAsync(CancellationToken cancellationToken)
@@ -65,19 +128,19 @@ public abstract class ServiceContextBase : IServiceContext
             _dispatcher = new Dispatcher(this);
             _token = ServiceToken.NewToken();
             _serializer = SerializerProvider.Create(this);
-            Debug($"{SerializerProvider.Name} Serializer created.");
+            Debug($"{this} {SerializerProvider.Name} Serializer created.");
             _adaptorHost = AdaptorHostProvider.Create(this, _instanceContext, _token);
-            Debug($"{AdaptorHostProvider.Name} Adaptor created.");
+            Debug($"{this} {AdaptorHostProvider.Name} Adaptor created.");
             _adaptorHost.Disconnected += AdaptorHost_Disconnected;
             foreach (var item in ServiceHosts.Values)
             {
                 await item.OpenAsync(_token, cancellationToken);
-                Debug($"{item.Name} Service opened.");
+                Debug($"{this} {item.Name} Service opened.");
             }
             _instanceContext.InitializeInstance();
             await _adaptorHost.OpenAsync(Host, Port, cancellationToken);
-            Debug($"{AdaptorHostProvider.Name} Adaptor opened.");
-            Debug($"Service Context opened.");
+            Debug($"{this} {AdaptorHostProvider.Name} Adaptor opened.");
+            Debug($"{this} Service Context opened.");
             ServiceState = ServiceState.Open;
             OnOpened(EventArgs.Empty);
             return _token.Guid;
@@ -102,15 +165,16 @@ public abstract class ServiceContextBase : IServiceContext
         {
             ServiceState = ServiceState.Closing;
             await _adaptorHost!.CloseAsync(closeCode, cancellationToken);
-            Debug($"{AdaptorHostProvider!.Name} Adaptor closed.");
+            Debug($"{this} {AdaptorHostProvider!.Name} Adaptor closed.");
             _instanceContext.ReleaseInstance();
             foreach (var item in ServiceHosts.Values.Reverse())
             {
                 await item.CloseAsync(_token, cancellationToken);
-                Debug($"{item.Name} Service closed.");
+                Debug($"{this} {item.Name} Service closed.");
             }
             _adaptorHost.Disconnected -= AdaptorHost_Disconnected;
             await _adaptorHost.DisposeAsync();
+            Debug($"{this} {AdaptorHostProvider.Name} Adaptor disposed.");
             _adaptorHost = null;
             _serializer = null;
             _dispatcher?.Dispose();
@@ -118,7 +182,7 @@ public abstract class ServiceContextBase : IServiceContext
             _token = ServiceToken.Empty;
             ServiceState = ServiceState.None;
             OnClosed(new CloseEventArgs(closeCode));
-            Debug($"Service Context closed.");
+            Debug($"{this} Service Context closed.");
         }
         catch
         {
@@ -158,46 +222,6 @@ public abstract class ServiceContextBase : IServiceContext
         if (_instanceContext.GetService(serviceType) is { } instanceService)
             return instanceService;
         return null;
-    }
-
-    public string AdaptorHostType { get; set; } = Communication.AdaptorHostProvider.DefaultName;
-
-    public string SerializerType { get; set; } = JsonSerializerProvider.DefaultName;
-
-    public ServiceHostCollection ServiceHosts { get; }
-
-    public ServiceState ServiceState { get; private set; }
-
-    public string Host
-    {
-        get => _host;
-        set
-        {
-            if (ServiceState != ServiceState.None)
-                throw new InvalidOperationException($"cannot set host. service state is '{ServiceState}'.");
-            _host = value;
-        }
-    }
-
-    public int Port
-    {
-        get => _port;
-        set
-        {
-            if (ServiceState != ServiceState.None)
-                throw new InvalidOperationException($"cannot set port. service state is '{ServiceState}'.");
-            _port = value;
-        }
-    }
-
-    public Dispatcher Dispatcher
-    {
-        get
-        {
-            if (_dispatcher == null)
-                throw new InvalidOperationException();
-            return _dispatcher;
-        }
     }
 
     public event EventHandler? Opened;
@@ -311,17 +335,18 @@ public abstract class ServiceContextBase : IServiceContext
         var closeCode = e.CloseCode;
         var cancellationToken = CancellationToken.None;
         ServiceState = ServiceState.Closing;
-        // await _adaptorHost!.CloseAsync(closeCode, cancellationToken);
-        Debug($"{AdaptorHostProvider!.Name} Adaptor closed.");
+        Debug($"{this} {AdaptorHostProvider!.Name} Adaptor closed.");
         _instanceContext.ReleaseInstance();
         foreach (var item in ServiceHosts.Values.Reverse())
         {
             await item.CloseAsync(_token!, cancellationToken);
-            Debug($"{item.Name} Service closed.");
+            Debug($"{this} {item.Name} Service closed.");
         }
-        // _adaptorHost.Disconnected -= AdaptorHost_Disconnected;
         if (_adaptorHost != null)
+        {
             await _adaptorHost.DisposeAsync();
+            Debug($"{this} {AdaptorHostProvider.Name} Adaptor disposed.");
+        }
         _adaptorHost = null;
         _serializer = null;
         _dispatcher?.Dispose();
@@ -329,7 +354,7 @@ public abstract class ServiceContextBase : IServiceContext
         _token = ServiceToken.Empty;
         ServiceState = ServiceState.None;
         OnClosed(new CloseEventArgs(closeCode));
-        Debug($"Service Context closed: ({closeCode}).");
+        Debug($"{this} Service Context closed: ({closeCode}).");
     }
 
     #region IServiceHost

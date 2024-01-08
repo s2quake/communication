@@ -32,17 +32,11 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
-sealed class LoginCommand : CommandAsyncBase
+[method: ImportingConstructor]
+sealed class LoginCommand(Application application, Lazy<IUserService> userService) : CommandAsyncBase
 {
-    private readonly Application _application;
-    private readonly Lazy<IUserService> _userService;
-
-    [ImportingConstructor]
-    public LoginCommand(Application application, Lazy<IUserService> userService)
-    {
-        _application = application;
-        _userService = userService;
-    }
+    private readonly Application _application = application;
+    private readonly Lazy<IUserService> _userService = userService;
 
     [CommandPropertyRequired]
     public string UserID

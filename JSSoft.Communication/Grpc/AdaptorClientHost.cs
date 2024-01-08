@@ -58,7 +58,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         try
         {
             _channel = new Channel($"{host}:{port}", ChannelCredentials.Insecure);
-            _adaptorImpl = new AdaptorClientImpl(_channel, "c", _serviceHosts.Values.ToArray());
+            _adaptorImpl = new AdaptorClientImpl(_channel, $"{_serviceContext.Id}", _serviceHosts.Values.ToArray());
             await _adaptorImpl.OpenAsync(cancellationToken);
             _descriptor = _instanceContext.CreateInstance(_adaptorImpl);
             _cancellationTokenSource = new CancellationTokenSource();

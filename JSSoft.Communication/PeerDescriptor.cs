@@ -28,6 +28,10 @@ namespace JSSoft.Communication;
 
 public sealed class PeerDescriptor
 {
+    public Dictionary<IServiceHost, object> Services { get; } = [];
+
+    public Dictionary<IServiceHost, object> Callbacks { get; } = [];
+
     public void Dispose()
     {
         var items = Callbacks.Values.OfType<IDisposable>().ToArray();
@@ -50,8 +54,4 @@ public sealed class PeerDescriptor
         Callbacks.Remove(serviceHost);
         return value;
     }
-
-    public Dictionary<IServiceHost, object> Services { get; } = [];
-
-    public Dictionary<IServiceHost, object> Callbacks { get; } = [];
 }

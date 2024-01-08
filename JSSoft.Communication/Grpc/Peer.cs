@@ -40,6 +40,20 @@ sealed class Peer : IPeer, IDisposable
         }
     }
 
+    public string Id { get; }
+
+    public IServiceHost[] ServiceHosts { get; }
+
+    public Guid Token { get; set; } = Guid.NewGuid();
+
+    public DateTime PingTime { get; set; }
+
+    public PeerDescriptor? Descriptor { get; set; }
+
+    public Dictionary<IServiceHost, object> Services => Descriptor?.Services ?? [];
+
+    public Dictionary<IServiceHost, PollReplyItemCollection> PollReplyItems { get; } = [];
+
     public void Dispose()
     {
         if (_isDisposed == true)
@@ -58,7 +72,7 @@ sealed class Peer : IPeer, IDisposable
         PingTime = dateTime;
     }
 
-    internal PollReply Collect()
+    public PollReply Collect()
     {
         var reply = new PollReply() { Code = int.MinValue };
         lock (this)
@@ -73,18 +87,4 @@ sealed class Peer : IPeer, IDisposable
         }
         return reply;
     }
-
-    public string Id { get; }
-
-    public IServiceHost[] ServiceHosts { get; }
-
-    public Guid Token { get; set; } = Guid.NewGuid();
-
-    public DateTime PingTime { get; set; }
-
-    public PeerDescriptor? Descriptor { get; set; }
-
-    public Dictionary<IServiceHost, object> Services => Descriptor?.Services ?? [];
-
-    public Dictionary<IServiceHost, PollReplyItemCollection> PollReplyItems { get; } = [];
 }

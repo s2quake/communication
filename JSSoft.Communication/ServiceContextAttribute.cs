@@ -27,9 +27,5 @@ namespace JSSoft.Communication;
 [AttributeUsage(AttributeTargets.Class)]
 sealed class ServiceContextAttribute : Attribute
 {
-    public ServiceContextAttribute()
-    {
-    }
-
     public bool IsServer { get; set; }
 }

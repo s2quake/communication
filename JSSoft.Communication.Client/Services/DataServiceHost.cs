@@ -25,15 +25,10 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.Services;
 
 [Export(typeof(IServiceHost))]
-class DataServiceHost : ClientServiceHost<IDataService>
+[method: ImportingConstructor]
+class DataServiceHost(DataService dataService) : ClientServiceHost<IDataService>
 {
-    private readonly DataService _dataService;
-
-    [ImportingConstructor]
-    public DataServiceHost(DataService dataService)
-    {
-        _dataService = dataService;
-    }
+    private readonly DataService _dataService = dataService;
 
     protected override void OnServiceCreated(IPeer peer, IDataService service)
     {

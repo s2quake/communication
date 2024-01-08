@@ -29,15 +29,9 @@ using JSSoft.Communication.Services;
 namespace JSSoft.Communication.ConsoleApp;
 
 [Export(typeof(IServiceContext))]
-class ClientContext : Communication.ClientContext
+[method: ImportingConstructor]
+class ClientContext([ImportMany] IServiceHost[] serviceHosts) : Communication.ClientContext(serviceHosts)
 {
-    [ImportingConstructor]
-    public ClientContext([ImportMany] IServiceHost[] serviceHosts)
-        : base(serviceHosts)
-    {
-
-    }
-
     protected override InstanceBase CreateInstance(Type type)
     {
         if (type == typeof(IUserService))

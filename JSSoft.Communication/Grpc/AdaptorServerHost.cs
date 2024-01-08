@@ -70,16 +70,18 @@ sealed class AdaptorServerHost : IAdaptorHost
 
     public Dispatcher Dispatcher => _serviceContext.Dispatcher;
 
+    public Guid Id => _serviceContext.Id;
+
     public async Task<OpenReply> Open(OpenRequest request, ServerCallContext context, CancellationToken cancellationToken)
     {
         var id = context.Peer;
-        var token = Guid.NewGuid();
+        var token = Guid.Parse(request.Token);
         var serviceNames = request.ServiceNames;
         var serviceHosts = serviceNames.Select(item => _serviceHosts[item]).ToArray();
         var peer = new Peer(id, serviceHosts) { Token = token };
-        LogUtility.Debug($"{context.Peer}({token}) Connecting");
+        LogUtility.Debug($"{_serviceContext} {context.Peer}, {token} Connecting");
         Peers.Add(peer);
-        LogUtility.Debug($"{context.Peer}({token}) Connected");
+        LogUtility.Debug($"{_serviceContext} {context.Peer}, {token} Connected");
         await Task.CompletedTask;
         return new OpenReply() { Token = $"{token}" };
     }
@@ -88,9 +90,9 @@ sealed class AdaptorServerHost : IAdaptorHost
     {
         var id = context.Peer;
         var token = request.Token;
-        LogUtility.Debug($"{context.Peer}({token}) Disconnecting");
-        Peers.Remove(id, "close");
-        LogUtility.Debug($"{context.Peer}({token}) Disconnected");
+        LogUtility.Debug($"{_serviceContext} {context.Peer}, {token} Disconnecting");
+        Peers.Remove(id);
+        LogUtility.Debug($"{_serviceContext} {context.Peer}, {token} Disconnected");
         await Task.CompletedTask;
         return new CloseReply();
     }
@@ -102,7 +104,7 @@ sealed class AdaptorServerHost : IAdaptorHost
         if (Peers.TryGetValue(id, out var peer) == true)
         {
             peer.Ping(dateTime);
-            LogUtility.Debug($"{id}({peer.Token}) Ping: {dateTime}");
+            LogUtility.Debug($"{_serviceContext} {id}, {peer.Token} Ping({dateTime})");
             return new PingReply() { Time = peer.PingTime.Ticks };
         }
         await Task.CompletedTask;
@@ -161,7 +163,7 @@ sealed class AdaptorServerHost : IAdaptorHost
         }
         catch
         {
-            Peers.Remove(id, out var _);
+            Peers.Detach(id);
         }
     }
 
@@ -207,7 +209,7 @@ sealed class AdaptorServerHost : IAdaptorHost
                     select peer;
         foreach (var item in query)
         {
-            Peers.Remove(item.Id, "timeout");
+            Peers.Detach(item.Id);
         }
     }
 

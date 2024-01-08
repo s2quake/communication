@@ -17,6 +17,7 @@ service Adaptor {
 message OpenRequest {
     repeated string serviceNames = 1;
     int64 time = 2;
+    string token = 3;
 }
 
 message OpenReply {

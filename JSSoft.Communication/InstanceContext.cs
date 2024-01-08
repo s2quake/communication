@@ -22,14 +22,12 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace JSSoft.Communication;
 
-sealed class InstanceContext(ServiceContextBase serviceContext) : IInstanceContext, IPeer
+sealed class InstanceContext(ServiceContextBase serviceContext) 
+    : IInstanceContext, IPeer
 {
     private readonly ConcurrentDictionary<IPeer, PeerDescriptor> _descriptorByPeer = new();
     private readonly PeerDescriptor _descriptor = new();

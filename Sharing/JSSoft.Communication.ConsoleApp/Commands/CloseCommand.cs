@@ -30,17 +30,11 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
-sealed class CloseCommand : CommandAsyncBase
+[method: ImportingConstructor]
+sealed class CloseCommand(IServiceContext serviceHost, Application application) : CommandAsyncBase
 {
-    private readonly IServiceContext _serviceHost;
-    private readonly Application _application;
-
-    [ImportingConstructor]
-    public CloseCommand(IServiceContext serviceHost, Application application)
-    {
-        _serviceHost = serviceHost;
-        _application = application;
-    }
+    private readonly IServiceContext _serviceHost = serviceHost;
+    private readonly Application _application = application;
 
     public override bool IsEnabled => _serviceHost.ServiceState == ServiceState.Open;
 

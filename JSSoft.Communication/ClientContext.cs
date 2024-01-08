@@ -25,7 +25,8 @@ using System;
 namespace JSSoft.Communication;
 
 [ServiceContext(IsServer = false)]
-public class ClientContext(params IServiceHost[] serviceHosts) : ServiceContextBase(serviceHosts)
+public class ClientContext(params IServiceHost[] serviceHosts)
+    : ServiceContextBase(serviceHosts)
 {
     public override IAdaptorHostProvider AdaptorHostProvider => Communication.AdaptorHostProvider.Default;
 

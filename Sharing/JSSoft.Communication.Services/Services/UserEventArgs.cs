@@ -24,12 +24,7 @@ using System;
 
 namespace JSSoft.Communication.Services;
 
-public class UserEventArgs : EventArgs
+public class UserEventArgs(string userID) : EventArgs
 {
-    public UserEventArgs(string userID)
-    {
-        UserID = userID;
-    }
-
-    public string UserID { get; }
+    public string UserID { get; } = userID;
 }

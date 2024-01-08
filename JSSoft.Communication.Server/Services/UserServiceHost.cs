@@ -25,16 +25,10 @@ using System.ComponentModel.Composition;
 namespace JSSoft.Communication.Services;
 
 [Export(typeof(IServiceHost))]
-class UserServiceHost : ServerServiceHost<IUserService, IUserServiceCallback>
+[method: ImportingConstructor]
+class UserServiceHost(UserService userService) : ServerServiceHost<IUserService, IUserServiceCallback>(userService)
 {
-    private readonly UserService _userService;
-
-    [ImportingConstructor]
-    public UserServiceHost(UserService userService)
-        : base(userService)
-    {
-        _userService = userService;
-    }
+    private readonly UserService _userService = userService;
 
     protected override IUserService CreateService(IPeer peer)
     {
