@@ -85,9 +85,10 @@ sealed class AdaptorClientHost : IAdaptorHost
         if (_task != null)
             await _task;
         if (_adaptorImpl != null)
+        {
             _instanceContext.DestroyInstance(_adaptorImpl);
-        if (_adaptorImpl != null)
             await _adaptorImpl.CloseAsync(0, cancellationToken);
+        }
         _adaptorImpl = null;
         if (_channel != null)
             await _channel.ShutdownAsync();
@@ -140,8 +141,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         if (closeCode != int.MinValue)
         {
             _task = null;
-            // await _adaptorImpl.CloseAsync(1, CancellationToken.None);
-            // _adaptorImpl = null;
+            _instanceContext.DestroyInstance(_adaptorImpl);
             Disconnected?.Invoke(this, new(closeCode));
         }
     }
