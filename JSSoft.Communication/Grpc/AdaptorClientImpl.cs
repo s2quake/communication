@@ -56,14 +56,13 @@ sealed class AdaptorClientImpl(Channel channel, string id, IServiceHost[] servic
         if (_timer != null)
             await _timer.DisposeAsync();
         _timer = null;
-        await CloseAsync(new CloseRequest() { Token = $"{Token}" }, cancellationToken: cancellationToken);
-    }
-
-    public async Task AbortAsync()
-    {
-        if (_timer != null)
-            await _timer.DisposeAsync();
-        _timer = null;
+        try
+        {
+            await CloseAsync(new CloseRequest() { Token = $"{Token}" }, cancellationToken: cancellationToken);
+        }
+        catch
+        {
+        }
     }
 
     private async void Timer_TimerCallback(object? state)

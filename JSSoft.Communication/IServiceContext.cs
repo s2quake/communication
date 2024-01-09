@@ -24,7 +24,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using JSSoft.Communication.Threading;
 
 namespace JSSoft.Communication;
 
@@ -37,8 +36,6 @@ public interface IServiceContext : IServiceProvider
     int Port { get; set; }
 
     Guid Id { get; }
-
-    Dispatcher Dispatcher { get; }
 
     ServiceState ServiceState { get; }
 

@@ -44,7 +44,6 @@ public abstract class ServiceContextBase : IServiceContext
     private string _host = DefaultHost;
     private int _port = DefaultPort;
     private ServiceToken? _token;
-    private Dispatcher? _dispatcher;
     private ServiceState _serviceState;
 
     protected ServiceContextBase(IServiceHost[] serviceHost)
@@ -103,16 +102,6 @@ public abstract class ServiceContextBase : IServiceContext
 
     public Guid Id { get; } = Guid.NewGuid();
 
-    public Dispatcher Dispatcher
-    {
-        get
-        {
-            if (_dispatcher == null)
-                throw new InvalidOperationException();
-            return _dispatcher;
-        }
-    }
-
     public override string ToString()
     {
         return $"{_t}[{Id}]";
@@ -125,7 +114,6 @@ public abstract class ServiceContextBase : IServiceContext
         try
         {
             ServiceState = ServiceState.Opening;
-            _dispatcher = new Dispatcher(this);
             _token = ServiceToken.NewToken();
             _serializer = SerializerProvider.Create(this);
             Debug($"{this} {SerializerProvider.Name} Serializer created.");
@@ -177,8 +165,6 @@ public abstract class ServiceContextBase : IServiceContext
             Debug($"{this} {AdaptorHostProvider.Name} Adaptor disposed.");
             _adaptorHost = null;
             _serializer = null;
-            _dispatcher?.Dispose();
-            _dispatcher = null;
             _token = ServiceToken.Empty;
             ServiceState = ServiceState.None;
             OnClosed(new CloseEventArgs(closeCode));
@@ -209,8 +195,6 @@ public abstract class ServiceContextBase : IServiceContext
         _adaptorHost = null;
         if (_adaptorHost != null)
             await _adaptorHost.DisposeAsync();
-        _dispatcher?.Dispose();
-        _dispatcher = null;
         ServiceState = ServiceState.None;
         OnAborted(EventArgs.Empty);
     }
@@ -349,8 +333,6 @@ public abstract class ServiceContextBase : IServiceContext
         }
         _adaptorHost = null;
         _serializer = null;
-        _dispatcher?.Dispose();
-        _dispatcher = null;
         _token = ServiceToken.Empty;
         ServiceState = ServiceState.None;
         OnClosed(new CloseEventArgs(closeCode));

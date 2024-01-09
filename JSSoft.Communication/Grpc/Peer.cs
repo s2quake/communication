@@ -59,11 +59,14 @@ sealed class Peer : IPeer, IDisposable
         if (_isDisposed == true)
             throw new ObjectDisposedException($"{this}");
 
-        foreach (var item in ServiceHosts)
+        lock (this)
         {
-            PollReplyItems.Remove(item);
+            foreach (var item in ServiceHosts)
+            {
+                PollReplyItems.Remove(item);
+            }
+            _isDisposed = true;
         }
-        _isDisposed = true;
         GC.SuppressFinalize(this);
     }
 
@@ -77,12 +80,15 @@ sealed class Peer : IPeer, IDisposable
         var reply = new PollReply() { Code = int.MinValue };
         lock (this)
         {
-            var services = ServiceHosts;
-            foreach (var item in services)
+            if (_isDisposed != true)
             {
-                var callbacks = PollReplyItems[item];
-                var items = callbacks.Flush();
-                reply.Items.AddRange(items);
+                var services = ServiceHosts;
+                foreach (var item in services)
+                {
+                    var callbacks = PollReplyItems[item];
+                    var items = callbacks.Flush();
+                    reply.Items.AddRange(items);
+                }
             }
         }
         return reply;

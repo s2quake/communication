@@ -68,8 +68,6 @@ sealed class AdaptorServerHost : IAdaptorHost
 
     public PeerCollection Peers { get; }
 
-    public Dispatcher Dispatcher => _serviceContext.Dispatcher;
-
     public Guid Id => _serviceContext.Id;
 
     public async Task<OpenReply> Open(OpenRequest request, ServerCallContext context, CancellationToken cancellationToken)
