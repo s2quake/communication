@@ -56,7 +56,6 @@ public sealed class PeerDescriptor : IDisposable
         Callbacks.Add(serviceHost, callback);
     }
 
-private bool _b;
     public (object service, object callback) RemoveInstance(IServiceHost serviceHost)
     {
         if (_isDisposed == true)
@@ -65,7 +64,6 @@ private bool _b;
         var value = (Services[serviceHost], Callbacks[serviceHost]);
         Services.Remove(serviceHost);
         Callbacks.Remove(serviceHost);
-        _b = true;
         return value;
     }
 }

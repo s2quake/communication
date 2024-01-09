@@ -1,5 +1,7 @@
 
 
+using Xunit.Abstractions;
+
 namespace JSSoft.Communication.Tests;
 
 public class UnitTest1
@@ -46,5 +48,29 @@ public class UnitTest1
         var result = autoResetEvent.WaitOne(millisecondsTimeout: 1000);
         Assert.True(result);
         Assert.Equal(ServiceState.None, client.ServiceState);
+    }
+
+    [Fact]
+    public async Task MultipleOpenAndClientCloseAsync()
+    {
+        var count = 20;
+        var server = new ServerContext(new ServerServiceHost());
+        var clients = Enumerable.Range(0, count).Select(item => new ClientContext(new ClientServiceHost())).ToArray();
+        var serverToken = await server.OpenAsync(CancellationToken.None);
+        var openTasks = clients.Select(item => item.OpenAsync(CancellationToken.None)).ToArray();
+        await Task.WhenAll(openTasks);
+        var closeTasks = new Task[count];
+        var serverCloseTask = server.CloseAsync(serverToken, 0, CancellationToken.None);
+        for (var i = 0; i < count; i++)
+        {
+            closeTasks[i] = clients[i].CloseAsync(openTasks[i].Result, 0, CancellationToken.None);
+        }
+        await Task.WhenAll(closeTasks);
+        await serverCloseTask;
+        Assert.Equal(ServiceState.None, server.ServiceState);
+        for (var i = 0; i < count; i++)
+        {
+            Assert.Equal(ServiceState.None, clients[i].ServiceState);
+        }
     }
 }
