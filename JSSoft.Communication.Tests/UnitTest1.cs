@@ -1,7 +1,3 @@
-
-
-using Xunit.Abstractions;
-
 namespace JSSoft.Communication.Tests;
 
 public class UnitTest1
@@ -39,14 +35,12 @@ public class UnitTest1
 
         var serverToken = await server.OpenAsync(CancellationToken.None);
         var clientToken = await client.OpenAsync(CancellationToken.None);
-        var autoResetEvent = new AutoResetEvent(initialState: false);
-        client.Closed += (s, e) => autoResetEvent.Set();
-        client.Faulted += (s, e) => throw new NotImplementedException();
 
         await server.CloseAsync(serverToken, 0, CancellationToken.None);
+        await Task.Delay(1000);
+        Assert.Equal(ServiceState.Disconnected, client.ServiceState);
+        await client.CloseAsync(clientToken, 0, CancellationToken.None);
 
-        var result = autoResetEvent.WaitOne(millisecondsTimeout: 1000);
-        Assert.True(result);
         Assert.Equal(ServiceState.None, client.ServiceState);
     }
 

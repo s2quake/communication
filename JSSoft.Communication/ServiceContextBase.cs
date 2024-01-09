@@ -21,7 +21,6 @@
 // SOFTWARE.
 
 using JSSoft.Communication.Logging;
-using JSSoft.Communication.Threading;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,12 +71,9 @@ public abstract class ServiceContextBase : IServiceContext
         {
             if (_serviceState != value)
             {
-                Debug($"{this} {nameof(ServiceState)}.{_serviceState} => {nameof(ServiceState)}.{value}");
+                var _ = _serviceState;
                 _serviceState = value;
-                if (value == ServiceState.Faulted)
-                {
-                    int qewr = 0;
-                }
+                Debug($"{this} {nameof(ServiceState)}.{_} => {nameof(ServiceState)}.{value}");
             }
         }
     }
@@ -178,6 +174,7 @@ public abstract class ServiceContextBase : IServiceContext
         {
             ServiceState = ServiceState.Faulted;
             OnFaulted(EventArgs.Empty);
+            LogUtility.Error(e);
             throw;
         }
     }
@@ -189,16 +186,20 @@ public abstract class ServiceContextBase : IServiceContext
         if (token == Guid.Empty || _token!.Guid != token)
             throw new ArgumentException($"Invalid token: {token}", nameof(token));
 
-        foreach (var item in ServiceHosts)
+        var query = from item in ServiceHosts.Values
+                    where item.ServiceState == ServiceState.Faulted
+                    select item;
+        foreach (var item in query)
         {
-            if (item.Value.ServiceState == ServiceState.Faulted)
-                await item.Value.AbortAsync(_token!);
+            await item.AbortAsync(_token!);
         }
         _token = null;
         _serializer = null;
-        _adaptorHost = null;
         if (_adaptorHost != null)
+        {
             await _adaptorHost.DisposeAsync();
+            _adaptorHost = null;
+        }
         ServiceState = ServiceState.None;
         OnAborted(EventArgs.Empty);
     }
@@ -321,29 +322,6 @@ public abstract class ServiceContextBase : IServiceContext
     private void AdaptorHost_Disconnected(object? sender, CloseEventArgs e)
     {
         ServiceState = ServiceState.Disconnected;
-        // if (ServiceState != ServiceState.Open)
-        //     return;
-        // var closeCode = e.CloseCode;
-        // var cancellationToken = CancellationToken.None;
-        // ServiceState = ServiceState.Closing;
-        // Debug($"{this} {AdaptorHostProvider!.Name} Adaptor closed.");
-        // _instanceContext.ReleaseInstance();
-        // foreach (var item in ServiceHosts.Values.Reverse())
-        // {
-        //     await item.CloseAsync(_token!, cancellationToken);
-        //     Debug($"{this} {item.Name} Service closed.");
-        // }
-        // if (_adaptorHost != null)
-        // {
-        //     await _adaptorHost.DisposeAsync();
-        //     Debug($"{this} {AdaptorHostProvider.Name} Adaptor disposed.");
-        // }
-        // _adaptorHost = null;
-        // _serializer = null;
-        // _token = ServiceToken.Empty;
-        // ServiceState = ServiceState.None;
-        // OnClosed(new CloseEventArgs(closeCode));
-        // Debug($"{this} Service Context closed: ({closeCode}).");
     }
 
     #region IServiceHost

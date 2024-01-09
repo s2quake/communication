@@ -22,7 +22,6 @@
 
 using Grpc.Core;
 using JSSoft.Communication.Logging;
-using JSSoft.Communication.Threading;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -70,32 +69,30 @@ sealed class AdaptorServerHost : IAdaptorHost
 
     public Guid Id => _serviceContext.Id;
 
-    public async Task<OpenReply> Open(OpenRequest request, ServerCallContext context, CancellationToken cancellationToken)
+    public async Task<OpenReply> OpenAsync(OpenRequest request, ServerCallContext context, CancellationToken cancellationToken)
     {
         var id = context.Peer;
         var token = Guid.Parse(request.Token);
         var serviceNames = request.ServiceNames;
         var serviceHosts = serviceNames.Select(item => _serviceHosts[item]).ToArray();
         var peer = new Peer(id, serviceHosts) { Token = token };
-        LogUtility.Debug($"{_serviceContext} {context.Peer}, {token} Connecting");
         Peers.Add(peer);
         LogUtility.Debug($"{_serviceContext} {context.Peer}, {token} Connected");
         await Task.CompletedTask;
         return new OpenReply() { Token = $"{token}" };
     }
 
-    public async Task<CloseReply> Close(CloseRequest request, ServerCallContext context, CancellationToken cancellationToken)
+    public async Task<CloseReply> CloseAsync(CloseRequest request, ServerCallContext context, CancellationToken cancellationToken)
     {
         var id = context.Peer;
         var token = request.Token;
-        LogUtility.Debug($"{_serviceContext} {context.Peer}, {token} Disconnecting");
         Peers.Remove(id);
         LogUtility.Debug($"{_serviceContext} {context.Peer}, {token} Disconnected");
         await Task.CompletedTask;
         return new CloseReply();
     }
 
-    public async Task<PingReply> Ping(PingRequest request, ServerCallContext context)
+    public async Task<PingReply> PingAsync(PingRequest request, ServerCallContext context)
     {
         var id = context.Peer;
         var dateTime = DateTime.UtcNow;
@@ -109,8 +106,7 @@ sealed class AdaptorServerHost : IAdaptorHost
         return new PingReply() { Time = DateTime.MinValue.Ticks };
     }
 
-    private static int c = 0;
-    public async Task<InvokeReply> Invoke(InvokeRequest request, ServerCallContext context)
+    public async Task<InvokeReply> InvokeAsync(InvokeRequest request, ServerCallContext context)
     {
         if (_serializer == null)
             throw new InvalidOperationException();
@@ -124,7 +120,6 @@ sealed class AdaptorServerHost : IAdaptorHost
         var id = context.Peer;
         if (Peers.TryGetValue(id, out var peer) == true)
         {
-            // Console.WriteLine($"{c++}: {request.Name}");
             var methodDescriptor = methodDescriptors[request.Name];
             var instance = peer.Services[serviceHost];
             var args = _serializer.DeserializeMany(methodDescriptor.ParameterTypes, [.. request.Data]);
@@ -137,14 +132,10 @@ sealed class AdaptorServerHost : IAdaptorHost
             LogUtility.Debug($"{context.Peer} Invoke: {request.ServiceName}.{methodDescriptor.ShortName}");
             return reply;
         }
-        else
-        {
-            int qwer = 0;
-        }
         return new InvokeReply();
     }
 
-    public async Task Poll(IAsyncStreamReader<PollRequest> requestStream, IServerStreamWriter<PollReply> responseStream, ServerCallContext context)
+    public async Task PollAsync(IAsyncStreamReader<PollRequest> requestStream, IServerStreamWriter<PollReply> responseStream, ServerCallContext context)
     {
         var id = context.Peer;
         var peer = Peers[id];

@@ -20,17 +20,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using JSSoft.Communication.Services;
-using JSSoft.Commands;
 using JSSoft.Commands.Extensions;
-using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel.Composition;
 using JSSoft.Terminals;
-using JSSoft.Terminals.Hosting;
 
 namespace JSSoft.Communication.ConsoleApp;
 

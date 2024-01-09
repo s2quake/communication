@@ -32,6 +32,8 @@ namespace JSSoft.Communication.Grpc;
 
 sealed class AdaptorClientHost : IAdaptorHost
 {
+    private static readonly TimeSpan Timeout = new(0, 0, 15);
+
     private readonly IServiceContext _serviceContext;
     private readonly IInstanceContext _instanceContext;
     private readonly IReadOnlyDictionary<string, IServiceHost> _serviceHosts;
@@ -42,6 +44,8 @@ sealed class AdaptorClientHost : IAdaptorHost
     private AdaptorClientImpl? _adaptorImpl;
     private ISerializer? _serializer;
     private PeerDescriptor? _descriptor;
+    private Timer? _timer;
+    private string _token = string.Empty;
 
     public AdaptorClientHost(IServiceContext serviceContext, IInstanceContext instanceContext)
     {
@@ -59,11 +63,12 @@ sealed class AdaptorClientHost : IAdaptorHost
         {
             _channel = new Channel($"{host}:{port}", ChannelCredentials.Insecure);
             _adaptorImpl = new AdaptorClientImpl(_channel, $"{_serviceContext.Id}", _serviceHosts.Values.ToArray());
-            await _adaptorImpl.OpenAsync(cancellationToken);
+            _token = await _adaptorImpl.OpenAsync(cancellationToken);
             _descriptor = _instanceContext.CreateInstance(_adaptorImpl);
             _cancellationTokenSource = new CancellationTokenSource();
             _serializer = (ISerializer)_serviceContext.GetService(typeof(ISerializer))!;
             _task = PollAsync(_cancellationTokenSource.Token);
+            _timer = new Timer(Timer_TimerCallback, null, TimeSpan.Zero, Timeout);
         }
         catch
         {
@@ -78,23 +83,30 @@ sealed class AdaptorClientHost : IAdaptorHost
 
     public async Task CloseAsync(int closeCode, CancellationToken cancellationToken)
     {
-        if (_adaptorImpl == null)
-            throw new InvalidOperationException();
-
         _cancellationTokenSource?.Cancel();
         if (_task != null)
+        {
             await _task;
+        }
+        if (_timer != null)
+        {
+            await _timer.DisposeAsync();
+            _timer = null;
+        }
         if (_adaptorImpl != null)
         {
             _instanceContext.DestroyInstance(_adaptorImpl);
-            await _adaptorImpl.CloseAsync(0, cancellationToken);
+            await _adaptorImpl.CloseAsync(_token, cancellationToken);
+            _adaptorImpl = null;
         }
-        _adaptorImpl = null;
         if (_channel != null)
+        {
             await _channel.ShutdownAsync();
+            _channel = null;
+        }
+        _token = string.Empty;
         _cancellationTokenSource?.Dispose();
         _cancellationTokenSource = null;
-        _channel = null;
     }
 
     public ValueTask DisposeAsync()
@@ -104,6 +116,23 @@ sealed class AdaptorClientHost : IAdaptorHost
 
     public event EventHandler<CloseEventArgs>? Disconnected;
 
+    private async void Timer_TimerCallback(object? state)
+    {
+        try
+        {
+            if (_adaptorImpl != null)
+            {
+                var request = new PingRequest()
+                {
+                    Token = _token.ToString()
+                };
+                await _adaptorImpl.PingAsync(request);
+            }
+        }
+        catch
+        {
+        }
+    }
     private async Task PollAsync(CancellationToken cancellationToken)
     {
         if (_adaptorImpl == null)
@@ -115,9 +144,9 @@ sealed class AdaptorClientHost : IAdaptorHost
             using var call = _adaptorImpl.Poll();
             while (cancellationToken.IsCancellationRequested != true)
             {
-                var request = new PollRequest()
+                var request = new PollRequest
                 {
-                    Token = $"{_adaptorImpl.Token}"
+                    Token = _token,
                 };
                 await call.RequestStream.WriteAsync(request);
                 if (await call.ResponseStream.MoveNext() == false)
@@ -142,6 +171,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         {
             _task = null;
             _instanceContext.DestroyInstance(_adaptorImpl);
+            _adaptorImpl = null;
             Disconnected?.Invoke(this, new(closeCode));
         }
     }
@@ -165,7 +195,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         foreach (var item in pollItems)
         {
             var service = _serviceHosts[item.ServiceName];
-            InvokeCallback(service, item.Name, item.Data.ToArray());
+            InvokeCallback(service, item.Name, [.. item.Data]);
         }
     }
 
@@ -186,9 +216,9 @@ sealed class AdaptorClientHost : IAdaptorHost
         if (_adaptorImpl == null)
             throw new InvalidOperationException();
 
-        var token = $"{_adaptorImpl.Token}";
+        var token = _token;
         var data = _serializer!.SerializeMany(types, args);
-        var request = new InvokeRequest()
+        var request = new InvokeRequest
         {
             ServiceName = instance.ServiceName,
             Name = name,
@@ -207,9 +237,9 @@ sealed class AdaptorClientHost : IAdaptorHost
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
 
-        var token = $"{_adaptorImpl.Token}";
+        var token = _token;
         var data = _serializer.SerializeMany(types, args);
-        var request = new InvokeRequest()
+        var request = new InvokeRequest
         {
             ServiceName = instance.ServiceName,
             Name = name,
@@ -231,9 +261,9 @@ sealed class AdaptorClientHost : IAdaptorHost
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
 
-        var token = $"{_adaptorImpl.Token}";
+        var token = _token;
         var data = _serializer.SerializeMany(types, args);
-        var request = new InvokeRequest()
+        var request = new InvokeRequest
         {
             ServiceName = instance.ServiceName,
             Name = name,
@@ -252,9 +282,9 @@ sealed class AdaptorClientHost : IAdaptorHost
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
 
-        var token = $"{_adaptorImpl.Token}";
+        var token = _token;
         var data = _serializer.SerializeMany(types, args);
-        var request = new InvokeRequest()
+        var request = new InvokeRequest
         {
             ServiceName = instance.ServiceName,
             Name = name,
@@ -266,9 +296,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         {
             ThrowException(exceptionType, reply.Data);
         }
-        if (_serializer.Deserialize(typeof(T), reply.Data) is T value)
-            return value;
-        return default!;
+        return _serializer.Deserialize(typeof(T), reply.Data) is T value ? value : default!;
     }
 
     #endregion

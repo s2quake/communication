@@ -21,7 +21,6 @@
 // SOFTWARE.
 
 using System.ComponentModel.Composition;
-using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Services;
 
