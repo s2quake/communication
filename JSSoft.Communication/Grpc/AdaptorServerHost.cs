@@ -109,6 +109,7 @@ sealed class AdaptorServerHost : IAdaptorHost
         return new PingReply() { Time = DateTime.MinValue.Ticks };
     }
 
+    private static int c = 0;
     public async Task<InvokeReply> Invoke(InvokeRequest request, ServerCallContext context)
     {
         if (_serializer == null)
@@ -123,6 +124,7 @@ sealed class AdaptorServerHost : IAdaptorHost
         var id = context.Peer;
         if (Peers.TryGetValue(id, out var peer) == true)
         {
+            // Console.WriteLine($"{c++}: {request.Name}");
             var methodDescriptor = methodDescriptors[request.Name];
             var instance = peer.Services[serviceHost];
             var args = _serializer.DeserializeMany(methodDescriptor.ParameterTypes, [.. request.Data]);
@@ -134,6 +136,10 @@ sealed class AdaptorServerHost : IAdaptorHost
             };
             LogUtility.Debug($"{context.Peer} Invoke: {request.ServiceName}.{methodDescriptor.ShortName}");
             return reply;
+        }
+        else
+        {
+            int qwer = 0;
         }
         return new InvokeReply();
     }

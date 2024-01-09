@@ -51,7 +51,7 @@ sealed class AdaptorClientImpl(Channel channel, string id, IServiceHost[] servic
         _timer = new Timer(Timer_TimerCallback, null, TimeSpan.Zero, Timeout);
     }
 
-    public async Task CloseAsync(CancellationToken cancellationToken)
+    public async Task CloseAsync(int n, CancellationToken cancellationToken)
     {
         if (_timer != null)
             await _timer.DisposeAsync();

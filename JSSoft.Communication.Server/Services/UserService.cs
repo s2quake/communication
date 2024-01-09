@@ -278,7 +278,7 @@ class UserService : IUserService, INotifyUserService
         if (userID == null)
             throw new ArgumentNullException(nameof(userID));
         if (_userByID.ContainsKey(userID) != true)
-            throw new ArgumentException("invalid userID", nameof(userID));
+            throw new ArgumentException("Invalid userID", nameof(userID));
     }
 
     private void ValidateNotUser(string userID)
@@ -294,7 +294,7 @@ class UserService : IUserService, INotifyUserService
     {
         Dispatcher.VerifyAccess();
         if (_userByToken.ContainsKey(token) != true)
-            throw new ArgumentException("invalid token.", nameof(token));
+            throw new ArgumentException("Invalid token.", nameof(token));
     }
 
     private void ValidatePassword(string password)
@@ -303,7 +303,7 @@ class UserService : IUserService, INotifyUserService
         if (password == null)
             throw new ArgumentNullException(nameof(password));
         if (password == string.Empty)
-            throw new ArgumentException("invalid password.", nameof(password));
+            throw new ArgumentException("Invalid password.", nameof(password));
         if (password.Length < 4)
             throw new ArgumentException("length of password must be greater or equal than 4.", nameof(password));
     }
@@ -354,7 +354,7 @@ class UserService : IUserService, INotifyUserService
         if (userName == null)
             throw new ArgumentNullException(nameof(userName));
         if (userName == string.Empty)
-            throw new ArgumentException("invalid name.", nameof(userName));
+            throw new ArgumentException("Invalid name.", nameof(userName));
         var user = _userByToken[token];
         if (user.UserName == userName)
             throw new ArgumentException("same name can not set.", nameof(userName));

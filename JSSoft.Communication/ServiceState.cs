@@ -34,5 +34,7 @@ public enum ServiceState
 
     Faulted,
 
+    Disconnected,
+
     Closed = None,
 }

@@ -74,6 +74,10 @@ public abstract class ServiceContextBase : IServiceContext
             {
                 Debug($"{this} {nameof(ServiceState)}.{_serviceState} => {nameof(ServiceState)}.{value}");
                 _serviceState = value;
+                if (value == ServiceState.Faulted)
+                {
+                    int qewr = 0;
+                }
             }
         }
     }
@@ -119,7 +123,6 @@ public abstract class ServiceContextBase : IServiceContext
             Debug($"{this} {SerializerProvider.Name} Serializer created.");
             _adaptorHost = AdaptorHostProvider.Create(this, _instanceContext, _token);
             Debug($"{this} {AdaptorHostProvider.Name} Adaptor created.");
-            _adaptorHost.Disconnected += AdaptorHost_Disconnected;
             foreach (var item in ServiceHosts.Values)
             {
                 await item.OpenAsync(_token, cancellationToken);
@@ -127,6 +130,7 @@ public abstract class ServiceContextBase : IServiceContext
             }
             _instanceContext.InitializeInstance();
             await _adaptorHost.OpenAsync(Host, Port, cancellationToken);
+            _adaptorHost.Disconnected += AdaptorHost_Disconnected;
             Debug($"{this} {AdaptorHostProvider.Name} Adaptor opened.");
             Debug($"{this} Service Context opened.");
             ServiceState = ServiceState.Open;
@@ -143,15 +147,16 @@ public abstract class ServiceContextBase : IServiceContext
 
     public async Task CloseAsync(Guid token, int closeCode, CancellationToken cancellationToken)
     {
-        if (ServiceState != ServiceState.Open)
+        if (ServiceState != ServiceState.Open && ServiceState != ServiceState.Disconnected)
             throw new InvalidOperationException();
         if (token == Guid.Empty || _token!.Guid != token)
-            throw new ArgumentException($"invalid token: {token}", nameof(token));
+            throw new ArgumentException($"Invalid token: {token}", nameof(token));
         if (closeCode == int.MinValue)
-            throw new ArgumentException($"invalid close code: '{closeCode}'", nameof(closeCode));
+            throw new ArgumentException($"Invalid close code: '{closeCode}'", nameof(closeCode));
         try
         {
             ServiceState = ServiceState.Closing;
+            _adaptorHost!.Disconnected -= AdaptorHost_Disconnected;
             await _adaptorHost!.CloseAsync(closeCode, cancellationToken);
             Debug($"{this} {AdaptorHostProvider!.Name} Adaptor closed.");
             _instanceContext.ReleaseInstance();
@@ -160,7 +165,6 @@ public abstract class ServiceContextBase : IServiceContext
                 await item.CloseAsync(_token, cancellationToken);
                 Debug($"{this} {item.Name} Service closed.");
             }
-            _adaptorHost.Disconnected -= AdaptorHost_Disconnected;
             await _adaptorHost.DisposeAsync();
             Debug($"{this} {AdaptorHostProvider.Name} Adaptor disposed.");
             _adaptorHost = null;
@@ -170,7 +174,7 @@ public abstract class ServiceContextBase : IServiceContext
             OnClosed(new CloseEventArgs(closeCode));
             Debug($"{this} Service Context closed.");
         }
-        catch
+        catch (Exception e)
         {
             ServiceState = ServiceState.Faulted;
             OnFaulted(EventArgs.Empty);
@@ -183,7 +187,7 @@ public abstract class ServiceContextBase : IServiceContext
         if (ServiceState != ServiceState.Faulted)
             throw new InvalidOperationException();
         if (token == Guid.Empty || _token!.Guid != token)
-            throw new ArgumentException($"invalid token: {token}", nameof(token));
+            throw new ArgumentException($"Invalid token: {token}", nameof(token));
 
         foreach (var item in ServiceHosts)
         {
@@ -314,29 +318,32 @@ public abstract class ServiceContextBase : IServiceContext
         LogUtility.Debug(message);
     }
 
-    private async void AdaptorHost_Disconnected(object? sender, CloseEventArgs e)
+    private void AdaptorHost_Disconnected(object? sender, CloseEventArgs e)
     {
-        var closeCode = e.CloseCode;
-        var cancellationToken = CancellationToken.None;
-        ServiceState = ServiceState.Closing;
-        Debug($"{this} {AdaptorHostProvider!.Name} Adaptor closed.");
-        _instanceContext.ReleaseInstance();
-        foreach (var item in ServiceHosts.Values.Reverse())
-        {
-            await item.CloseAsync(_token!, cancellationToken);
-            Debug($"{this} {item.Name} Service closed.");
-        }
-        if (_adaptorHost != null)
-        {
-            await _adaptorHost.DisposeAsync();
-            Debug($"{this} {AdaptorHostProvider.Name} Adaptor disposed.");
-        }
-        _adaptorHost = null;
-        _serializer = null;
-        _token = ServiceToken.Empty;
-        ServiceState = ServiceState.None;
-        OnClosed(new CloseEventArgs(closeCode));
-        Debug($"{this} Service Context closed: ({closeCode}).");
+        ServiceState = ServiceState.Disconnected;
+        // if (ServiceState != ServiceState.Open)
+        //     return;
+        // var closeCode = e.CloseCode;
+        // var cancellationToken = CancellationToken.None;
+        // ServiceState = ServiceState.Closing;
+        // Debug($"{this} {AdaptorHostProvider!.Name} Adaptor closed.");
+        // _instanceContext.ReleaseInstance();
+        // foreach (var item in ServiceHosts.Values.Reverse())
+        // {
+        //     await item.CloseAsync(_token!, cancellationToken);
+        //     Debug($"{this} {item.Name} Service closed.");
+        // }
+        // if (_adaptorHost != null)
+        // {
+        //     await _adaptorHost.DisposeAsync();
+        //     Debug($"{this} {AdaptorHostProvider.Name} Adaptor disposed.");
+        // }
+        // _adaptorHost = null;
+        // _serializer = null;
+        // _token = ServiceToken.Empty;
+        // ServiceState = ServiceState.None;
+        // OnClosed(new CloseEventArgs(closeCode));
+        // Debug($"{this} Service Context closed: ({closeCode}).");
     }
 
     #region IServiceHost
