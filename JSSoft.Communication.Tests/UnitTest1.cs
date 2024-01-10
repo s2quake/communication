@@ -23,8 +23,8 @@ public class UnitTest1
         var serverToken = await server.OpenAsync(CancellationToken.None);
         var clientToken = await client.OpenAsync(CancellationToken.None);
 
-        await client.CloseAsync(clientToken, 0, CancellationToken.None);
-        await server.CloseAsync(serverToken, 0, CancellationToken.None);
+        await client.CloseAsync(clientToken, CancellationToken.None);
+        await server.CloseAsync(serverToken, CancellationToken.None);
     }
 
     [Fact]
@@ -35,13 +35,19 @@ public class UnitTest1
 
         var serverToken = await server.OpenAsync(CancellationToken.None);
         var clientToken = await client.OpenAsync(CancellationToken.None);
+        var autoResetEvent = new AutoResetEvent(initialState: false);
+        client.Disconnected += (s, e) => autoResetEvent.Set();
 
-        await server.CloseAsync(serverToken, 0, CancellationToken.None);
-        await Task.Delay(1000);
-        Assert.Equal(ServiceState.Disconnected, client.ServiceState);
-        await client.CloseAsync(clientToken, 0, CancellationToken.None);
-
-        Assert.Equal(ServiceState.None, client.ServiceState);
+        await server.CloseAsync(serverToken, CancellationToken.None);
+        if (autoResetEvent.WaitOne(1000) == true)
+        {
+            await client.CloseAsync(clientToken, CancellationToken.None);
+            Assert.Equal(ServiceState.None, client.ServiceState);
+        }
+        else
+        {
+            Assert.Fail("Client has not been disconnected.");
+        }
     }
 
     [Fact]
@@ -54,10 +60,10 @@ public class UnitTest1
         var openTasks = clients.Select(item => item.OpenAsync(CancellationToken.None)).ToArray();
         await Task.WhenAll(openTasks);
         var closeTasks = new Task[count];
-        var serverCloseTask = server.CloseAsync(serverToken, 0, CancellationToken.None);
+        var serverCloseTask = server.CloseAsync(serverToken, CancellationToken.None);
         for (var i = 0; i < count; i++)
         {
-            closeTasks[i] = clients[i].CloseAsync(openTasks[i].Result, 0, CancellationToken.None);
+            closeTasks[i] = clients[i].CloseAsync(openTasks[i].Result, CancellationToken.None);
         }
         await Task.WhenAll(closeTasks);
         await serverCloseTask;

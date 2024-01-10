@@ -40,6 +40,6 @@ sealed class CloseCommand(IServiceContext serviceHost, Application application) 
 
     protected override Task OnExecuteAsync(CancellationToken cancellationToken, IProgress<ProgressInfo> progress)
     {
-        return _serviceHost.CloseAsync(_application.Token, 0, cancellationToken);
+        return _serviceHost.CloseAsync(_application.Token, cancellationToken);
     }
 }

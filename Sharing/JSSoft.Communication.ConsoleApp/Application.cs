@@ -34,14 +34,10 @@ using JSSoft.Terminals;
 
 namespace JSSoft.Communication.ConsoleApp;
 
-// [Export(typeof(IApplication))]
-// [Export(typeof(IServiceProvider))]
-// [Export(typeof(Application))]
 sealed class Application : IApplication, IServiceProvider
 {
     private static readonly string postfix = TerminalEnvironment.IsWindows() == true ? ">" : "$ ";
     private readonly Settings _settings;
-    // private readonly CommandContext commandContext;
     private readonly IServiceContext _serviceHost;
     private readonly INotifyUserService _userServiceNotification;
     private readonly CompositionContainer _container;
@@ -60,8 +56,6 @@ sealed class Application : IApplication, IServiceProvider
     private readonly bool _isServer = false;
 #endif
 
-    // private readonly Lazy<Terminal> _terminalLazy;
-
     public Application()
     {
         _container = new CompositionContainer(new AssemblyCatalog(typeof(Application).Assembly));
@@ -69,9 +63,7 @@ sealed class Application : IApplication, IServiceProvider
         _container.ComposeExportedValue<IServiceProvider>(this);
         _container.ComposeExportedValue(this);
 
-        // _terminalLazy = terminalLazy;
         _settings = Settings.CreateFromCommandLine();
-        // Prompt = postfix;
         _serviceHost = _container.GetExportedValue<IServiceContext>();
         _serviceHost.Opened += ServiceHost_Opened;
         _serviceHost.Closed += ServiceHost_Closed;
@@ -79,14 +71,8 @@ sealed class Application : IApplication, IServiceProvider
         _userServiceNotification.LoggedIn += UserServiceNotification_LoggedIn;
         _userServiceNotification.LoggedOut += UserServiceNotification_LoggedOut;
         _userServiceNotification.MessageReceived += UserServiceNotification_MessageReceived;
-        // commandContext = commandContext;
         Title = "Server";
     }
-
-    // public static IApplication Create()
-    // {
-    //     return Container.GetService<IApplication>();
-    // }
 
     public void Dispose()
     {
@@ -239,7 +225,6 @@ sealed class Application : IApplication, IServiceProvider
             var contractName = AttributedModelServices.GetContractName(serviceType);
             return _container.GetExportedValue<object>(contractName);
         }
-        // return Container.GetService(serviceType);
     }
 
     #endregion
@@ -275,7 +260,7 @@ sealed class Application : IApplication, IServiceProvider
         if (_serviceHost.ServiceState == ServiceState.Open)
         {
             _serviceHost.Closed -= ServiceHost_Closed;
-            await _serviceHost.CloseAsync(Token, exitCode, CancellationToken.None);
+            await _serviceHost.CloseAsync(Token, CancellationToken.None);
         }
     }
 

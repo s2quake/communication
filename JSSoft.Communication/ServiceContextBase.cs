@@ -34,6 +34,7 @@ public abstract class ServiceContextBase : IServiceContext
 {
     public const string DefaultHost = "localhost";
     public const int DefaultPort = 4004;
+    private static readonly object obj = new();
     private readonly ServiceInstanceBuilder? _instanceBuilder;
     private readonly InstanceContext _instanceContext;
     private readonly bool _isServer;
@@ -73,7 +74,8 @@ public abstract class ServiceContextBase : IServiceContext
             {
                 var _ = _serviceState;
                 _serviceState = value;
-                Debug($"{this} {nameof(ServiceState)}.{_} => {nameof(ServiceState)}.{value}");
+                Debug($"{nameof(ServiceState)}.{_} => {nameof(ServiceState)}.{value}");
+                OnServiceStateChanged(EventArgs.Empty);
             }
         }
     }
@@ -116,19 +118,19 @@ public abstract class ServiceContextBase : IServiceContext
             ServiceState = ServiceState.Opening;
             _token = ServiceToken.NewToken();
             _serializer = SerializerProvider.Create(this);
-            Debug($"{this} {SerializerProvider.Name} Serializer created.");
+            Debug($"{SerializerProvider.Name} Serializer created.");
             _adaptorHost = AdaptorHostProvider.Create(this, _instanceContext, _token);
-            Debug($"{this} {AdaptorHostProvider.Name} Adaptor created.");
+            Debug($"{AdaptorHostProvider.Name} Adaptor created.");
             foreach (var item in ServiceHosts.Values)
             {
                 await item.OpenAsync(_token, cancellationToken);
-                Debug($"{this} {item.Name} Service opened.");
+                Debug($"{item.Name} Service opened.");
             }
             _instanceContext.InitializeInstance();
             await _adaptorHost.OpenAsync(Host, Port, cancellationToken);
             _adaptorHost.Disconnected += AdaptorHost_Disconnected;
-            Debug($"{this} {AdaptorHostProvider.Name} Adaptor opened.");
-            Debug($"{this} Service Context opened.");
+            Debug($"{AdaptorHostProvider.Name} Adaptor opened.");
+            Debug($"Service Context opened.");
             ServiceState = ServiceState.Open;
             OnOpened(EventArgs.Empty);
             return _token.Guid;
@@ -141,34 +143,33 @@ public abstract class ServiceContextBase : IServiceContext
         }
     }
 
-    public async Task CloseAsync(Guid token, int closeCode, CancellationToken cancellationToken)
+    public async Task CloseAsync(Guid token, CancellationToken cancellationToken)
     {
         if (ServiceState != ServiceState.Open && ServiceState != ServiceState.Disconnected)
             throw new InvalidOperationException();
         if (token == Guid.Empty || _token!.Guid != token)
             throw new ArgumentException($"Invalid token: {token}", nameof(token));
-        if (closeCode == int.MinValue)
-            throw new ArgumentException($"Invalid close code: '{closeCode}'", nameof(closeCode));
+
         try
         {
             ServiceState = ServiceState.Closing;
             _adaptorHost!.Disconnected -= AdaptorHost_Disconnected;
-            await _adaptorHost!.CloseAsync(closeCode, cancellationToken);
-            Debug($"{this} {AdaptorHostProvider!.Name} Adaptor closed.");
+            await _adaptorHost!.CloseAsync(cancellationToken);
+            Debug($"{AdaptorHostProvider!.Name} Adaptor closed.");
             _instanceContext.ReleaseInstance();
             foreach (var item in ServiceHosts.Values.Reverse())
             {
                 await item.CloseAsync(_token, cancellationToken);
-                Debug($"{this} {item.Name} Service closed.");
+                Debug($"{item.Name} Service closed.");
             }
             await _adaptorHost.DisposeAsync();
-            Debug($"{this} {AdaptorHostProvider.Name} Adaptor disposed.");
+            Debug($"{AdaptorHostProvider.Name} Adaptor disposed.");
             _adaptorHost = null;
             _serializer = null;
             _token = ServiceToken.Empty;
             ServiceState = ServiceState.None;
-            OnClosed(new CloseEventArgs(closeCode));
-            Debug($"{this} Service Context closed.");
+            OnClosed(EventArgs.Empty);
+            Debug($"Service Context closed.");
         }
         catch (Exception e)
         {
@@ -201,7 +202,7 @@ public abstract class ServiceContextBase : IServiceContext
             _adaptorHost = null;
         }
         ServiceState = ServiceState.None;
-        OnAborted(EventArgs.Empty);
+        OnClosed(EventArgs.Empty);
     }
 
     public virtual object? GetService(Type serviceType)
@@ -215,11 +216,13 @@ public abstract class ServiceContextBase : IServiceContext
 
     public event EventHandler? Opened;
 
-    public event EventHandler<CloseEventArgs>? Closed;
+    public event EventHandler? Closed;
 
     public event EventHandler? Faulted;
 
-    public event EventHandler? Aborted;
+    public event EventHandler? Disconnected;
+
+    public event EventHandler? ServiceStateChanged;
 
     protected virtual InstanceBase CreateInstance(Type type)
     {
@@ -237,7 +240,7 @@ public abstract class ServiceContextBase : IServiceContext
         Opened?.Invoke(this, e);
     }
 
-    protected virtual void OnClosed(CloseEventArgs e)
+    protected virtual void OnClosed(EventArgs e)
     {
         Closed?.Invoke(this, e);
     }
@@ -247,9 +250,14 @@ public abstract class ServiceContextBase : IServiceContext
         Faulted?.Invoke(this, e);
     }
 
-    protected virtual void OnAborted(EventArgs e)
+    protected virtual void OnDisconnected(EventArgs e)
     {
-        Aborted?.Invoke(this, e);
+        Disconnected?.Invoke(this, e);
+    }
+
+    protected virtual void OnServiceStateChanged(EventArgs e)
+    {
+        ServiceStateChanged?.Invoke(this, e);
     }
 
     internal static bool IsServer(ServiceContextBase serviceContext)
@@ -314,14 +322,15 @@ public abstract class ServiceContextBase : IServiceContext
         }
     }
 
-    private static void Debug(string message)
+    private void Debug(string message)
     {
-        LogUtility.Debug(message);
+        LogUtility.Debug($"{this} {message}");
     }
 
-    private void AdaptorHost_Disconnected(object? sender, CloseEventArgs e)
+    private void AdaptorHost_Disconnected(object? sender, EventArgs e)
     {
         ServiceState = ServiceState.Disconnected;
+        OnDisconnected(EventArgs.Empty);
     }
 
     #region IServiceHost

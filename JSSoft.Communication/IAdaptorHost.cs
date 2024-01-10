@@ -30,7 +30,7 @@ public interface IAdaptorHost : IAsyncDisposable
 {
     Task OpenAsync(string host, int port, CancellationToken cancellationToken);
 
-    Task CloseAsync(int closeCode, CancellationToken cancellationToken);
+    Task CloseAsync(CancellationToken cancellationToken);
 
     void Invoke(InstanceBase instance, string name, Type[] types, object?[] args);
 
@@ -40,5 +40,5 @@ public interface IAdaptorHost : IAsyncDisposable
 
     Task<T> InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args);
 
-    event EventHandler<CloseEventArgs>? Disconnected;
+    event EventHandler? Disconnected;
 }

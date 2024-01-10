@@ -81,7 +81,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         }
     }
 
-    public async Task CloseAsync(int closeCode, CancellationToken cancellationToken)
+    public async Task CloseAsync(CancellationToken cancellationToken)
     {
         _cancellationTokenSource?.Cancel();
         if (_task != null)
@@ -114,7 +114,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         return ValueTask.CompletedTask;
     }
 
-    public event EventHandler<CloseEventArgs>? Disconnected;
+    public event EventHandler? Disconnected;
 
     private async void Timer_TimerCallback(object? state)
     {
@@ -170,9 +170,23 @@ sealed class AdaptorClientHost : IAdaptorHost
         if (closeCode != int.MinValue)
         {
             _task = null;
-            _instanceContext.DestroyInstance(_adaptorImpl);
-            _adaptorImpl = null;
-            Disconnected?.Invoke(this, new(closeCode));
+            if (_timer != null)
+            {
+                await _timer.DisposeAsync();
+                _timer = null;
+            }
+            if (_adaptorImpl != null)
+            {
+                _instanceContext.DestroyInstance(_adaptorImpl);
+                await _adaptorImpl.CloseAsync(_token, CancellationToken.None);
+                _adaptorImpl = null;
+            }
+            if (_channel != null)
+            {
+                await _channel.ShutdownAsync();
+                _channel = null;
+            }
+            Disconnected?.Invoke(this, EventArgs.Empty);
         }
     }
 

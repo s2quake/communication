@@ -41,15 +41,17 @@ public interface IServiceContext : IServiceProvider
 
     Task<Guid> OpenAsync(CancellationToken cancellationToken);
 
-    Task CloseAsync(Guid token, int closeCode, CancellationToken cancellationToken);
+    Task CloseAsync(Guid token, CancellationToken cancellationToken);
 
     Task AbortAsync(Guid token);
 
-    event EventHandler Opened;
+    event EventHandler? Opened;
 
-    event EventHandler<CloseEventArgs> Closed;
+    event EventHandler? Closed;
 
     event EventHandler? Faulted;
 
-    event EventHandler? Aborted;
+    event EventHandler? Disconnected;
+
+    event EventHandler? ServiceStateChanged;
 }

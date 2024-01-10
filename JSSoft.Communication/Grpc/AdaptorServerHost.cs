@@ -46,7 +46,7 @@ sealed class AdaptorServerHost : IAdaptorHost
     private AdaptorServerImpl? _adaptor;
     private ISerializer? _serializer;
     private readonly Timer _timer;
-    private EventHandler<CloseEventArgs>? _disconnectedEventHandler;
+    private EventHandler? _disconnectedEventHandler;
 
     static AdaptorServerHost()
     {
@@ -228,9 +228,9 @@ sealed class AdaptorServerHost : IAdaptorHost
         await Task.Run(_server.Start, cancellationToken);
     }
 
-    async Task IAdaptorHost.CloseAsync(int closeCode, CancellationToken cancellationToken)
+    async Task IAdaptorHost.CloseAsync(CancellationToken cancellationToken)
     {
-        _closeCode = closeCode;
+        _closeCode = 0;
         _cancellationTokenSource?.Cancel();
         while (Peers.Any() == true)
         {
@@ -264,7 +264,7 @@ sealed class AdaptorServerHost : IAdaptorHost
         throw new NotImplementedException();
     }
 
-    event EventHandler<CloseEventArgs>? IAdaptorHost.Disconnected
+    event EventHandler? IAdaptorHost.Disconnected
     {
         add => _disconnectedEventHandler += value;
         remove => _disconnectedEventHandler -= value;
