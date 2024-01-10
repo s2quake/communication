@@ -58,13 +58,13 @@ public class ClientServiceHost<TService, TCallback>
     {
     }
 
-    private protected override object CreateInstance(IPeer peer, object obj)
+    protected override sealed object CreateInstance(IPeer peer, object obj)
     {
         _service = (TService?)obj;
         return CreateCallback(peer, (TService)obj);
     }
 
-    private protected override void DestroyInstance(IPeer peer, object obj)
+    protected override sealed void DestroyInstance(IPeer peer, object obj)
     {
         DestroyCallback(peer, (TCallback)obj);
         _service = null;
@@ -93,14 +93,14 @@ public class ClientServiceHost<TService>
     {
     }
 
-    private protected override object CreateInstance(IPeer peer, object obj)
+    protected override sealed object CreateInstance(IPeer peer, object obj)
     {
         _service = (TService)obj;
         OnServiceCreated(peer, (TService)obj);
         return new object();
     }
 
-    private protected override void DestroyInstance(IPeer peer, object obj)
+    protected override sealed void DestroyInstance(IPeer peer, object obj)
     {
         OnServiceDestroyed(peer);
         _service = null;

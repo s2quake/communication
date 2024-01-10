@@ -4,14 +4,29 @@ public class UnitTest1
 {
     public interface ITestService
     {
+        [OperationContract]
+        Task SendMessage(string message, CancellationToken cancellationToken);
     }
 
-    sealed class ServerServiceHost : ServerServiceHost<ITestService>, ITestService
+    public interface ITestCallback
     {
+        [OperationContract]
+        void OnMessageSend(string message);
     }
 
-    sealed class ClientServiceHost : ClientServiceHost<ITestService>
+    sealed class ServerServiceHost : ServerServiceHost<ITestService, ITestCallback>, ITestService
     {
+        public Task SendMessage(string message, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    sealed class ClientServiceHost : ClientServiceHost<ITestService, ITestCallback>, ITestCallback
+    {
+        public void OnMessageSend(string message)
+        {
+        }
     }
 
     [Fact]

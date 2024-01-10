@@ -58,13 +58,13 @@ public class ServerServiceHost<TService, TCallback>
     {
     }
 
-    private protected override object CreateInstance(IPeer peer, object obj)
+    protected override sealed object CreateInstance(IPeer peer, object obj)
     {
         _callback = (TCallback)obj;
         return CreateService(peer);
     }
 
-    private protected override void DestroyInstance(IPeer peer, object obj)
+    protected override sealed void DestroyInstance(IPeer peer, object obj)
     {
         DestroyService(peer, (TService)obj);
         _callback = null;
@@ -100,12 +100,12 @@ public class ServerServiceHost<TService> : ServiceHostBase
     {
     }
 
-    private protected override object CreateInstance(IPeer peer, object obj)
+    protected override sealed object CreateInstance(IPeer peer, object obj)
     {
         return CreateService(peer);
     }
 
-    private protected override void DestroyInstance(IPeer peer, object obj)
+    protected override sealed void DestroyInstance(IPeer peer, object obj)
     {
         DestroyService(peer, (TService)obj);
     }

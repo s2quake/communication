@@ -45,6 +45,10 @@ public abstract class ServiceHostBase(Type serviceType, Type callbackType) : ISe
 
     protected virtual Task OnAbortAsync() => Task.CompletedTask;
 
+    protected abstract object CreateInstance(IPeer peer, object obj);
+
+    protected abstract void DestroyInstance(IPeer peer, object obj);
+
     private static Type ValidateServiceType(Type ServiceType)
     {
         if (ServiceType.IsInterface != true)
@@ -81,10 +85,6 @@ public abstract class ServiceHostBase(Type serviceType, Type callbackType) : ISe
     {
         return t.IsVisible != true && t.IsPublic != true && t.IsNotPublic == true;
     }
-
-    private protected abstract object CreateInstance(IPeer peer, object obj);
-
-    private protected abstract void DestroyInstance(IPeer peer, object obj);
 
     internal static bool IsServer(IServiceHost serviceHost)
     {
