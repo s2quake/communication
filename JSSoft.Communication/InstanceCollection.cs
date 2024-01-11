@@ -24,6 +24,6 @@ using System.Collections.Generic;
 
 namespace JSSoft.Communication;
 
-sealed class InstanceCollection : Dictionary<IServiceHost, object>
+sealed class InstanceCollection : Dictionary<IService, object>
 {
 }

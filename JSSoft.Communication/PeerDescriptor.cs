@@ -30,16 +30,16 @@ public sealed class PeerDescriptor : IDisposable
 {
     private bool _isDisposed;
 
-    public Dictionary<IServiceHost, object> Services { get; } = [];
+    public Dictionary<IService, object> ServerInstances { get; } = [];
 
-    public Dictionary<IServiceHost, object> Callbacks { get; } = [];
+    public Dictionary<IService, object> ClientInstances { get; } = [];
 
     public void Dispose()
     {
         if (_isDisposed == true)
             throw new ObjectDisposedException($"{this}");
 
-        var items = Callbacks.Values.OfType<IDisposable>().ToArray();
+        var items = ClientInstances.Values.OfType<IDisposable>().ToArray();
         foreach (var item in items)
         {
             item.Dispose();
@@ -47,23 +47,23 @@ public sealed class PeerDescriptor : IDisposable
         _isDisposed = true;
     }
 
-    public void AddInstance(IServiceHost serviceHost, object service, object callback)
+    public void AddInstance(IService service, object serverInstance, object clientInstance)
     {
         if (_isDisposed == true)
             throw new ObjectDisposedException($"{this}");
 
-        Services.Add(serviceHost, service);
-        Callbacks.Add(serviceHost, callback);
+        ServerInstances.Add(service, serverInstance);
+        ClientInstances.Add(service, clientInstance);
     }
 
-    public (object service, object callback) RemoveInstance(IServiceHost serviceHost)
+    public (object serverInstance, object clientInstance) RemoveInstance(IService service)
     {
         if (_isDisposed == true)
             throw new ObjectDisposedException($"{this}");
 
-        var value = (Services[serviceHost], Callbacks[serviceHost]);
-        Services.Remove(serviceHost);
-        Callbacks.Remove(serviceHost);
+        var value = (ServerInstances[service], ClientInstances[service]);
+        ServerInstances.Remove(service);
+        ClientInstances.Remove(service);
         return value;
     }
 }

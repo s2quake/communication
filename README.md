@@ -212,13 +212,13 @@ namespace Server_Test
 
 서버에는 다수의 서비스를 사용할 수 있기 때문에 이를 관리하기 위하여
 
-`IServiceHost` 라는 인터페이스를 구현해야 합니다.
+`IService` 라는 인터페이스를 구현해야 합니다.
 
-`IServiceHost` 은(는) 서비스의 주인 역할을 하며 서버에서 잘 사용할 수 있게 여러 제반 사항을 만들어줍니다.
+`IService` 은(는) 서비스의 주인 역할을 하며 서버에서 잘 사용할 수 있게 여러 제반 사항을 만들어줍니다.
 
-IServiceHost 은(는) 직접 구현하기 힘들기 때문에 구현된 기본 클래스인 `ServerServiceHostBase` 을(를) 상속받아 정의합니다.
+IService 은(는) 직접 구현하기 힘들기 때문에 구현된 기본 클래스인 `ServerServiceHostBase` 을(를) 상속받아 정의합니다.
 
-> Server-Test 경로내에 `MyServiceHost.cs` 파일을 만들고 다음과 같이 작성합니다.
+> Server-Test 경로내에 `MyService.cs` 파일을 만들고 다음과 같이 작성합니다.
 
 ```csharp
 using System;
@@ -227,17 +227,8 @@ using Services;
 
 namespace Server_Test
 {
-    class MyServiceHost : ServerServiceHostBase<IMyService>
+    class MyService : ServerService<IMyService>, IMyService
     {
-        protected override IMyService CreateService()
-        {
-            return new MyService();
-        }
-
-        protected override void DestroyService(IMyService service)
-        {
-
-        }
     }
 }
 ```
@@ -256,7 +247,7 @@ namespace Server_Test
     class ServerContext : ServerContextBase
     {
         public ServerContext()
-            : base(new MyServiceHost())
+            : base(new MyService())
         {
 
         }
@@ -277,15 +268,14 @@ namespace Server_Test
     {
         static async Task Main(string[] args)
         {
-            var serviceContext = new ServerContext();
-
-            var token = await serviceContext.OpenAsync();
+            var serverContext = new ServerContext();
+            var token = await serverContext.OpenAsync();
 
             Console.WriteLine("서버가 시작되었습니다.");
             Console.WriteLine("종료하려면 아무 키나 누르세요.");
             Console.ReadKey();
 
-            await serviceContext.CloseAsync(token);
+            await serverContext.CloseAsync(token);
         }
     }
 }
@@ -304,7 +294,7 @@ dotnet add Client-Test reference JSSoft.Communication/JSSoft.Communication
 
 ## 8. 클라이언트 구현하기
 
-> Client-Test 경로내에 MyServiceHost.cs 파일을 만들고 내용을 다음과 같이 작성합니다.
+> Client-Test 경로내에 MyService.cs 파일을 만들고 내용을 다음과 같이 작성합니다.
 
 ```csharp
 using System;
@@ -313,7 +303,7 @@ using Services;
 
 namespace Client_Test
 {
-    class MyServiceHost : ClientServiceHostBase<IMyService>
+    class MyService : ClientServiceHostBase<IMyService>
     {
         public IMyService Service { get; private set; }
 
@@ -334,8 +324,8 @@ namespace Client_Test
 {
     class ClientContext : ClientContextBase
     {
-        public ClientContext(params IServiceHost[] serviceHosts)
-            : base(serviceHosts)
+        public ClientContext(params IService[] services)
+            : base(services)
         {
 
         }
@@ -355,11 +345,11 @@ namespace Client_Test
     {
         static async Task Main(string[] args)
         {
-            var serviceHost = new MyServiceHost();
-            var serviceContext = new ClientContext(serviceHost);
+            var service = new MyService();
+            var serviceContext = new ClientContext(service);
 
             var token = await serviceContext.OpenAsync();
-            var service = serviceHost.Service;
+            var service = service.Service;
 
             var id = service.Login("admin");
             var (product, version) = await service.GetVersionAsync();

@@ -28,13 +28,14 @@ namespace JSSoft.Communication.Grpc;
 sealed class Peer : IPeer, IDisposable
 {
     private bool _isDisposed;
+    private IService[] _services;
 
-    public Peer(string id, IServiceHost[] serviceHosts)
+    public Peer(string id, IService[] services)
     {
         Id = id;
-        ServiceHosts = serviceHosts;
+        _services = services;
         Ping(DateTime.UtcNow);
-        foreach (var item in serviceHosts)
+        foreach (var item in services)
         {
             PollReplyItems.Add(item, []);
         }
@@ -42,17 +43,15 @@ sealed class Peer : IPeer, IDisposable
 
     public string Id { get; }
 
-    public IServiceHost[] ServiceHosts { get; }
-
     public Guid Token { get; set; } = Guid.NewGuid();
 
     public DateTime PingTime { get; set; }
 
     public PeerDescriptor? Descriptor { get; set; }
 
-    public Dictionary<IServiceHost, object> Services => Descriptor?.Services ?? [];
+    public Dictionary<IService, object> Services => Descriptor?.ServerInstances ?? [];
 
-    public Dictionary<IServiceHost, PollReplyItemCollection> PollReplyItems { get; } = [];
+    public Dictionary<IService, PollReplyItemCollection> PollReplyItems { get; } = [];
 
     public void Dispose()
     {
@@ -61,7 +60,7 @@ sealed class Peer : IPeer, IDisposable
 
         lock (this)
         {
-            foreach (var item in ServiceHosts)
+            foreach (var item in _services)
             {
                 PollReplyItems.Remove(item);
             }
@@ -82,7 +81,7 @@ sealed class Peer : IPeer, IDisposable
         {
             if (_isDisposed != true)
             {
-                var services = ServiceHosts;
+                var services = _services;
                 foreach (var item in services)
                 {
                     var callbacks = PollReplyItems[item];

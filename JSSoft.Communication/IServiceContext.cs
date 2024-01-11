@@ -29,7 +29,7 @@ namespace JSSoft.Communication;
 
 public interface IServiceContext : IServiceProvider
 {
-    IReadOnlyDictionary<string, IServiceHost> ServiceHosts { get; }
+    IReadOnlyDictionary<string, IService> Services { get; }
 
     string Host { get; set; }
 

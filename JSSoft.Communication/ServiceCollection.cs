@@ -20,28 +20,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace JSSoft.Communication.Services;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
-public interface IUserServiceCallback
+namespace JSSoft.Communication;
+
+public class ServiceCollection(IEnumerable<IService> services) : IReadOnlyDictionary<string, IService>
 {
-    [OperationContract]
-    void OnCreated(string userID);
+    private readonly Dictionary<string, IService> _serviceByName = services.ToDictionary(item => item.Name);
 
-    [OperationContract]
-    void OnDeleted(string userID);
+    public IService this[string key] => _serviceByName[key];
 
-    [OperationContract]
-    void OnLoggedIn(string userID);
+    public IEnumerable<string> Keys => _serviceByName.Keys;
 
-    [OperationContract]
-    void OnLoggedOut(string userID);
+    public IEnumerable<IService> Values => _serviceByName.Values;
 
-    [OperationContract]
-    void OnMessageReceived(string sender, string receiver, string message);
+    public int Count => _serviceByName.Count;
 
-    [OperationContract]
-    void OnRenamed(string userID, string userName);
+    public bool ContainsKey(string key) => _serviceByName.ContainsKey(key);
 
-    [OperationContract]
-    void OnAuthorityChanged(string userID, Authority authority);
+    public bool TryGetValue(string key, [MaybeNullWhen(false)] out IService value)
+    {
+        return _serviceByName.TryGetValue(key, out value);
+    }
+
+    #region IEnumerable
+
+    IEnumerator<KeyValuePair<string, IService>> IEnumerable<KeyValuePair<string, IService>>.GetEnumerator()
+        => _serviceByName.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator()
+        => _serviceByName.GetEnumerator();
+
+    #endregion
 }

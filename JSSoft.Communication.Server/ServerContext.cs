@@ -26,6 +26,7 @@ namespace JSSoft.Communication.ConsoleApp;
 
 [Export(typeof(IServiceContext))]
 [method: ImportingConstructor]
-class ServerContext([ImportMany] IServiceHost[] serviceHosts) : Communication.ServerContext(serviceHosts)
+sealed class ServerContext([ImportMany] IService[] services)
+    : Communication.ServerContext(services)
 {
 }

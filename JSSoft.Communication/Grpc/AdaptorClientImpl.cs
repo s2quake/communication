@@ -28,16 +28,16 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Grpc;
 
-sealed class AdaptorClientImpl(Channel channel, string id, IServiceHost[] serviceHosts)
+sealed class AdaptorClientImpl(Channel channel, string id, IService[] services)
     : Adaptor.AdaptorClient(channel), IPeer
 {
     public string Id { get; } = id;
 
-    public IServiceHost[] ServiceHosts { get; } = serviceHosts;
+    public IService[] Services { get; } = services;
 
     public async Task<string> OpenAsync(CancellationToken cancellationToken)
     {
-        var serviceNames = ServiceHosts.Select(item => item.Name).ToArray();
+        var serviceNames = Services.Select(item => item.Name).ToArray();
         var request = new OpenRequest
         {
             Time = DateTime.UtcNow.Ticks,

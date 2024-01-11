@@ -27,10 +27,10 @@ namespace JSSoft.Communication;
 
 public sealed class MethodDescriptorCollection : Dictionary<string, MethodDescriptor>
 {
-    public MethodDescriptorCollection(IServiceHost serviceHost)
+    public MethodDescriptorCollection(IService service)
     {
-        var isServer = ServiceHostBase.IsServer(serviceHost);
-        var instanceType = isServer ? serviceHost.ServiceType : serviceHost.CallbackType;
+        var isServer = ServiceBase.IsServer(service);
+        var instanceType = isServer ? service.ServerType : service.ClientType;
         var methods = instanceType.GetMethods();
         foreach (var item in methods)
         {

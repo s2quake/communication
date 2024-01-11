@@ -2,19 +2,19 @@ namespace JSSoft.Communication.Tests;
 
 public class UnitTest1
 {
-    public interface ITestService
+    public interface ITestServer
     {
         [OperationContract]
         Task SendMessage(string message, CancellationToken cancellationToken);
     }
 
-    public interface ITestCallback
+    public interface ITestClient
     {
         [OperationContract]
         void OnMessageSend(string message);
     }
 
-    sealed class ServerServiceHost : ServerServiceHost<ITestService, ITestCallback>, ITestService
+    sealed class TestServer : ServerService<ITestServer, ITestClient>, ITestServer
     {
         public Task SendMessage(string message, CancellationToken cancellationToken)
         {
@@ -22,7 +22,7 @@ public class UnitTest1
         }
     }
 
-    sealed class ClientServiceHost : ClientServiceHost<ITestService, ITestCallback>, ITestCallback
+    sealed class TestClient : ClientService<ITestServer, ITestClient>, ITestClient
     {
         public void OnMessageSend(string message)
         {
@@ -32,32 +32,32 @@ public class UnitTest1
     [Fact]
     public async Task OpenAndClientCloseAsync()
     {
-        var server = new ServerContext(new ServerServiceHost());
-        var client = new ClientContext(new ClientServiceHost());
+        var serverContext = new ServerContext(new TestServer());
+        var clientContext = new ClientContext(new TestClient());
 
-        var serverToken = await server.OpenAsync(CancellationToken.None);
-        var clientToken = await client.OpenAsync(CancellationToken.None);
+        var serverToken = await serverContext.OpenAsync(CancellationToken.None);
+        var clientToken = await clientContext.OpenAsync(CancellationToken.None);
 
-        await client.CloseAsync(clientToken, CancellationToken.None);
-        await server.CloseAsync(serverToken, CancellationToken.None);
+        await clientContext.CloseAsync(clientToken, CancellationToken.None);
+        await serverContext.CloseAsync(serverToken, CancellationToken.None);
     }
 
     [Fact]
     public async Task OpenAndServerCloseAsync()
     {
-        var server = new ServerContext(new ServerServiceHost());
-        var client = new ClientContext(new ClientServiceHost());
+        var serverContext = new ServerContext(new TestServer());
+        var clientContext = new ClientContext(new TestClient());
 
-        var serverToken = await server.OpenAsync(CancellationToken.None);
-        var clientToken = await client.OpenAsync(CancellationToken.None);
+        var serverToken = await serverContext.OpenAsync(CancellationToken.None);
+        var clientToken = await clientContext.OpenAsync(CancellationToken.None);
         var autoResetEvent = new AutoResetEvent(initialState: false);
-        client.Disconnected += (s, e) => autoResetEvent.Set();
+        clientContext.Disconnected += (s, e) => autoResetEvent.Set();
 
-        await server.CloseAsync(serverToken, CancellationToken.None);
+        await serverContext.CloseAsync(serverToken, CancellationToken.None);
         if (autoResetEvent.WaitOne(1000) == true)
         {
-            await client.CloseAsync(clientToken, CancellationToken.None);
-            Assert.Equal(ServiceState.None, client.ServiceState);
+            await clientContext.CloseAsync(clientToken, CancellationToken.None);
+            Assert.Equal(ServiceState.None, clientContext.ServiceState);
         }
         else
         {
@@ -69,23 +69,23 @@ public class UnitTest1
     public async Task MultipleOpenAndClientCloseAsync()
     {
         var count = 20;
-        var server = new ServerContext(new ServerServiceHost());
-        var clients = Enumerable.Range(0, count).Select(item => new ClientContext(new ClientServiceHost())).ToArray();
-        var serverToken = await server.OpenAsync(CancellationToken.None);
-        var openTasks = clients.Select(item => item.OpenAsync(CancellationToken.None)).ToArray();
+        var serverContext = new ServerContext(new TestServer());
+        var clientContexts = Enumerable.Range(0, count).Select(item => new ClientContext(new TestClient())).ToArray();
+        var serverToken = await serverContext.OpenAsync(CancellationToken.None);
+        var openTasks = clientContexts.Select(item => item.OpenAsync(CancellationToken.None)).ToArray();
         await Task.WhenAll(openTasks);
         var closeTasks = new Task[count];
-        var serverCloseTask = server.CloseAsync(serverToken, CancellationToken.None);
+        var serverCloseTask = serverContext.CloseAsync(serverToken, CancellationToken.None);
         for (var i = 0; i < count; i++)
         {
-            closeTasks[i] = clients[i].CloseAsync(openTasks[i].Result, CancellationToken.None);
+            closeTasks[i] = clientContexts[i].CloseAsync(openTasks[i].Result, CancellationToken.None);
         }
         await Task.WhenAll(closeTasks);
         await serverCloseTask;
-        Assert.Equal(ServiceState.None, server.ServiceState);
+        Assert.Equal(ServiceState.None, serverContext.ServiceState);
         for (var i = 0; i < count; i++)
         {
-            Assert.Equal(ServiceState.None, clients[i].ServiceState);
+            Assert.Equal(ServiceState.None, clientContexts[i].ServiceState);
         }
     }
 }

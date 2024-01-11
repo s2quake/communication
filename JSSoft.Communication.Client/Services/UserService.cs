@@ -26,96 +26,58 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Services;
 
-[Export(typeof(IUserService))]
+[Export(typeof(IService))]
 [Export(typeof(INotifyUserService))]
-[Export(typeof(UserService))]
-class UserService : IUserService, IUserServiceCallback, INotifyUserService
+class UserService : ClientService<IUserService, IUserCallback>, IUserCallback, INotifyUserService
 {
-    private IUserService? _userService;
-
     public Task CreateAsync(Guid token, string userID, string password, Authority authority)
     {
-        if (_userService == null)
-            throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
-
-        return _userService.CreateAsync(token, userID, password, authority);
+        return Server.CreateAsync(token, userID, password, authority);
     }
 
     public Task DeleteAsync(Guid token, string userID)
     {
-        if (_userService == null)
-            throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
-
-        return _userService.DeleteAsync(token, userID);
+        return Server.DeleteAsync(token, userID);
     }
 
     public Task<(string userName, Authority authority)> GetInfoAsync(Guid token, string userID)
     {
-        if (_userService == null)
-            throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
-
-        return _userService.GetInfoAsync(token, userID);
+        return Server.GetInfoAsync(token, userID);
     }
 
     public Task<string[]> GetUsersAsync(Guid token)
     {
-        if (_userService == null)
-            throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
-
-        return _userService.GetUsersAsync(token);
+        return Server.GetUsersAsync(token);
     }
 
     public Task<bool> IsOnlineAsync(Guid token, string userID)
     {
-        if (_userService == null)
-            throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
-
-        return _userService.IsOnlineAsync(token, userID);
+        return Server.IsOnlineAsync(token, userID);
     }
 
     public Task<Guid> LoginAsync(string userID, string password)
     {
-        if (_userService == null)
-            throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
-
-        return _userService.LoginAsync(userID, password);
+        return Server.LoginAsync(userID, password);
     }
 
     public Task LogoutAsync(Guid token)
     {
-        if (_userService == null)
-            throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
-
-        return _userService.LogoutAsync(token);
+        return Server.LogoutAsync(token);
     }
 
     public Task RenameAsync(Guid token, string userName)
     {
-        if (_userService == null)
-            throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
-
-        return _userService.RenameAsync(token, userName);
+        return Server.RenameAsync(token, userName);
     }
 
     public Task SendMessageAsync(Guid token, string userID, string message)
     {
-        if (_userService == null)
-            throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
-
-        return _userService.SendMessageAsync(token, userID, message);
+        return Server.SendMessageAsync(token, userID, message);
     }
 
     public Task SetAuthorityAsync(Guid token, string userID, Authority authority)
     {
-        if (_userService == null)
-            throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
-
-        return _userService.SetAuthorityAsync(token, userID, authority);
-    }
-
-    public void SetUserService(IUserService? userService)
-    {
-        _userService = userService;
+        return Server.SetAuthorityAsync(token, userID, authority);
     }
 
     public event EventHandler<UserEventArgs>? LoggedIn;
@@ -169,37 +131,37 @@ class UserService : IUserService, IUserServiceCallback, INotifyUserService
 
     #region IUserServiceCallback
 
-    void IUserServiceCallback.OnCreated(string userID)
+    void IUserCallback.OnCreated(string userID)
     {
         OnCreated(new UserEventArgs(userID));
     }
 
-    void IUserServiceCallback.OnDeleted(string userID)
+    void IUserCallback.OnDeleted(string userID)
     {
         OnDeleted(new UserEventArgs(userID));
     }
 
-    void IUserServiceCallback.OnLoggedIn(string userID)
+    void IUserCallback.OnLoggedIn(string userID)
     {
         OnLoggedIn(new UserEventArgs(userID));
     }
 
-    void IUserServiceCallback.OnLoggedOut(string userID)
+    void IUserCallback.OnLoggedOut(string userID)
     {
         OnLoggedOut(new UserEventArgs(userID));
     }
 
-    void IUserServiceCallback.OnMessageReceived(string sender, string receiver, string message)
+    void IUserCallback.OnMessageReceived(string sender, string receiver, string message)
     {
         OnMessageReceived(new UserMessageEventArgs(sender, receiver, message));
     }
 
-    void IUserServiceCallback.OnRenamed(string userID, string userName)
+    void IUserCallback.OnRenamed(string userID, string userName)
     {
         OnRenamed(new UserNameEventArgs(userID, userName));
     }
 
-    void IUserServiceCallback.OnAuthorityChanged(string userID, Authority authority)
+    void IUserCallback.OnAuthorityChanged(string userID, Authority authority)
     {
         OnAuthorityChanged(new UserAuthorityEventArgs(userID, authority));
     }

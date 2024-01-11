@@ -23,7 +23,6 @@
 using JSSoft.Communication.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,30 +39,30 @@ public abstract class ServiceContextBase : IServiceContext
     private readonly bool _isServer;
     private readonly string _t;
     private ISerializer? _serializer;
-    private IAdaptorHost? _adaptorHost;
+    private IAdaptor? _adaptor;
     private string _host = DefaultHost;
     private int _port = DefaultPort;
     private ServiceToken? _token;
     private ServiceState _serviceState;
 
-    protected ServiceContextBase(IServiceHost[] serviceHost)
+    protected ServiceContextBase(IService[] services)
     {
-        ServiceHosts = new ServiceHostCollection(serviceHost);
+        Services = new ServiceCollection(services);
         _isServer = IsServer(this);
         _t = _isServer ? "👨" : "👩";
         _instanceBuilder = ServiceInstanceBuilder.Create();
         _instanceContext = new InstanceContext(this);
     }
 
-    public abstract IAdaptorHostProvider AdaptorHostProvider { get; }
+    public abstract IAdaptorProvider AdaptorProvider { get; }
 
     public abstract ISerializerProvider SerializerProvider { get; }
 
-    public string AdaptorHostType { get; set; } = Communication.AdaptorHostProvider.DefaultName;
+    public string AdaptorType { get; set; } = Communication.AdaptorProvider.DefaultName;
 
     public string SerializerType { get; set; } = JsonSerializerProvider.DefaultName;
 
-    public ServiceHostCollection ServiceHosts { get; }
+    public ServiceCollection Services { get; }
 
     public ServiceState ServiceState
     {
@@ -119,17 +118,12 @@ public abstract class ServiceContextBase : IServiceContext
             _token = ServiceToken.NewToken();
             _serializer = SerializerProvider.Create(this);
             Debug($"{SerializerProvider.Name} Serializer created.");
-            _adaptorHost = AdaptorHostProvider.Create(this, _instanceContext, _token);
-            Debug($"{AdaptorHostProvider.Name} Adaptor created.");
-            foreach (var item in ServiceHosts.Values)
-            {
-                await item.OpenAsync(_token, cancellationToken);
-                Debug($"{item.Name} Service opened.");
-            }
+            _adaptor = AdaptorProvider.Create(this, _instanceContext, _token);
+            Debug($"{AdaptorProvider.Name} Adaptor created.");
             _instanceContext.InitializeInstance();
-            await _adaptorHost.OpenAsync(Host, Port, cancellationToken);
-            _adaptorHost.Disconnected += AdaptorHost_Disconnected;
-            Debug($"{AdaptorHostProvider.Name} Adaptor opened.");
+            await _adaptor.OpenAsync(Host, Port, cancellationToken);
+            _adaptor.Disconnected += Adaptor_Disconnected;
+            Debug($"{AdaptorProvider.Name} Adaptor opened.");
             Debug($"Service Context opened.");
             ServiceState = ServiceState.Open;
             OnOpened(EventArgs.Empty);
@@ -153,18 +147,13 @@ public abstract class ServiceContextBase : IServiceContext
         try
         {
             ServiceState = ServiceState.Closing;
-            _adaptorHost!.Disconnected -= AdaptorHost_Disconnected;
-            await _adaptorHost!.CloseAsync(cancellationToken);
-            Debug($"{AdaptorHostProvider!.Name} Adaptor closed.");
+            _adaptor!.Disconnected -= Adaptor_Disconnected;
+            await _adaptor!.CloseAsync(cancellationToken);
+            Debug($"{AdaptorProvider!.Name} Adaptor closed.");
             _instanceContext.ReleaseInstance();
-            foreach (var item in ServiceHosts.Values.Reverse())
-            {
-                await item.CloseAsync(_token, cancellationToken);
-                Debug($"{item.Name} Service closed.");
-            }
-            await _adaptorHost.DisposeAsync();
-            Debug($"{AdaptorHostProvider.Name} Adaptor disposed.");
-            _adaptorHost = null;
+            await _adaptor.DisposeAsync();
+            Debug($"{AdaptorProvider.Name} Adaptor disposed.");
+            _adaptor = null;
             _serializer = null;
             _token = ServiceToken.Empty;
             ServiceState = ServiceState.None;
@@ -187,19 +176,12 @@ public abstract class ServiceContextBase : IServiceContext
         if (token == Guid.Empty || _token!.Guid != token)
             throw new ArgumentException($"Invalid token: {token}", nameof(token));
 
-        var query = from item in ServiceHosts.Values
-                    where item.ServiceState == ServiceState.Faulted
-                    select item;
-        foreach (var item in query)
-        {
-            await item.AbortAsync(_token!);
-        }
         _token = null;
         _serializer = null;
-        if (_adaptorHost != null)
+        if (_adaptor != null)
         {
-            await _adaptorHost.DisposeAsync();
-            _adaptorHost = null;
+            await _adaptor.DisposeAsync();
+            _adaptor = null;
         }
         ServiceState = ServiceState.None;
         OnClosed(EventArgs.Empty);
@@ -269,21 +251,21 @@ public abstract class ServiceContextBase : IServiceContext
         return false;
     }
 
-    internal static Type GetInstanceType(ServiceContextBase serviceContext, IServiceHost serviceHost)
+    internal static Type GetInstanceType(ServiceContextBase serviceContext, IService service)
     {
         var isServer = IsServer(serviceContext);
         if (isServer == true)
         {
-            return serviceHost.CallbackType;
+            return service.ClientType;
         }
-        return serviceHost.ServiceType;
+        return service.ServerType;
     }
 
-    internal static bool IsPerPeer(ServiceContextBase serviceContext, IServiceHost serviceHost)
+    internal static bool IsPerPeer(ServiceContextBase serviceContext, IService service)
     {
         if (IsServer(serviceContext) != true)
             return false;
-        var serviceType = serviceHost.ServiceType;
+        var serviceType = service.ServerType;
         if (serviceType.GetCustomAttribute(typeof(ServiceContractAttribute)) is ServiceContractAttribute attribute)
         {
             return attribute.PerPeer;
@@ -291,34 +273,33 @@ public abstract class ServiceContextBase : IServiceContext
         return false;
     }
 
-    internal (object, object) CreateInstance(IServiceHost serviceHost, IPeer peer)
+    internal (object, object) CreateInstance(IService service, IPeer peer)
     {
-        var adaptorHost = _adaptorHost!;
-        var baseType = GetInstanceType(this, serviceHost);
+        var adaptor = _adaptor!;
+        var baseType = GetInstanceType(this, service);
         var instance = CreateInstance(baseType);
         {
-            instance.ServiceHost = serviceHost;
-            instance.AdaptorHost = adaptorHost;
+            instance.Service = service;
+            instance.Adaptor = adaptor;
             instance.Peer = peer;
         }
-        var token = _token!;
 
-        var impl = serviceHost.CreateInstance(token, peer, instance);
-        var service = _isServer ? impl : instance;
-        var callback = _isServer ? instance : impl;
-        return (service, callback);
+        var impl = service.CreateInstance(peer, instance);
+        var serverInstance = _isServer ? impl : instance;
+        var clientInstance = _isServer ? instance : impl;
+        return (serverInstance, clientInstance);
     }
 
-    internal void DestroyInstance(IServiceHost serviceHost, IPeer peer, object service, object callback)
+    internal void DestroyInstance(IService service, IPeer peer, object serverInstance, object clientInstance)
     {
         var token = _token!;
         if (_isServer == true)
         {
-            serviceHost.DestroyInstance(token, peer, service);
+            service.DestroyInstance(peer, serverInstance);
         }
         else
         {
-            serviceHost.DestroyInstance(token, peer, callback);
+            service.DestroyInstance(peer, clientInstance);
         }
     }
 
@@ -327,15 +308,15 @@ public abstract class ServiceContextBase : IServiceContext
         LogUtility.Debug($"{this} {message}");
     }
 
-    private void AdaptorHost_Disconnected(object? sender, EventArgs e)
+    private void Adaptor_Disconnected(object? sender, EventArgs e)
     {
         ServiceState = ServiceState.Disconnected;
         OnDisconnected(EventArgs.Empty);
     }
 
-    #region IServiceHost
+    #region IService
 
-    IReadOnlyDictionary<string, IServiceHost> IServiceContext.ServiceHosts => ServiceHosts;
+    IReadOnlyDictionary<string, IService> IServiceContext.Services => Services;
 
     #endregion
 }

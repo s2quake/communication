@@ -26,22 +26,12 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Services;
 
+[Export(typeof(IService))]
 [Export(typeof(IDataService))]
-[Export(typeof(DataService))]
-class DataService : IDataService
+class DataService : ClientService<IDataService>, IDataService
 {
-    private IDataService? _dataService;
-
     public Task<DateTime> CreateDataBaseAsync(string dataBaseName)
     {
-        if (_dataService == null)
-            throw new InvalidOperationException($"'{nameof(DataService)}' has not been initialized.");
-
-        return _dataService.CreateDataBaseAsync(dataBaseName);
-    }
-
-    public void SetDataService(IDataService? dataService)
-    {
-        _dataService = dataService;
+        return Server.CreateDataBaseAsync(dataBaseName);
     }
 }

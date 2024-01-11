@@ -20,27 +20,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System.ComponentModel.Composition;
-
 namespace JSSoft.Communication.Services;
 
-[Export(typeof(IServiceHost))]
-[method: ImportingConstructor]
-class UserServiceHost(UserService userService) : ServerServiceHost<IUserService, IUserServiceCallback>(userService)
+public interface IUserCallback
 {
-    private readonly UserService _userService = userService;
+    [OperationContract]
+    void OnCreated(string userID);
 
-    protected override IUserService CreateService(IPeer peer)
-    {
-        _userService.SetCallback(Callback);
-        return _userService;
-    }
+    [OperationContract]
+    void OnDeleted(string userID);
 
-    protected override void DestroyService(IPeer peer, IUserService service)
-    {
-        if (service is UserService userService)
-        {
-            userService.Dispose();
-        }
-    }
+    [OperationContract]
+    void OnLoggedIn(string userID);
+
+    [OperationContract]
+    void OnLoggedOut(string userID);
+
+    [OperationContract]
+    void OnMessageReceived(string sender, string receiver, string message);
+
+    [OperationContract]
+    void OnRenamed(string userID, string userName);
+
+    [OperationContract]
+    void OnAuthorityChanged(string userID, Authority authority);
 }

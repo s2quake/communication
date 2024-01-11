@@ -20,23 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System.ComponentModel.Composition;
+using System;
 
-namespace JSSoft.Communication.Services;
+namespace JSSoft.Communication;
 
-[Export(typeof(IServiceHost))]
-[method: ImportingConstructor]
-class DataServiceHost(DataService dataService) : ClientServiceHost<IDataService>
+[AttributeUsage(AttributeTargets.Class)]
+sealed class ServiceAttribute : Attribute
 {
-    private readonly DataService _dataService = dataService;
-
-    protected override void OnServiceCreated(IPeer peer, IDataService service)
-    {
-        _dataService.SetDataService(service);
-    }
-
-    protected override void OnServiceDestroyed(IPeer peer)
-    {
-        _dataService.SetDataService(null);
-    }
+    public bool IsServer { get; set; }
 }

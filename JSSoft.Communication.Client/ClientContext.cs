@@ -30,7 +30,7 @@ namespace JSSoft.Communication.ConsoleApp;
 
 [Export(typeof(IServiceContext))]
 [method: ImportingConstructor]
-class ClientContext([ImportMany] IServiceHost[] serviceHosts) : Communication.ClientContext(serviceHosts)
+class ClientContext([ImportMany] IService[] services) : Communication.ClientContext(services)
 {
     protected override InstanceBase CreateInstance(Type type)
     {

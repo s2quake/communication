@@ -11,7 +11,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\UserAuthorityEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IUserService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\INotifyUserService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\IUserServiceCallback.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IUserCallback.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IDataService.cs" />
   </ItemGroup>
 </Project>

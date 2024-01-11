@@ -38,7 +38,7 @@ sealed class Application : IApplication, IServiceProvider
 {
     private static readonly string postfix = TerminalEnvironment.IsWindows() == true ? ">" : "$ ";
     private readonly Settings _settings;
-    private readonly IServiceContext _serviceHost;
+    private readonly IServiceContext _serviceContext;
     private readonly INotifyUserService _userServiceNotification;
     private readonly CompositionContainer _container;
     private bool _isDisposed;
@@ -64,9 +64,9 @@ sealed class Application : IApplication, IServiceProvider
         _container.ComposeExportedValue(this);
 
         _settings = Settings.CreateFromCommandLine();
-        _serviceHost = _container.GetExportedValue<IServiceContext>();
-        _serviceHost.Opened += ServiceHost_Opened;
-        _serviceHost.Closed += ServiceHost_Closed;
+        _serviceContext = _container.GetExportedValue<IServiceContext>();
+        _serviceContext.Opened += ServiceContext_Opened;
+        _serviceContext.Closed += ServiceContext_Closed;
         _userServiceNotification = _container.GetExportedValue<INotifyUserService>();
         _userServiceNotification.LoggedIn += UserServiceNotification_LoggedIn;
         _userServiceNotification.LoggedOut += UserServiceNotification_LoggedOut;
@@ -124,8 +124,8 @@ sealed class Application : IApplication, IServiceProvider
     {
         var prompt = string.Empty;
         var isOpened = IsOpened;
-        var host = _serviceHost.Host;
-        var port = _serviceHost.Port;
+        var host = _serviceContext.Host;
+        var port = _serviceContext.Port;
         var userID = UserID;
 
         if (isOpened == true)
@@ -137,26 +137,26 @@ sealed class Application : IApplication, IServiceProvider
         // Terminal.Prompt = prompt + postfix;
     }
 
-    private void ServiceHost_Opened(object? sender, EventArgs e)
+    private void ServiceContext_Opened(object? sender, EventArgs e)
     {
         IsOpened = true;
         UpdatePrompt();
 
         if (_isServer)
         {
-            Title = $"Server {_serviceHost.Host}:{_serviceHost.Port}";
+            Title = $"Server {_serviceContext.Host}:{_serviceContext.Port}";
             Out.WriteLine("서버가 시작되었습니다.");
         }
         else
         {
-            Title = $"Client {_serviceHost.Host}:{_serviceHost.Port}";
+            Title = $"Client {_serviceContext.Host}:{_serviceContext.Port}";
             Out.WriteLine("서버에 연결되었습니다.");
         }
         Out.WriteLine("사용 가능한 명령을 확인려면 'help' 을(를) 입력하세요.");
         Out.WriteLine("로그인을 하려면 'login admin admin' 을(를) 입력하세요.");
     }
 
-    private void ServiceHost_Closed(object? sender, EventArgs e)
+    private void ServiceContext_Closed(object? sender, EventArgs e)
     {
         IsOpened = false;
         UpdatePrompt();
@@ -237,11 +237,11 @@ sealed class Application : IApplication, IServiceProvider
             throw new InvalidOperationException();
 
         _cancellationTokenSource = new CancellationTokenSource();
-        _serviceHost.Host = _settings.Host;
-        _serviceHost.Port = _settings.Port;
+        _serviceContext.Host = _settings.Host;
+        _serviceContext.Port = _settings.Port;
         try
         {
-            Token = await _serviceHost.OpenAsync(_cancellationTokenSource.Token);
+            Token = await _serviceContext.OpenAsync(_cancellationTokenSource.Token);
         }
         catch (Exception e)
         {
@@ -257,10 +257,10 @@ sealed class Application : IApplication, IServiceProvider
             throw new InvalidOperationException();
 
         _cancellationTokenSource.Cancel();
-        if (_serviceHost.ServiceState == ServiceState.Open)
+        if (_serviceContext.ServiceState == ServiceState.Open)
         {
-            _serviceHost.Closed -= ServiceHost_Closed;
-            await _serviceHost.CloseAsync(Token, CancellationToken.None);
+            _serviceContext.Closed -= ServiceContext_Closed;
+            await _serviceContext.CloseAsync(Token, CancellationToken.None);
         }
     }
 

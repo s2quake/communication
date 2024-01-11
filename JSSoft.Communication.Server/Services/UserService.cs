@@ -20,24 +20,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using JSSoft.Communication.Threading;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading.Tasks;
-using System.ComponentModel.Composition;
+using JSSoft.Communication.Threading;
 
 namespace JSSoft.Communication.Services;
 
+[Export(typeof(IService))]
 [Export(typeof(IUserService))]
 [Export(typeof(INotifyUserService))]
-[Export(typeof(UserService))]
-class UserService : IUserService, INotifyUserService
+class UserService
+    : ServerService<IUserService, IUserCallback>, IUserService, INotifyUserService, IDisposable
 {
-    private readonly Dictionary<string, UserInfo> _userByID = new();
-    private readonly Dictionary<Guid, UserInfo> _userByToken = new();
+    private readonly Dictionary<string, UserInfo> _userByID = [];
+    private readonly Dictionary<Guid, UserInfo> _userByToken = [];
 
-    private IUserServiceCallback? _callback;
     private Dispatcher? _dispatcher;
 
     public UserService()
@@ -61,6 +61,7 @@ class UserService : IUserService, INotifyUserService
             };
             _userByID.Add(user.UserID, user);
         }
+        _dispatcher = new Dispatcher(this);
     }
 
     public Task CreateAsync(Guid token, string userID, string password, Authority authority)
@@ -78,7 +79,7 @@ class UserService : IUserService, INotifyUserService
                 Authority = authority
             };
             _userByID.Add(userID, userInfo);
-            _callback!.OnCreated(userID);
+            Client.OnCreated(userID);
             OnCreated(new UserEventArgs(userID));
         });
     }
@@ -90,7 +91,7 @@ class UserService : IUserService, INotifyUserService
             ValidateDelete(token, userID);
 
             _userByID.Remove(userID);
-            _callback!.OnDeleted(userID);
+            Client.OnDeleted(userID);
             OnDeleted(new UserEventArgs(userID));
         });
     }
@@ -139,7 +140,7 @@ class UserService : IUserService, INotifyUserService
             var user = _userByID[userID];
             user.Token = token;
             _userByToken.Add(token, user);
-            _callback!.OnLoggedIn(userID);
+            Client.OnLoggedIn(userID);
             OnLoggedIn(new UserEventArgs(userID));
             return token;
         });
@@ -154,7 +155,7 @@ class UserService : IUserService, INotifyUserService
             var user = _userByToken[token];
             user.Token = Guid.Empty;
             _userByToken.Remove(token);
-            _callback!.OnLoggedOut(user.UserID);
+            Client.OnLoggedOut(user.UserID);
             OnLoggedOut(new UserEventArgs(user.UserID));
         });
     }
@@ -168,7 +169,7 @@ class UserService : IUserService, INotifyUserService
             ValidateMessage(message);
 
             var user = _userByToken[token];
-            _callback!.OnMessageReceived(user.UserID, userID, message);
+            Client.OnMessageReceived(user.UserID, userID, message);
             OnMessageReceived(new UserMessageEventArgs(user.UserID, userID, message));
         });
     }
@@ -181,7 +182,7 @@ class UserService : IUserService, INotifyUserService
 
             var user = _userByToken[token];
             user.UserName = userName;
-            _callback!.OnRenamed(user.UserID, userName);
+            Client.OnRenamed(user.UserID, userName);
             OnRenamed(new UserNameEventArgs(user.UserID, userName));
         });
     }
@@ -194,7 +195,7 @@ class UserService : IUserService, INotifyUserService
 
             var user = _userByID[userID];
             user.Authority = authority;
-            _callback!.OnAuthorityChanged(userID, authority);
+            Client.OnAuthorityChanged(userID, authority);
             OnAuthorityChanged(new UserAuthorityEventArgs(userID, authority));
         });
     }
@@ -202,9 +203,11 @@ class UserService : IUserService, INotifyUserService
     public void Dispose()
     {
         if (_dispatcher == null)
-            throw new ObjectDisposedException(nameof(UserService));
+            throw new ObjectDisposedException($"{this}");
+
         _dispatcher.Dispose();
         _dispatcher = null;
+        GC.SuppressFinalize(this);
     }
 
     public Dispatcher Dispatcher
@@ -212,7 +215,7 @@ class UserService : IUserService, INotifyUserService
         get
         {
             if (_dispatcher == null)
-                throw new InvalidOperationException($"'{nameof(UserService)}' has not been initialized.");
+                throw new InvalidOperationException($"'{this}' has not been initialized.");
             return _dispatcher;
         }
     }
@@ -230,12 +233,6 @@ class UserService : IUserService, INotifyUserService
     public event EventHandler<UserNameEventArgs>? Renamed;
 
     public event EventHandler<UserAuthorityEventArgs>? AuthorityChanged;
-
-    internal void SetCallback(IUserServiceCallback? callback)
-    {
-        _callback = callback;
-        _dispatcher = new Dispatcher(this);
-    }
 
     protected virtual void OnCreated(UserEventArgs e)
     {

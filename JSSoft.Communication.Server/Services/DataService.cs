@@ -20,19 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using JSSoft.Communication.Threading;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.ComponentModel.Composition;
+using System.Threading.Tasks;
+using JSSoft.Communication.Threading;
 
 namespace JSSoft.Communication.Services;
 
-[Export(typeof(IDataService))]
-[Export(typeof(DataService))]
-class DataService : IDataService
+[Export(typeof(IService))]
+class DataService
+    : ServerService<IDataService>, IDataService, IDisposable
 {
-    private readonly HashSet<string> _dataBases = new();
+    private readonly HashSet<string> _dataBases = [];
     private Dispatcher? _dispatcher;
 
     public DataService()
@@ -58,15 +58,8 @@ class DataService : IDataService
 
         _dispatcher.Dispose();
         _dispatcher = null;
+        GC.SuppressFinalize(this);
     }
 
-    public Dispatcher Dispatcher
-    {
-        get
-        {
-            if (_dispatcher == null)
-                throw new ObjectDisposedException($"{this}");
-            return _dispatcher;
-        }
-    }
+    public Dispatcher Dispatcher => _dispatcher ?? throw new ObjectDisposedException($"{this}");
 }

@@ -21,28 +21,27 @@
 // SOFTWARE.
 
 using System;
-using System.ComponentModel.Composition;
 
-namespace JSSoft.Communication.Services;
+namespace JSSoft.Communication;
 
-[Export(typeof(IServiceHost))]
-[method: ImportingConstructor]
-class DataServiceHost(DataService dataService)
-    : ServerServiceHost<IDataService>(dataService), IDisposable
+sealed class AdaptorProvider : IAdaptorProvider
 {
-    private readonly DataService _dataService = dataService;
+    public const string DefaultName = "grpc";
 
-    public void Dispose()
+    public IAdaptor Create(IServiceContext serviceContext, IInstanceContext instanceContext, ServiceToken token)
     {
-        _dataService.Dispose();
+        // Environment.SetEnvironmentVariable("GRPC_VERBOSITY", "DEBUG");
+        // Environment.SetEnvironmentVariable("GRPC_TRACE", "all");
+        // global::Grpc.Core.GrpcEnvironment.SetLogger(new global::Grpc.Core.Logging.ConsoleLogger());
+
+        if (serviceContext is ServerContext serverContext)
+            return new Grpc.AdaptorServer(serverContext, instanceContext);
+        else if (serviceContext is ClientContext clientContext)
+            return new Grpc.AdaptorClient(clientContext, instanceContext);
+        throw new NotImplementedException();
     }
 
-    protected override IDataService CreateService(IPeer peer)
-    {
-        return _dataService;
-    }
+    public string Name => DefaultName;
 
-    protected override void DestroyService(IPeer peer, IDataService service)
-    {
-    }
+    public static readonly AdaptorProvider Default = new();
 }

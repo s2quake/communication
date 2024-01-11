@@ -24,85 +24,89 @@ using System;
 
 namespace JSSoft.Communication;
 
-[ServiceHost(IsServer = false)]
-public class ClientServiceHost<TService, TCallback>
-    : ServiceHostBase
-    where TService : class
-    where TCallback : class
+[Service(IsServer = true)]
+public class ServerService<TServer, TClient>
+    : ServiceBase
+    where TServer : class
+    where TClient : class
 {
-    private readonly TCallback _callback;
-    private TService? _service;
+    private readonly TServer _server;
+    private TClient? _client;
 
-    public ClientServiceHost(TCallback callback)
-        : base(typeof(TService), typeof(TCallback))
+    public ServerService(TServer server)
+        : base(typeof(TServer), typeof(TClient))
     {
-        _callback = callback;
+        _server = server;
     }
 
-    public ClientServiceHost()
-        : base(typeof(TService), typeof(TCallback))
+    public ServerService()
+        : base(typeof(TServer), typeof(TClient))
     {
-        if (typeof(TService).IsAssignableFrom(this.GetType()) == false)
+        if (typeof(TServer).IsAssignableFrom(this.GetType()) == false)
             throw new InvalidOperationException();
-        _callback = (this as TCallback)!;
+        _server = (this as TServer)!;
     }
 
-    protected TService Service => _service ?? throw new InvalidOperationException();
+    public TClient Client => _client ?? throw new InvalidOperationException();
 
-    protected virtual TCallback CreateCallback(IPeer peer, TService service)
+    protected virtual TServer CreateServer(IPeer peer)
     {
-        return _callback;
+        return _server;
     }
 
-    protected virtual void DestroyCallback(IPeer peer, TCallback callback)
+    protected virtual void DestroyServer(IPeer peer, TServer server)
     {
     }
 
     protected override sealed object CreateInstance(IPeer peer, object obj)
     {
-        _service = (TService?)obj;
-        return CreateCallback(peer, (TService)obj);
+        _client = (TClient)obj;
+        return CreateServer(peer);
     }
 
     protected override sealed void DestroyInstance(IPeer peer, object obj)
     {
-        DestroyCallback(peer, (TCallback)obj);
-        _service = null;
+        DestroyServer(peer, (TServer)obj);
+        _client = null;
     }
 }
 
-[ServiceHost(IsServer = false)]
-public class ClientServiceHost<TService>
-    : ServiceHostBase
-    where TService : class
+[Service(IsServer = true)]
+public class ServerService<TServer> : ServiceBase
+    where TServer : class
 {
-    private TService? _service;
+    private readonly TServer? _server;
 
-    public ClientServiceHost()
-        : base(serviceType: typeof(TService), callbackType: typeof(void))
+    public ServerService(TServer server)
+        : base(serverType: typeof(TServer), clientType: typeof(void))
     {
+        _server = server;
     }
 
-    protected TService Service => _service ?? throw new InvalidOperationException();
-
-    protected virtual void OnServiceCreated(IPeer peer, TService service)
+    public ServerService()
+        : base(serverType: typeof(TServer), clientType: typeof(void))
     {
+        if (typeof(TServer).IsAssignableFrom(this.GetType()) == false)
+            throw new InvalidOperationException();
+        _server = this as TServer;
     }
 
-    protected virtual void OnServiceDestroyed(IPeer peer)
+    protected virtual TServer CreateServer(IPeer peer)
+    {
+        return _server!;
+    }
+
+    protected virtual void DestroyServer(IPeer peer, TServer server)
     {
     }
 
     protected override sealed object CreateInstance(IPeer peer, object obj)
     {
-        _service = (TService)obj;
-        OnServiceCreated(peer, (TService)obj);
-        return new object();
+        return CreateServer(peer);
     }
 
     protected override sealed void DestroyInstance(IPeer peer, object obj)
     {
-        OnServiceDestroyed(peer);
-        _service = null;
+        DestroyServer(peer, (TServer)obj);
     }
 }

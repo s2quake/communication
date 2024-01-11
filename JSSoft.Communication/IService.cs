@@ -21,28 +21,18 @@
 // SOFTWARE.
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace JSSoft.Communication;
 
-public interface IServiceHost
+public interface IService
 {
-    Type ServiceType { get; }
+    Type ServerType { get; }
 
-    Type CallbackType { get; }
+    Type ClientType { get; }
 
     string Name { get; }
 
-    ServiceState ServiceState {get;}
+    object CreateInstance(IPeer peer, object obj);
 
-    Task OpenAsync(ServiceToken serviceToken, CancellationToken cancellationToken);
-    
-    Task CloseAsync(ServiceToken serviceToken, CancellationToken cancellationToken);
-
-    Task AbortAsync(ServiceToken serviceToken);
-
-    object CreateInstance(ServiceToken serviceToken, IPeer peer, object obj);
-
-    void DestroyInstance(ServiceToken serviceToken, IPeer peer, object obj);
+    void DestroyInstance(IPeer peer, object obj);
 }

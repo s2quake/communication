@@ -25,32 +25,32 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Grpc;
 
-sealed class AdaptorServerImpl(AdaptorServerHost adaptorHost) : Adaptor.AdaptorBase
+sealed class AdaptorServerImpl(AdaptorServer adaptorServer) : Adaptor.AdaptorBase
 {
-    private readonly AdaptorServerHost _adaptorHost = adaptorHost;
+    private readonly AdaptorServer _adaptorServer = adaptorServer;
 
     public override Task<OpenReply> Open(OpenRequest request, ServerCallContext context)
     {
-        return _adaptorHost.OpenAsync(request, context, context.CancellationToken);
+        return _adaptorServer.OpenAsync(request, context, context.CancellationToken);
     }
 
     public override Task<CloseReply> Close(CloseRequest request, ServerCallContext context)
     {
-        return _adaptorHost.CloseAsync(request, context, context.CancellationToken);
+        return _adaptorServer.CloseAsync(request, context, context.CancellationToken);
     }
 
     public override Task<PingReply> Ping(PingRequest request, ServerCallContext context)
     {
-        return _adaptorHost.PingAsync(request, context);
+        return _adaptorServer.PingAsync(request, context);
     }
 
     public override Task<InvokeReply> Invoke(InvokeRequest request, ServerCallContext context)
     {
-        return _adaptorHost.InvokeAsync(request, context);
+        return _adaptorServer.InvokeAsync(request, context);
     }
 
     public override Task Poll(IAsyncStreamReader<PollRequest> requestStream, IServerStreamWriter<PollReply> responseStream, ServerCallContext context)
     {
-        return _adaptorHost.PollAsync(requestStream, responseStream, context);
+        return _adaptorServer.PollAsync(requestStream, responseStream, context);
     }
 }

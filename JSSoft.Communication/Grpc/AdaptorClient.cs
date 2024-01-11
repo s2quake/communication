@@ -30,14 +30,14 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Grpc;
 
-sealed class AdaptorClientHost : IAdaptorHost
+sealed class AdaptorClient : IAdaptor
 {
     private static readonly TimeSpan Timeout = new(0, 0, 15);
 
     private readonly IServiceContext _serviceContext;
     private readonly IInstanceContext _instanceContext;
-    private readonly IReadOnlyDictionary<string, IServiceHost> _serviceHosts;
-    private readonly Dictionary<IServiceHost, MethodDescriptorCollection> _methodsByServiceHost;
+    private readonly IReadOnlyDictionary<string, IService> _serviceByName;
+    private readonly Dictionary<IService, MethodDescriptorCollection> _methodsByService;
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _task;
     private Channel? _channel;
@@ -47,12 +47,12 @@ sealed class AdaptorClientHost : IAdaptorHost
     private Timer? _timer;
     private string _token = string.Empty;
 
-    public AdaptorClientHost(IServiceContext serviceContext, IInstanceContext instanceContext)
+    public AdaptorClient(IServiceContext serviceContext, IInstanceContext instanceContext)
     {
         _serviceContext = serviceContext;
         _instanceContext = instanceContext;
-        _serviceHosts = serviceContext.ServiceHosts;
-        _methodsByServiceHost = _serviceHosts.ToDictionary(item => item.Value, item => new MethodDescriptorCollection(item.Value));
+        _serviceByName = serviceContext.Services;
+        _methodsByService = _serviceByName.ToDictionary(item => item.Value, item => new MethodDescriptorCollection(item.Value));
     }
 
     public async Task OpenAsync(string host, int port, CancellationToken cancellationToken)
@@ -62,7 +62,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         try
         {
             _channel = new Channel($"{host}:{port}", ChannelCredentials.Insecure);
-            _adaptorImpl = new AdaptorClientImpl(_channel, $"{_serviceContext.Id}", _serviceHosts.Values.ToArray());
+            _adaptorImpl = new AdaptorClientImpl(_channel, $"{_serviceContext.Id}", _serviceByName.Values.ToArray());
             _token = await _adaptorImpl.OpenAsync(cancellationToken);
             _descriptor = _instanceContext.CreateInstance(_adaptorImpl);
             _cancellationTokenSource = new CancellationTokenSource();
@@ -190,17 +190,17 @@ sealed class AdaptorClientHost : IAdaptorHost
         }
     }
 
-    private void InvokeCallback(IServiceHost serviceHost, string name, string[] data)
+    private void InvokeCallback(IService service, string name, string[] data)
     {
         if (_adaptorImpl == null)
             throw new InvalidOperationException();
-        var methodDescriptors = _methodsByServiceHost[serviceHost];
+        var methodDescriptors = _methodsByService[service];
         if (methodDescriptors.ContainsKey(name) != true)
             throw new InvalidOperationException();
 
         var methodDescriptor = methodDescriptors[name];
         var args = _serializer!.DeserializeMany(methodDescriptor.ParameterTypes, data);
-        var instance = _descriptor!.Callbacks[serviceHost];
+        var instance = _descriptor!.ClientInstances[service];
         Task.Run(() => methodDescriptor.InvokeAsync(_serviceContext, instance, args));
     }
 
@@ -208,7 +208,7 @@ sealed class AdaptorClientHost : IAdaptorHost
     {
         foreach (var item in pollItems)
         {
-            var service = _serviceHosts[item.ServiceName];
+            var service = _serviceByName[item.ServiceName];
             InvokeCallback(service, item.Name, [.. item.Data]);
         }
     }
@@ -223,9 +223,9 @@ sealed class AdaptorClientHost : IAdaptorHost
         throw new UnreachableException();
     }
 
-    #region IAdaptorHost
+    #region IAdaptor
 
-    void IAdaptorHost.Invoke(InstanceBase instance, string name, Type[] types, object?[] args)
+    void IAdaptor.Invoke(InstanceBase instance, string name, Type[] types, object?[] args)
     {
         if (_adaptorImpl == null)
             throw new InvalidOperationException();
@@ -246,7 +246,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         }
     }
 
-    T IAdaptorHost.Invoke<T>(InstanceBase instance, string name, Type[] types, object?[] args)
+    T IAdaptor.Invoke<T>(InstanceBase instance, string name, Type[] types, object?[] args)
     {
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
@@ -270,7 +270,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         throw new UnreachableException();
     }
 
-    async Task IAdaptorHost.InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args)
+    async Task IAdaptor.InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args)
     {
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
@@ -291,7 +291,7 @@ sealed class AdaptorClientHost : IAdaptorHost
         }
     }
 
-    async Task<T> IAdaptorHost.InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args)
+    async Task<T> IAdaptor.InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args)
     {
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();

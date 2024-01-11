@@ -35,7 +35,7 @@ sealed class InstanceContext(ServiceContextBase serviceContext)
 
     public void InitializeInstance()
     {
-        var query = from item in _serviceContext.ServiceHosts.Values
+        var query = from item in _serviceContext.Services.Values
                     where ServiceContextBase.IsPerPeer(_serviceContext, item) != true
                     select item;
         foreach (var item in query)
@@ -48,7 +48,7 @@ sealed class InstanceContext(ServiceContextBase serviceContext)
     public void ReleaseInstance()
     {
         var isServer = ServiceContextBase.IsServer(_serviceContext);
-        var query = from item in _serviceContext.ServiceHosts.Values.Reverse()
+        var query = from item in _serviceContext.Services.Values.Reverse()
                     where ServiceContextBase.IsPerPeer(_serviceContext, item) != true
                     select item;
         foreach (var item in query)
@@ -61,7 +61,7 @@ sealed class InstanceContext(ServiceContextBase serviceContext)
     public PeerDescriptor CreateInstance(IPeer peer)
     {
         var peerDescriptor = new PeerDescriptor();
-        foreach (var item in _serviceContext.ServiceHosts.Values)
+        foreach (var item in _serviceContext.Services.Values)
         {
             var isPerPeer = ServiceContextBase.IsPerPeer(_serviceContext, item);
             if (isPerPeer == true)
@@ -71,7 +71,7 @@ sealed class InstanceContext(ServiceContextBase serviceContext)
             }
             else
             {
-                var (service, callback) = (_descriptor.Services[item], _descriptor.Callbacks[item]);
+                var (service, callback) = (_descriptor.ServerInstances[item], _descriptor.ClientInstances[item]);
                 peerDescriptor.AddInstance(item, service, callback);
             }
         }
@@ -83,7 +83,7 @@ sealed class InstanceContext(ServiceContextBase serviceContext)
     {
         if (_descriptorByPeer.TryRemove(peer, out var peerDescriptor) == false)
             return;
-        foreach (var item in _serviceContext.ServiceHosts.Values.Reverse())
+        foreach (var item in _serviceContext.Services.Values.Reverse())
         {
             var isPerPeer = ServiceContextBase.IsPerPeer(_serviceContext, item);
             if (isPerPeer == true)
@@ -103,7 +103,7 @@ sealed class InstanceContext(ServiceContextBase serviceContext)
     public object? GetService(Type serviceType)
     {
         var query = from descriptor in _descriptorByPeer.Values
-                    from service in descriptor.Services.Values
+                    from service in descriptor.ServerInstances.Values
                     where serviceType.IsAssignableFrom(service.GetType()) == true
                     select service;
         return query.SingleOrDefault();

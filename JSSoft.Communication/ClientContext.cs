@@ -25,10 +25,10 @@ using System;
 namespace JSSoft.Communication;
 
 [ServiceContext(IsServer = false)]
-public class ClientContext(params IServiceHost[] serviceHosts)
-    : ServiceContextBase(serviceHosts)
+public class ClientContext(params IService[] services)
+    : ServiceContextBase(services)
 {
-    public override IAdaptorHostProvider AdaptorHostProvider => Communication.AdaptorHostProvider.Default;
+    public override IAdaptorProvider AdaptorProvider => Communication.AdaptorProvider.Default;
 
     public override ISerializerProvider SerializerProvider => JsonSerializerProvider.Default;
 

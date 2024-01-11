@@ -31,15 +31,15 @@ namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
 [method: ImportingConstructor]
-sealed class OpenCommand(IServiceContext serviceHost, Application application) : CommandAsyncBase
+sealed class OpenCommand(IServiceContext serviceContext, Application application) : CommandAsyncBase
 {
-    private readonly IServiceContext _serviceHost = serviceHost;
+    private readonly IServiceContext _serviceContext = serviceContext;
     private readonly Application _application = application;
 
-    public override bool IsEnabled => _serviceHost.ServiceState == ServiceState.None;
+    public override bool IsEnabled => _serviceContext.ServiceState == ServiceState.None;
 
     protected override async Task OnExecuteAsync(CancellationToken cancellationToken, IProgress<ProgressInfo> progress)
     {
-        _application.Token = await _serviceHost.OpenAsync(cancellationToken);
+        _application.Token = await _serviceContext.OpenAsync(cancellationToken);
     }
 }

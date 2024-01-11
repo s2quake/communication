@@ -20,24 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System.ComponentModel.Composition;
+namespace JSSoft.Communication;
 
-namespace JSSoft.Communication.Services;
-
-[Export(typeof(IServiceHost))]
-[method: ImportingConstructor]
-class UserServiceHost(UserService userService) : ClientServiceHost<IUserService, IUserServiceCallback>(userService)
+public interface IAdaptorProvider
 {
-    private readonly UserService _userService = userService;
+    IAdaptor Create(IServiceContext serviceContext, IInstanceContext instanceContext, ServiceToken serviceToken);
 
-    protected override IUserServiceCallback CreateCallback(IPeer peer, IUserService service)
-    {
-        _userService.SetUserService(service);
-        return _userService;
-    }
-
-    protected override void DestroyCallback(IPeer peer, IUserServiceCallback callback)
-    {
-        _userService.SetUserService(null);
-    }
+    string Name { get; }
 }
