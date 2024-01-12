@@ -4,13 +4,13 @@ public class UnitTest1
 {
     public interface ITestServer
     {
-        [OperationContract]
+        [ServerMethod]
         Task SendMessage(string message, CancellationToken cancellationToken);
     }
 
     public interface ITestClient
     {
-        [OperationContract]
+        [ClientMethod]
         void OnMessageSend(string message);
     }
 

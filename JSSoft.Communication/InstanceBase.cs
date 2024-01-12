@@ -30,6 +30,7 @@ namespace JSSoft.Communication;
 public abstract class InstanceBase
 {
     public const string InvokeMethod = "Invoke";
+    public const string InvokeOneWayMethod = "InvokeOneWay";
     public const string InvokeGenericMethod = "InvokeGeneric";
     public const string InvokeAsyncMethod = "InvokeAsync";
     public const string InvokeGenericAsyncMethod = "InvokeGenericAsync";
@@ -67,6 +68,17 @@ public abstract class InstanceBase
     }
 
     protected void Invoke((string name, Type[] types, object?[] args) info)
+    {
+        Adaptor.Invoke(this, info.name, info.types, info.args);
+    }
+
+    [InstanceMethod(InvokeOneWayMethod)]
+    protected void InvokeOneWay(string name, Type[] types, object?[] args)
+    {
+        Adaptor.InvokeOneWay(this, name, types, args);
+    }
+
+    protected void InvokeOneWay((string name, Type[] types, object?[] args) info)
     {
         Adaptor.Invoke(this, info.name, info.types, info.args);
     }

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -243,6 +244,29 @@ sealed class AdaptorClient : IAdaptor
         if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
         {
             ThrowException(exceptionType, reply.Data);
+        }
+    }
+
+    async void IAdaptor.InvokeOneWay(InstanceBase instance, string name, Type[] types, object?[] args)
+    {
+        if (_adaptorImpl == null)
+            throw new InvalidOperationException();
+
+        var token = _token;
+        var data = _serializer!.SerializeMany(types, args);
+        var request = new InvokeRequest
+        {
+            ServiceName = instance.ServiceName,
+            Name = name,
+            Token = token
+        };
+        request.Data.AddRange(data);
+        try
+        {
+            await _adaptorImpl.InvokeAsync(request);
+        }
+        catch
+        {
         }
     }
 

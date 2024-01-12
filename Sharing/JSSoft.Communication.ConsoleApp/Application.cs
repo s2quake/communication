@@ -134,7 +134,7 @@ sealed class Application : IApplication, IServiceProvider
             if (userID != string.Empty)
                 prompt += $"@{userID}";
         }
-        // Terminal.Prompt = prompt + postfix;
+        Terminal.Prompt = $"{prompt} {postfix}";
     }
 
     private void ServiceContext_Opened(object? sender, EventArgs e)

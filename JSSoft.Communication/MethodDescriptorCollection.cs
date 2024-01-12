@@ -34,10 +34,21 @@ public sealed class MethodDescriptorCollection : Dictionary<string, MethodDescri
         var methods = instanceType.GetMethods();
         foreach (var item in methods)
         {
-            if (item.GetCustomAttribute(typeof(OperationContractAttribute)) is OperationContractAttribute)
+            if (isServer == true)
             {
-                var methodDescriptor = new MethodDescriptor(item);
-                Add(methodDescriptor.Name, methodDescriptor);
+                if (item.GetCustomAttribute(typeof(ClientMethodAttribute)) is ClientMethodAttribute clientMethodAttribute)
+                {
+                    var methodDescriptor = new MethodDescriptor(item, clientMethodAttribute);
+                    Add(methodDescriptor.Name, methodDescriptor);
+                }
+            }
+            else
+            {
+                if (item.GetCustomAttribute(typeof(ServerMethodAttribute)) is ServerMethodAttribute serverMethodAttribute)
+                {
+                    var methodDescriptor = new MethodDescriptor(item, serverMethodAttribute);
+                    Add(methodDescriptor.Name, methodDescriptor);
+                }
             }
         }
     }

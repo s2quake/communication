@@ -27,6 +27,6 @@ namespace JSSoft.Communication.Services;
 
 public interface IDataService
 {
-    [OperationContract]
+    [ServerMethod]
     Task<DateTime> CreateDataBaseAsync(string dataBaseName);
 }

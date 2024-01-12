@@ -24,24 +24,24 @@ namespace JSSoft.Communication.Services;
 
 public interface IUserCallback
 {
-    [OperationContract]
+    [ClientMethod]
     void OnCreated(string userID);
 
-    [OperationContract]
+    [ClientMethod]
     void OnDeleted(string userID);
 
-    [OperationContract]
+    [ClientMethod]
     void OnLoggedIn(string userID);
 
-    [OperationContract]
+    [ClientMethod]
     void OnLoggedOut(string userID);
 
-    [OperationContract]
+    [ClientMethod]
     void OnMessageReceived(string sender, string receiver, string message);
 
-    [OperationContract]
+    [ClientMethod]
     void OnRenamed(string userID, string userName);
 
-    [OperationContract]
+    [ClientMethod]
     void OnAuthorityChanged(string userID, Authority authority);
 }

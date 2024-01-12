@@ -70,30 +70,42 @@ sealed class ServiceInstanceBuilder
 
     private static Type CreateType(ModuleBuilder moduleBuilder, string typeName, Type baseType, Type interfaceType)
     {
-        var typeBuilder = moduleBuilder.DefineType(typeName, TypeAttributes.Class | TypeAttributes.Public, baseType, new Type[] { interfaceType });
-        var methods = interfaceType.GetMethods();
-        foreach (var item in methods)
+        var typeBuilder = moduleBuilder.DefineType(typeName, TypeAttributes.Class | TypeAttributes.Public, baseType, [interfaceType]);
+        var methodInfos = interfaceType.GetMethods();
+        foreach (var methodInfo in methodInfos)
         {
-            var returnType = item.ReturnType;
+            var operationContractAttribute = (ServerMethodAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(ServerMethodAttribute))!;
+            var isOneWay = IsOneWay(methodInfo);
+            var returnType = methodInfo.ReturnType;
             if (returnType == typeof(Task))
             {
-                CreateInvokeAsync(typeBuilder, item, InstanceBase.InvokeAsyncMethod);
+                CreateInvokeAsync(typeBuilder, methodInfo, InstanceBase.InvokeAsyncMethod);
             }
             else if (returnType.IsSubclassOf(typeof(Task)) == true)
             {
-                CreateInvokeAsync(typeBuilder, item, InstanceBase.InvokeGenericAsyncMethod);
+                CreateInvokeAsync(typeBuilder, methodInfo, InstanceBase.InvokeGenericAsyncMethod);
             }
             else if (returnType == typeof(void))
             {
-                CreateInvoke(typeBuilder, item, InstanceBase.InvokeMethod);
+                if (isOneWay == true)
+                    CreateInvoke(typeBuilder, methodInfo, InstanceBase.InvokeOneWayMethod);
+                else
+                    CreateInvoke(typeBuilder, methodInfo, InstanceBase.InvokeMethod);
             }
             else
             {
-                CreateInvoke(typeBuilder, item, InstanceBase.InvokeGenericMethod);
+                CreateInvoke(typeBuilder, methodInfo, InstanceBase.InvokeGenericMethod);
             }
         }
 
         return typeBuilder.CreateType();
+
+        static bool IsOneWay(MethodInfo methodInfo)
+        {
+            if (Attribute.GetCustomAttribute(methodInfo, typeof(ServerMethodAttribute)) is ServerMethodAttribute serverMethodAttribute)
+                return serverMethodAttribute.IsOneWay;
+            return false;
+        }
     }
 
     private static void CreateInvoke(TypeBuilder typeBuilder, MethodInfo methodInfo, string methodName)

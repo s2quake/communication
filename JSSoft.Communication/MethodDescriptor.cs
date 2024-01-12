@@ -29,7 +29,7 @@ namespace JSSoft.Communication;
 
 public sealed class MethodDescriptor
 {
-    internal MethodDescriptor(MethodInfo methodInfo)
+    internal MethodDescriptor(MethodInfo methodInfo, ServerMethodAttribute serverMethodAttribute)
     {
         MethodInfo = methodInfo;
         ParameterTypes = methodInfo.GetParameters().Select(item => item.ParameterType).ToArray();
@@ -46,6 +46,31 @@ public sealed class MethodDescriptor
         }
         Name = GenerateName(methodInfo);
         ShortName = methodInfo.Name;
+        IsOneWay = serverMethodAttribute.IsOneWay;
+        if (IsOneWay == true && ReturnType != typeof(void))
+            throw new InvalidOperationException($"'{methodInfo}'s {nameof(MethodInfo.ReturnType)} must be '{typeof(void)}'.");
+    }
+
+    internal MethodDescriptor(MethodInfo methodInfo, ClientMethodAttribute clientMethodAttribute)
+    {
+        MethodInfo = methodInfo;
+        ParameterTypes = methodInfo.GetParameters().Select(item => item.ParameterType).ToArray();
+        ReturnType = methodInfo.ReturnType;
+        if (ReturnType == typeof(Task))
+        {
+            ReturnType = typeof(void);
+            IsAsync = true;
+        }
+        else if (ReturnType.IsSubclassOf(typeof(Task)) == true)
+        {
+            ReturnType = ReturnType.GetGenericArguments().First();
+            IsAsync = true;
+        }
+        Name = GenerateName(methodInfo);
+        ShortName = methodInfo.Name;
+        IsOneWay = true;
+        if (IsOneWay == true && ReturnType != typeof(void))
+            throw new InvalidOperationException($"'{methodInfo}'s {nameof(MethodInfo.ReturnType)} must be '{typeof(void)}'.");
     }
 
     public string Name { get; }
@@ -57,6 +82,19 @@ public sealed class MethodDescriptor
     public Type ReturnType { get; }
 
     public bool IsAsync { get; }
+
+    public bool IsOneWay { get; }
+
+    public async void InvokeOneWay(IServiceProvider serviceProvider, object instance, object?[] args)
+    {
+        try
+        {
+            await InvokeAsync(instance, args);
+        }
+        catch
+        {
+        }
+    }
 
     public async Task<(string, Type, object?)> InvokeAsync(IServiceProvider serviceProvider, object instance, object?[] args)
     {

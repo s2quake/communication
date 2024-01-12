@@ -25,16 +25,7 @@ using System;
 namespace JSSoft.Communication;
 
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class OperationContractAttribute : Attribute
+public sealed class ServerMethodAttribute : Attribute
 {
-    public OperationContractAttribute()
-    {
-    }
-
-    public OperationContractAttribute(string name)
-    {
-        Name = name;
-    }
-
-    public string Name { get; } = string.Empty;
+    public bool IsOneWay { get; set; }
 }

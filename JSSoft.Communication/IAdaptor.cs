@@ -32,6 +32,8 @@ public interface IAdaptor : IAsyncDisposable
 
     Task CloseAsync(CancellationToken cancellationToken);
 
+    void InvokeOneWay(InstanceBase instance, string name, Type[] types, object?[] args);
+
     void Invoke(InstanceBase instance, string name, Type[] types, object?[] args);
 
     T Invoke<T>(InstanceBase instance, string name, Type[] types, object?[] args);

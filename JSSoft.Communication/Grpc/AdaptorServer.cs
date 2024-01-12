@@ -123,14 +123,28 @@ sealed class AdaptorServer : IAdaptor
             var methodDescriptor = methodDescriptors[request.Name];
             var instance = peer.Services[service];
             var args = _serializer.DeserializeMany(methodDescriptor.ParameterTypes, [.. request.Data]);
-            var (assem, valueType, value) = await methodDescriptor.InvokeAsync(_serviceContext, instance, args);
-            var reply = new InvokeReply()
+            if (methodDescriptor.IsOneWay == true)
             {
-                ID = $"{assem}",
-                Data = _serializer.Serialize(valueType, value)
-            };
-            LogUtility.Debug($"{context.Peer} Invoke: {request.ServiceName}.{methodDescriptor.ShortName}");
-            return reply;
+                methodDescriptor.InvokeOneWay(_serviceContext, instance, args);
+                var reply = new InvokeReply()
+                {
+                    ID = string.Empty,
+                    Data = _serializer.Serialize(typeof(void), null)
+                };
+                LogUtility.Debug($"{context.Peer} Invoke(one way): {request.ServiceName}.{methodDescriptor.ShortName}");
+                return reply;
+            }
+            else
+            {
+                var (assemblyQualifiedName, valueType, value) = await methodDescriptor.InvokeAsync(_serviceContext, instance, args);
+                var reply = new InvokeReply()
+                {
+                    ID = $"{assemblyQualifiedName}",
+                    Data = _serializer.Serialize(valueType, value)
+                };
+                LogUtility.Debug($"{context.Peer} Invoke: {request.ServiceName}.{methodDescriptor.ShortName}");
+                return reply;
+            }
         }
         return new InvokeReply();
     }
@@ -243,10 +257,15 @@ sealed class AdaptorServer : IAdaptor
         _serializer = null;
         _server = null;
     }
-
+    
     void IAdaptor.Invoke(InstanceBase instance, string name, Type[] types, object?[] args)
     {
         AddCallback(instance, name, types, args);
+    }
+
+    void IAdaptor.InvokeOneWay(InstanceBase instance, string name, Type[] types, object?[] args)
+    {
+        throw new NotImplementedException();
     }
 
     T IAdaptor.Invoke<T>(InstanceBase instance, string name, Type[] types, object?[] args)

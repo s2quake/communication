@@ -21,40 +21,10 @@
 // SOFTWARE.
 
 using System;
-using System.Threading.Tasks;
 
-namespace JSSoft.Communication.Services;
+namespace JSSoft.Communication;
 
-[ServiceContract]
-public interface IUserService
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class ClientMethodAttribute : Attribute
 {
-    [ServerMethod]
-    Task CreateAsync(Guid token, string userID, string password, Authority authority);
-
-    [ServerMethod]
-    Task DeleteAsync(Guid token, string userID);
-
-    [ServerMethod]
-    Task RenameAsync(Guid token, string userName);
-
-    [ServerMethod]
-    Task SetAuthorityAsync(Guid token, string userID, Authority authority);
-
-    [ServerMethod]
-    Task<Guid> LoginAsync(string userID, string password);
-
-    [ServerMethod]
-    Task LogoutAsync(Guid token);
-
-    [ServerMethod]
-    Task<(string userName, Authority authority)> GetInfoAsync(Guid token, string userID);
-
-    [ServerMethod]
-    Task<string[]> GetUsersAsync(Guid token);
-
-    [ServerMethod]
-    Task<bool> IsOnlineAsync(Guid token, string userID);
-
-    [ServerMethod]
-    Task SendMessageAsync(Guid token, string userID, string message);
 }
