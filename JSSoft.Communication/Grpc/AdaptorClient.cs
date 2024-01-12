@@ -57,13 +57,13 @@ sealed class AdaptorClient : IAdaptor
         _methodsByService = _serviceByName.ToDictionary(item => item.Value, item => new MethodDescriptorCollection(item.Value));
     }
 
-    public async Task OpenAsync(DnsEndPoint endPoint, CancellationToken cancellationToken)
+    public async Task OpenAsync(EndPoint endPoint, CancellationToken cancellationToken)
     {
         if (_adaptorImpl != null)
             throw new InvalidOperationException();
         try
         {
-            _channel = new Channel($"{endPoint.Host}:{endPoint.Port}", ChannelCredentials.Insecure);
+            _channel = new Channel(EndPointUtility.GetString(endPoint), ChannelCredentials.Insecure);
             _adaptorImpl = new AdaptorClientImpl(_channel, $"{_serviceContext.Id}", _serviceByName.Values.ToArray());
             _token = await _adaptorImpl.OpenAsync(cancellationToken);
             _descriptor = _instanceContext.CreateInstance(_adaptorImpl);

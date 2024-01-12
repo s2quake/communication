@@ -32,7 +32,7 @@ public interface IServiceContext : IServiceProvider
 {
     IReadOnlyDictionary<string, IService> Services { get; }
 
-    DnsEndPoint EndPoint { get; set; }
+    EndPoint EndPoint { get; set; }
 
     Guid Id { get; }
 

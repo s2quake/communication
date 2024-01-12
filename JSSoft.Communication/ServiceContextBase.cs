@@ -41,7 +41,7 @@ public abstract class ServiceContextBase : IServiceContext
     private readonly string _t;
     private ISerializer? _serializer;
     private IAdaptor? _adaptor;
-    private DnsEndPoint _endPoint = new(DefaultHost, DefaultPort);
+    private EndPoint _endPoint = new DnsEndPoint(DefaultHost, DefaultPort);
     private ServiceToken? _token;
     private ServiceState _serviceState;
 
@@ -79,7 +79,7 @@ public abstract class ServiceContextBase : IServiceContext
         }
     }
 
-    public DnsEndPoint EndPoint
+    public EndPoint EndPoint
     {
         get => _endPoint;
         set

@@ -29,7 +29,7 @@ namespace JSSoft.Communication;
 
 public interface IAdaptor : IAsyncDisposable
 {
-    Task OpenAsync(DnsEndPoint endPoint, CancellationToken cancellationToken);
+    Task OpenAsync(EndPoint endPoint, CancellationToken cancellationToken);
 
     Task CloseAsync(CancellationToken cancellationToken);
 

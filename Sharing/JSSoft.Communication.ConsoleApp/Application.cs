@@ -31,6 +31,7 @@ using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
 using JSSoft.Terminals;
+using System.Net;
 
 namespace JSSoft.Communication.ConsoleApp;
 
@@ -124,13 +125,11 @@ sealed class Application : IApplication, IServiceProvider
     {
         var prompt = string.Empty;
         var isOpened = IsOpened;
-        var host = _serviceContext.Host;
-        var port = _serviceContext.Port;
         var userID = UserID;
 
         if (isOpened == true)
         {
-            prompt = $"{host}:{port}";
+            prompt = EndPointUtility.GetString(_serviceContext.EndPoint);
             if (userID != string.Empty)
                 prompt += $"@{userID}";
         }
@@ -144,12 +143,12 @@ sealed class Application : IApplication, IServiceProvider
 
         if (_isServer)
         {
-            Title = $"Server {_serviceContext.Host}:{_serviceContext.Port}";
+            Title = $"Server {EndPointUtility.GetString(_serviceContext.EndPoint)}";
             Out.WriteLine("서버가 시작되었습니다.");
         }
         else
         {
-            Title = $"Client {_serviceContext.Host}:{_serviceContext.Port}";
+            Title = $"Client {EndPointUtility.GetString(_serviceContext.EndPoint)}";
             Out.WriteLine("서버에 연결되었습니다.");
         }
         Out.WriteLine("사용 가능한 명령을 확인려면 'help' 을(를) 입력하세요.");
@@ -237,8 +236,7 @@ sealed class Application : IApplication, IServiceProvider
             throw new InvalidOperationException();
 
         _cancellationTokenSource = new CancellationTokenSource();
-        _serviceContext.Host = _settings.Host;
-        _serviceContext.Port = _settings.Port;
+        _serviceContext.EndPoint = new DnsEndPoint(_settings.Host, _settings.Port);
         try
         {
             Token = await _serviceContext.OpenAsync(_cancellationTokenSource.Token);

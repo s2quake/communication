@@ -224,18 +224,18 @@ sealed class AdaptorServer : IAdaptor
 
     #region IAdaptor
 
-    async Task IAdaptor.OpenAsync(DnsEndPoint endPoint, CancellationToken cancellationToken)
+    async Task IAdaptor.OpenAsync(EndPoint endPoint, CancellationToken cancellationToken)
     {
         _adaptor = new AdaptorServerImpl(this);
         _server = new Server()
         {
             Services = { Adaptor.BindService(_adaptor) },
-            Ports = { new ServerPort(endPoint.Host, endPoint.Port, ServerCredentials.Insecure) },
+            Ports = { EndPointUtility.GetServerPort(endPoint, ServerCredentials.Insecure) },
         };
-        if (endPoint.Host == ServiceContextBase.DefaultHost)
-        {
-            _server.Ports.Add(new ServerPort(localAddress, endPoint.Port, ServerCredentials.Insecure));
-        }
+        // if (endPoint.Host == ServiceContextBase.DefaultHost)
+        // {
+        //     _server.Ports.Add(new ServerPort(localAddress, endPoint.Port, ServerCredentials.Insecure));
+        // }
         _cancellationTokenSource = new CancellationTokenSource();
         _serializer = _serviceContext.GetService(typeof(ISerializer)) as ISerializer;
         _closeCode = int.MinValue;
