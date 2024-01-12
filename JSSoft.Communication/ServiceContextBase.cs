@@ -23,6 +23,7 @@
 using JSSoft.Communication.Logging;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,8 +41,7 @@ public abstract class ServiceContextBase : IServiceContext
     private readonly string _t;
     private ISerializer? _serializer;
     private IAdaptor? _adaptor;
-    private string _host = DefaultHost;
-    private int _port = DefaultPort;
+    private DnsEndPoint _endPoint = new(DefaultHost, DefaultPort);
     private ServiceToken? _token;
     private ServiceState _serviceState;
 
@@ -79,25 +79,14 @@ public abstract class ServiceContextBase : IServiceContext
         }
     }
 
-    public string Host
+    public DnsEndPoint EndPoint
     {
-        get => _host;
+        get => _endPoint;
         set
         {
             if (ServiceState != ServiceState.None)
-                throw new InvalidOperationException($"cannot set host. service state is '{ServiceState}'.");
-            _host = value;
-        }
-    }
-
-    public int Port
-    {
-        get => _port;
-        set
-        {
-            if (ServiceState != ServiceState.None)
-                throw new InvalidOperationException($"cannot set port. service state is '{ServiceState}'.");
-            _port = value;
+                throw new InvalidOperationException($"Cannot set '{nameof(EndPoint)}'. service state is '{ServiceState}'.");
+            _endPoint = value;
         }
     }
 
@@ -121,7 +110,7 @@ public abstract class ServiceContextBase : IServiceContext
             _adaptor = AdaptorProvider.Create(this, _instanceContext, _token);
             Debug($"{AdaptorProvider.Name} Adaptor created.");
             _instanceContext.InitializeInstance();
-            await _adaptor.OpenAsync(Host, Port, cancellationToken);
+            await _adaptor.OpenAsync(_endPoint, cancellationToken);
             _adaptor.Disconnected += Adaptor_Disconnected;
             Debug($"{AdaptorProvider.Name} Adaptor opened.");
             Debug($"Service Context opened.");

@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,7 +29,7 @@ namespace JSSoft.Communication;
 
 public interface IAdaptor : IAsyncDisposable
 {
-    Task OpenAsync(string host, int port, CancellationToken cancellationToken);
+    Task OpenAsync(DnsEndPoint endPoint, CancellationToken cancellationToken);
 
     Task CloseAsync(CancellationToken cancellationToken);
 

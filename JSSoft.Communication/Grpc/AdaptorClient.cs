@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,13 +57,13 @@ sealed class AdaptorClient : IAdaptor
         _methodsByService = _serviceByName.ToDictionary(item => item.Value, item => new MethodDescriptorCollection(item.Value));
     }
 
-    public async Task OpenAsync(string host, int port, CancellationToken cancellationToken)
+    public async Task OpenAsync(DnsEndPoint endPoint, CancellationToken cancellationToken)
     {
         if (_adaptorImpl != null)
             throw new InvalidOperationException();
         try
         {
-            _channel = new Channel($"{host}:{port}", ChannelCredentials.Insecure);
+            _channel = new Channel($"{endPoint.Host}:{endPoint.Port}", ChannelCredentials.Insecure);
             _adaptorImpl = new AdaptorClientImpl(_channel, $"{_serviceContext.Id}", _serviceByName.Values.ToArray());
             _token = await _adaptorImpl.OpenAsync(cancellationToken);
             _descriptor = _instanceContext.CreateInstance(_adaptorImpl);

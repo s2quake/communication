@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,9 +32,7 @@ public interface IServiceContext : IServiceProvider
 {
     IReadOnlyDictionary<string, IService> Services { get; }
 
-    string Host { get; set; }
-
-    int Port { get; set; }
+    DnsEndPoint EndPoint { get; set; }
 
     Guid Id { get; }
 
