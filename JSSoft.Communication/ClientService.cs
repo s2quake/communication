@@ -83,7 +83,7 @@ public class ClientService<TServer>
     {
     }
 
-    protected TServer Server => _server ?? throw new InvalidOperationException();
+    public TServer Server => _server ?? throw new InvalidOperationException();
 
     protected virtual void OnServiceCreated(IPeer peer, TServer server)
     {
