@@ -8,28 +8,29 @@
 
 ```plain
 Visual Studio Code
-.NET Core 3.1
+.NET 8.0
+c# 12.0
 ```
 
 ## 빌드
 
 ```plain
-git clone https://github.com/s2quake/communication.git --recursive
+git clone https://github.com/s2quake/communication.git
 cd communication
-dotnet build JSSoft.Communication --framework netcoreapp3.1
+dotnet build
 ```
 
 ## 실행
 
 ```plain
-dotnet run --project JSSoft.Communication/Server-MEF --framework netcoreapp3.1
+dotnet run --project JSSoft.Communication.Server --framework net8.0
 
-dotnet run --project JSSoft.Communication/Client-MEF --framework netcoreapp3.1
+dotnet run --project JSSoft.Communication.Client --framework net8.0
 ```
 
 ## 솔루션 구성
 
-솔루션은 3개의 서버와 3개의 클라이언트 예제로 그리고 통신을 담당하는 1개의 라이브러리로 구성되어 있습니다.
+솔루션은 서버와 클라이언트 예제 그리고 통신을 담당하는 라이브러리, 총 3개의 프로젝트로 구성되어 있습니다.
 
 ## JSSoft.Communication
 
@@ -43,37 +44,13 @@ gRPC 은(는)낮은 수준으로만 사용되었습니다.
 
 gPRC 을(를) 사용하기 위한 프로토콜은 [adaptor.proto](JSSoft.Communication/Grpc/adaptor.proto) 에 정의되어 있습니다.
 
-## Server-MEF, Client-MEF
-
-[MEF](https://blog.powerumc.kr/189) 을 사용하여 서버와 클라이언트를 사용할 수 있도록 예제를 구성하였습니다.
-
-여러 예제에서 같은 코드를 사용하기 때문에 #if MEF 을(를) 사용하였습니다.
-
-```plain
-#if MEF
-...
-#endif
-```
-
-## Server, Client
-
-MEF 을(를) 사용하지 않고 필요한 인스턴스를 직접 생성하여 서버와 클라이언트를 구동할 수 있는 예제입니다.
-
-인스턴스 생성 [Container.cs](JSSoft.Communication.ConsoleApp.Sharing/Container.cs#L102) 에 구현되어 있습니다.
-
-## Server-Simple, Client-Simple
-
-위 2개의 예제는 서버와 클라이언트를 구동후 능동적으로 기능을 사용할 수 있는 간단한 기본 기능들이 내재 되어 있습니다.
-
-이 예제는 그러한 기능들을 제외하고 서버와 클라이언트만 구동하는 가장 간단한 방법을 구현해 놓았습니다.
-
 ## 처음부터 실행까지
 
 ### 1. 도구 설치
 
-아래의 링크로 이동하여 .NET Core 3.1과 Visual Studio Code를 설치합니다.
+아래의 링크로 이동하여 .NET 8.0과 Visual Studio Code를 설치합니다.
 
-[.NET Core 3.1](https://dotnet.microsoft.com/download/dotnet-core/3.1)
+[.NET 8.0](https://dotnet.microsoft.com/download)
 
 [Visual Studio Code](https://code.visualstudio.com/)
 
@@ -88,10 +65,8 @@ macOS 또는 linux 운영체제에서는 **terminal**을
 Windows 에서는 **PowerShell**을 실행합니다.
 
 ```plain
-git clone https://github.com/s2quake/communication.git --recursive
+git clone https://github.com/s2quake/communication.git
 ```
-
-> 저장소는 서브모듈을 포함하고 있기 때문에 --recursive 스위치를 사용합니다.
 
 ### 3. 소스 경로로 이동
 
@@ -102,13 +77,13 @@ cd communication
 ## 4. 소스 빌드
 
 ```plain
-dotnet build --framework netcoreapp3.1 JSSoft.Communication
+dotnet build --framework net8.0
 ```
 
 ## 5. 서버 실행
 
 ```plain
-dotnet run --project JSSoft.Communication/Server-MEF --framework netcoreapp3.1
+dotnet run --project JSSoft.Communication.Server --framework net8.0
 ```
 
 ## 6. 클라이언트 실행
@@ -116,7 +91,7 @@ dotnet run --project JSSoft.Communication/Server-MEF --framework netcoreapp3.1
 새로운 terminal이나 PowerShell을 실행하여 소스 경로로 이동하여 아래의 명령을 실행합니다.
 
 ```plain
-dotnet run --project JSSoft.Communication/Client-MEF --framework netcoreapp3.1
+dotnet run --project JSSoft.Communication.Client --framework net8.0
 ```
 
 ## 간단한 예제를 작성해보면서 무엇인지 알아보기
@@ -135,7 +110,7 @@ Visual Studio Code 를 실행후 폴더 열기로 소스 위치를 선택합니�
 mkdir Server-Test
 dotnet new console -o Server-Test
 dotnet sln add Server-Test
-dotnet add Server-Test reference JSSoft.Communication/JSSoft.Communication
+dotnet add Server-Test reference JSSoft.Communication
 ```
 
 * Server-Test 경로를 생성합니다.
@@ -157,11 +132,11 @@ namespace Services
 {
     public interface IMyService
     {
-        [OperationContract]
+        [ServerMethod]
         string Login(string userID);
 
-        [OperationContract]
-        Task<(string product, string version)> GetVersionAsync();
+        [ServerMethod]
+        Task<(string product, string version)> GetVersionAsync(CancellationToken cancellationToken);
     }
 }
 ```
@@ -187,7 +162,7 @@ using Services;
 
 namespace Server_Test
 {
-    class MyService : IMyService
+    sealed class MyService : ServerService<IMyService>, IMyService
     {
         public string Login(string userID)
         {
@@ -195,65 +170,18 @@ namespace Server_Test
             return $"{Guid.NewGuid()}";
         }
 
-        public Task<(string product, string version)> GetVersionAsync()
+        public Task<(string product, string version)> GetVersionAsync(CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
                 return ("MyServer", "1.0.0.0");
-            });
+            }, cancellationToken);
         }
     }
 }
 ```
 
-## 5. 나만의 서비스 준비하기
-
-이제 구현된 서비스를 서버에 사용할 준비를 해야 합니다.
-
-서버에는 다수의 서비스를 사용할 수 있기 때문에 이를 관리하기 위하여
-
-`IService` 라는 인터페이스를 구현해야 합니다.
-
-`IService` 은(는) 서비스의 주인 역할을 하며 서버에서 잘 사용할 수 있게 여러 제반 사항을 만들어줍니다.
-
-IService 은(는) 직접 구현하기 힘들기 때문에 구현된 기본 클래스인 `ServerServiceHostBase` 을(를) 상속받아 정의합니다.
-
-> Server-Test 경로내에 `MyService.cs` 파일을 만들고 다음과 같이 작성합니다.
-
-```csharp
-using System;
-using JSSoft.Communication;
-using Services;
-
-namespace Server_Test
-{
-    class MyService : ServerService<IMyService>, IMyService
-    {
-    }
-}
-```
-
-## 6. 서버 실행하기
-
-이제 준비된 서비스를 사용하여 서버를 실행해봅니다.
-
-> Server-Test 경로내에 `ServerContext.cs` 파일을 만들고 다음과 같이 작성합니다.
-
-```csharp
-using JSSoft.Communication;
-
-namespace Server_Test
-{
-    class ServerContext : ServerContextBase
-    {
-        public ServerContext()
-            : base(new MyService())
-        {
-
-        }
-    }
-}
-```
+## 5. 서버 실행하기
 
 > Server-Test 경로내에 Program.cs 내용을 다음과 같이 작성합니다.
 
@@ -268,14 +196,15 @@ namespace Server_Test
     {
         static async Task Main(string[] args)
         {
-            var serverContext = new ServerContext();
-            var token = await serverContext.OpenAsync();
+            var service = new ServerService();
+            var serviceContext = new ServerContext([service]);
+            var token = await serviceContext.OpenAsync(CancellationToken.None);
 
             Console.WriteLine("서버가 시작되었습니다.");
             Console.WriteLine("종료하려면 아무 키나 누르세요.");
             Console.ReadKey();
 
-            await serverContext.CloseAsync(token);
+            await serviceContext.CloseAsync(token, CancellationToken.None);
         }
     }
 }
@@ -289,12 +218,12 @@ namespace Server_Test
 mkdir Client-Test
 dotnet new console -o Client-Test
 dotnet sln add Client-Test
-dotnet add Client-Test reference JSSoft.Communication/JSSoft.Communication
+dotnet add Client-Test reference JSSoft.Communication
 ```
 
 ## 8. 클라이언트 구현하기
 
-> Client-Test 경로내에 MyService.cs 파일을 만들고 내용을 다음과 같이 작성합니다.
+> Client-Test 경로내에 ClientService.cs 파일을 만들고 내용을 다음과 같이 작성합니다.
 
 ```csharp
 using System;
@@ -303,32 +232,8 @@ using Services;
 
 namespace Client_Test
 {
-    class MyService : ClientServiceHostBase<IMyService>
+    sealed class ClientService : ClientService<IMyService>
     {
-        public IMyService Service { get; private set; }
-
-        protected override void OnServiceCreated(IMyService service)
-        {
-            Service = service;
-        }
-    }
-}
-```
-
-> Client-Test 경로내에 ClientContext.cs 파일을 만들고 내용을 다음과 같이 작성합니다.
-
-```csharp
-using JSSoft.Communication;
-
-namespace Client_Test
-{
-    class ClientContext : ClientContextBase
-    {
-        public ClientContext(params IService[] services)
-            : base(services)
-        {
-
-        }
     }
 }
 ```
@@ -345,14 +250,14 @@ namespace Client_Test
     {
         static async Task Main(string[] args)
         {
-            var service = new MyService();
-            var serviceContext = new ClientContext(service);
+            var service = new ClientService();
+            var serviceContext = new ClientContext([service]);
 
-            var token = await serviceContext.OpenAsync();
-            var service = service.Service;
+            var token = await serviceContext.OpenAsync(CancellationToken.None);
+            var server = service.Server;
 
-            var id = service.Login("admin");
-            var (product, version) = await service.GetVersionAsync();
+            var id = server.Login("admin");
+            var (product, version) = await server.GetVersionAsync(CancellationToken.None);
             Console.WriteLine($"logged in: {id}");
             Console.WriteLine($"product: {product}");
             Console.WriteLine($"version: {version}");
@@ -360,7 +265,7 @@ namespace Client_Test
             Console.WriteLine("종료하려면 아무 키나 누르세요.");
             Console.ReadKey();
 
-            await serviceContext.CloseAsync(token);
+            await serviceContext.CloseAsync(token, CancellationToken.None);
         }
     }
 }
@@ -371,17 +276,17 @@ namespace Client_Test
 새로운 terminal이나 PowerShell 실행후 소스 경로에서 아래의 명령을 실행하여 빌드합니다.
 
 ```plain
-dotnet build --framework netcoreapp3.1
+dotnet build --framework net8.0
 ```
 
 빌드가 완료된 후에 아래의 명령을 실행하여 서버를 실행합니다.
 
 ```plain
-dotnet run --project Server-Test --framework netcoreapp3.1
+dotnet run --project Server-Test --framework net8.0
 ```
 
 다시 새로운 terminal이나 PowerShell 실행후 소스 경로에서 아래의 명령을 실행하여 클라이언트를 실행합니다.
 
 ```plain
-dotnet run --projet Client-Test --framework netcoreapp3.1
+dotnet run --projet Client-Test --framework net8.0
 ```

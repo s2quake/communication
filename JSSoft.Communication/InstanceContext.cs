@@ -26,7 +26,7 @@ using System.Linq;
 
 namespace JSSoft.Communication;
 
-sealed class InstanceContext(ServiceContextBase serviceContext) 
+sealed class InstanceContext(ServiceContextBase serviceContext)
     : IInstanceContext, IPeer
 {
     private readonly ConcurrentDictionary<IPeer, PeerDescriptor> _descriptorByPeer = new();

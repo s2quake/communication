@@ -27,8 +27,9 @@ using System.Threading.Tasks;
 namespace JSSoft.Communication.Services;
 
 [Export(typeof(IService))]
+[Export(typeof(IUserService))]
 [Export(typeof(INotifyUserService))]
-class UserService : ClientService<IUserService, IUserCallback>, IUserCallback, INotifyUserService
+class UserService : ClientService<IUserService, IUserCallback>, IUserService, IUserCallback, INotifyUserService
 {
     public Task CreateAsync(Guid token, string userID, string password, Authority authority)
     {

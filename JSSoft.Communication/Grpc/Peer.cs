@@ -27,8 +27,8 @@ namespace JSSoft.Communication.Grpc;
 
 sealed class Peer : IPeer, IDisposable
 {
+    private readonly IService[] _services;
     private bool _isDisposed;
-    private IService[] _services;
 
     public Peer(string id, IService[] services)
     {

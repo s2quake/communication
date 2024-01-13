@@ -38,7 +38,7 @@ namespace JSSoft.Communication.ConsoleApp;
 sealed class Application : IApplication, IServiceProvider
 {
     private static readonly string postfix = TerminalEnvironment.IsWindows() == true ? ">" : "$ ";
-    private readonly Settings _settings;
+    private readonly ApplicationOptions _option;
     private readonly IServiceContext _serviceContext;
     private readonly INotifyUserService _userServiceNotification;
     private readonly CompositionContainer _container;
@@ -57,14 +57,14 @@ sealed class Application : IApplication, IServiceProvider
     private readonly bool _isServer = false;
 #endif
 
-    public Application()
+    public Application(ApplicationOptions option)
     {
         _container = new CompositionContainer(new AssemblyCatalog(typeof(Application).Assembly));
         _container.ComposeExportedValue<IApplication>(this);
         _container.ComposeExportedValue<IServiceProvider>(this);
         _container.ComposeExportedValue(this);
-
-        _settings = Settings.CreateFromCommandLine();
+        _container.ComposeExportedValue(option);
+        _option = option;
         _serviceContext = _container.GetExportedValue<IServiceContext>();
         _serviceContext.Opened += ServiceContext_Opened;
         _serviceContext.Closed += ServiceContext_Closed;
@@ -73,15 +73,6 @@ sealed class Application : IApplication, IServiceProvider
         _userServiceNotification.LoggedOut += UserServiceNotification_LoggedOut;
         _userServiceNotification.MessageReceived += UserServiceNotification_MessageReceived;
         Title = "Server";
-    }
-
-    public void Dispose()
-    {
-        if (_isDisposed != true)
-        {
-            _container.Dispose();
-            _isDisposed = true;
-        }
     }
 
     public bool IsOpened { get; private set; }
@@ -93,6 +84,15 @@ sealed class Application : IApplication, IServiceProvider
         {
             title = value;
             Console.Title = value;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed != true)
+        {
+            _container.Dispose();
+            _isDisposed = true;
         }
     }
 
@@ -151,7 +151,7 @@ sealed class Application : IApplication, IServiceProvider
             Title = $"Client {EndPointUtility.GetString(_serviceContext.EndPoint)}";
             Out.WriteLine("서버에 연결되었습니다.");
         }
-        Out.WriteLine("사용 가능한 명령을 확인려면 'help' 을(를) 입력하세요.");
+        Out.WriteLine("사용 가능한 명령을 확인려면 '--help' 을(를) 입력하세요.");
         Out.WriteLine("로그인을 하려면 'login admin admin' 을(를) 입력하세요.");
     }
 
@@ -236,7 +236,7 @@ sealed class Application : IApplication, IServiceProvider
             throw new InvalidOperationException();
 
         _cancellationTokenSource = new CancellationTokenSource();
-        _serviceContext.EndPoint = new DnsEndPoint(_settings.Host, _settings.Port);
+        _serviceContext.EndPoint = new DnsEndPoint(_option.Host, _option.Port);
         try
         {
             Token = await _serviceContext.OpenAsync(_cancellationTokenSource.Token);
@@ -244,8 +244,9 @@ sealed class Application : IApplication, IServiceProvider
         catch (Exception e)
         {
             var text = TerminalStringBuilder.GetString(e.Message, TerminalColorType.BrightRed);
-            Console.Error.WriteLine(text);
+            await _serviceContext.AbortAsync();
         }
+        UpdatePrompt();
         await Terminal.StartAsync(_cancellationTokenSource.Token);
     }
 
@@ -258,7 +259,14 @@ sealed class Application : IApplication, IServiceProvider
         if (_serviceContext.ServiceState == ServiceState.Open)
         {
             _serviceContext.Closed -= ServiceContext_Closed;
-            await _serviceContext.CloseAsync(Token, CancellationToken.None);
+            try
+            {
+                await _serviceContext.CloseAsync(Token, CancellationToken.None);
+            }
+            catch
+            {
+                await _serviceContext.AbortAsync();
+            }
         }
     }
 

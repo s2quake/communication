@@ -29,19 +29,19 @@ public sealed class MethodDescriptorCollection : Dictionary<string, MethodDescri
 {
     public MethodDescriptorCollection(IService service)
     {
-        var isServer = ServiceBase.IsServer(service);
+        var isServer = ServiceUtility.IsServer(service);
         var instanceType = isServer ? service.ServerType : service.ClientType;
         var methods = instanceType.GetMethods();
         foreach (var item in methods)
         {
             if (item.GetCustomAttribute(typeof(ClientMethodAttribute)) is ClientMethodAttribute clientMethodAttribute)
             {
-                var methodDescriptor = new MethodDescriptor(item, clientMethodAttribute);
+                var methodDescriptor = new MethodDescriptor(item);
                 Add(methodDescriptor.Name, methodDescriptor);
             }
             if (item.GetCustomAttribute(typeof(ServerMethodAttribute)) is ServerMethodAttribute serverMethodAttribute)
             {
-                var methodDescriptor = new MethodDescriptor(item, serverMethodAttribute);
+                var methodDescriptor = new MethodDescriptor(item);
                 Add(methodDescriptor.Name, methodDescriptor);
             }
         }

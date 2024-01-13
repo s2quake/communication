@@ -21,36 +21,31 @@
 // SOFTWARE.
 
 using JSSoft.Commands;
-using JSSoft.Commands.Extensions;
-using System;
+using System.ComponentModel.Composition;
 
 namespace JSSoft.Communication.ConsoleApp;
 
-public class Settings
+[Export]
+public class ApplicationOptions
 {
-    [CommandProperty(InitValue = ServiceContextBase.DefaultPort)]
-    public int Port
-    {
-        get; set;
-    }
+    [CommandPropertyRequired(DefaultValue = ServiceContextBase.DefaultHost)]
+    public string Host { get; set; } = string.Empty;
 
-    [CommandProperty(InitValue = ServiceContextBase.DefaultHost)]
-    public string Host
-    {
-        get; set;
-    } = string.Empty;
+    [CommandProperty(InitValue = ServiceContextBase.DefaultPort)]
+    public int Port { get; set; }
 
     [CommandPropertySwitch]
-    public bool Verbose
-    {
-        get; set;
-    }
+    public bool Verbose { get; set; }
 
-    public static Settings CreateFromCommandLine()
+    public static ApplicationOptions Parse(string[] args)
     {
-        var settings = new Settings();
-        var parser = new CommandParser(settings);
-        parser.ParseCommandLine(Environment.CommandLine);
-        return settings;
+        var options = new ApplicationOptions();
+        var parserSettings = new CommandSettings()
+        {
+            AllowEmpty = true,
+        };
+        var parser = new CommandParser(options, parserSettings);
+        parser.Parse(args);
+        return options;
     }
 }

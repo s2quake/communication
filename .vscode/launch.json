@@ -22,9 +22,6 @@
             "type": "coreclr",
             "request": "launch",
             "program": "${workspaceFolder}/JSSoft.Communication.Server/bin/Debug/net8.0/server.dll",
-            "args": [
-                "--verbose"
-            ],
             "cwd": "${workspaceFolder}/JSSoft.Communication.Server/bin/Debug/net8.0",
             "console": "integratedTerminal",
             "stopAtEntry": false

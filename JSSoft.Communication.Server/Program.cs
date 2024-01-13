@@ -21,24 +21,17 @@
 // SOFTWARE.
 
 using System;
-using System.Threading.Tasks;
+using JSSoft.Communication.ConsoleApp;
 
-namespace JSSoft.Communication.ConsoleApp;
-
-class Program
+try
 {
-    static async Task Main(string[] _)
-    {
-        try
-        {
-            using var application = new Application();
-            await application.StartAsync();
-        }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine(e);
-            Console.ReadKey();
-            Environment.Exit(1);
-        }
-    }
+    var options = ApplicationOptions.Parse(args);
+    using var application = new Application(options);
+    await application.StartAsync();
+}
+catch (Exception e)
+{
+    Console.Error.WriteLine(e);
+    Console.ReadKey();
+    Environment.Exit(1);
 }

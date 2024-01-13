@@ -30,27 +30,17 @@ sealed class AdaptorServerImpl(AdaptorServer adaptorServer) : Adaptor.AdaptorBas
     private readonly AdaptorServer _adaptorServer = adaptorServer;
 
     public override Task<OpenReply> Open(OpenRequest request, ServerCallContext context)
-    {
-        return _adaptorServer.OpenAsync(request, context, context.CancellationToken);
-    }
+        => _adaptorServer.OpenAsync(request, context, context.CancellationToken);
 
     public override Task<CloseReply> Close(CloseRequest request, ServerCallContext context)
-    {
-        return _adaptorServer.CloseAsync(request, context, context.CancellationToken);
-    }
+        => _adaptorServer.CloseAsync(request, context, context.CancellationToken);
 
     public override Task<PingReply> Ping(PingRequest request, ServerCallContext context)
-    {
-        return _adaptorServer.PingAsync(request, context);
-    }
+        => _adaptorServer.PingAsync(request, context);
 
     public override Task<InvokeReply> Invoke(InvokeRequest request, ServerCallContext context)
-    {
-        return _adaptorServer.InvokeAsync(request, context);
-    }
+        => _adaptorServer.InvokeAsync(request, context);
 
     public override Task Poll(IAsyncStreamReader<PollRequest> requestStream, IServerStreamWriter<PollReply> responseStream, ServerCallContext context)
-    {
-        return _adaptorServer.PollAsync(requestStream, responseStream, context);
-    }
+        => _adaptorServer.PollAsync(requestStream, responseStream, context);
 }

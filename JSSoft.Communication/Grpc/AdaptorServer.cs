@@ -136,6 +136,10 @@ sealed class AdaptorServer : IAdaptor
             }
             else
             {
+                if (methodDescriptor.ParameterTypes.Length > 0 && methodDescriptor.ParameterTypes[methodDescriptor.ParameterTypes.Length - 1] == typeof(CancellationToken))
+                {
+                    args[args.Length - 1] = context.CancellationToken;
+                }
                 var (assemblyQualifiedName, valueType, value) = await methodDescriptor.InvokeAsync(_serviceContext, instance, args);
                 var reply = new InvokeReply()
                 {
@@ -257,7 +261,7 @@ sealed class AdaptorServer : IAdaptor
         _serializer = null;
         _server = null;
     }
-    
+
     void IAdaptor.Invoke(InstanceBase instance, string name, Type[] types, object?[] args)
     {
         AddCallback(instance, name, types, args);
@@ -265,7 +269,7 @@ sealed class AdaptorServer : IAdaptor
 
     void IAdaptor.InvokeOneWay(InstanceBase instance, string name, Type[] types, object?[] args)
     {
-        throw new NotImplementedException();
+        AddCallback(instance, name, types, args);
     }
 
     T IAdaptor.Invoke<T>(InstanceBase instance, string name, Type[] types, object?[] args)

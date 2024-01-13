@@ -40,6 +40,14 @@ sealed class OpenCommand(IServiceContext serviceContext, Application application
 
     protected override async Task OnExecuteAsync(CancellationToken cancellationToken, IProgress<ProgressInfo> progress)
     {
-        _application.Token = await _serviceContext.OpenAsync(cancellationToken);
+        try
+        {
+            _application.Token = await _serviceContext.OpenAsync(cancellationToken);
+        }
+        catch
+        {
+            await _serviceContext.AbortAsync();
+            throw;
+        }
     }
 }

@@ -26,7 +26,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -135,6 +134,7 @@ sealed class AdaptorClient : IAdaptor
         {
         }
     }
+
     private async Task PollAsync(CancellationToken cancellationToken)
     {
         if (_adaptorImpl == null)
@@ -225,6 +225,15 @@ sealed class AdaptorClient : IAdaptor
         throw new UnreachableException();
     }
 
+    private static CancellationToken GetCancellationToken(ref Type[] types, ref object?[] args)
+    {
+        if (types.Length > 0 && types[types.Length - 1] == typeof(CancellationToken))
+        {
+            return (CancellationToken)args[args.Length - 1]!;
+        }
+        return CancellationToken.None;
+    }
+
     #region IAdaptor
 
     void IAdaptor.Invoke(InstanceBase instance, string name, Type[] types, object?[] args)
@@ -300,6 +309,7 @@ sealed class AdaptorClient : IAdaptor
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
 
+        var cancellationToken = GetCancellationToken(ref types, ref args);
         var token = _token;
         var data = _serializer.SerializeMany(types, args);
         var request = new InvokeRequest
@@ -309,10 +319,19 @@ sealed class AdaptorClient : IAdaptor
             Token = token
         };
         request.Data.AddRange(data);
-        var reply = await _adaptorImpl.InvokeAsync(request);
-        if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
+        try
         {
-            ThrowException(exceptionType, reply.Data);
+            var reply = await _adaptorImpl.InvokeAsync(request, cancellationToken: cancellationToken);
+            if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
+            {
+                ThrowException(exceptionType, reply.Data);
+            }
+        }
+        catch (RpcException e)
+        {
+            if (e.StatusCode == StatusCode.Cancelled)
+                cancellationToken.ThrowIfCancellationRequested();
+            throw;
         }
     }
 
@@ -321,6 +340,7 @@ sealed class AdaptorClient : IAdaptor
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
 
+        var cancellationToken = GetCancellationToken(ref types, ref args);
         var token = _token;
         var data = _serializer.SerializeMany(types, args);
         var request = new InvokeRequest
@@ -330,12 +350,21 @@ sealed class AdaptorClient : IAdaptor
             Token = token
         };
         request.Data.AddRange(data);
-        var reply = await _adaptorImpl.InvokeAsync(request);
-        if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
+        try
         {
-            ThrowException(exceptionType, reply.Data);
+            var reply = await _adaptorImpl.InvokeAsync(request, cancellationToken: cancellationToken);
+            if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
+            {
+                ThrowException(exceptionType, reply.Data);
+            }
+            return _serializer.Deserialize(typeof(T), reply.Data) is T value ? value : default!;
         }
-        return _serializer.Deserialize(typeof(T), reply.Data) is T value ? value : default!;
+        catch (RpcException e)
+        {
+            if (e.StatusCode == StatusCode.Cancelled)
+                cancellationToken.ThrowIfCancellationRequested();
+            throw;
+        }
     }
 
     #endregion

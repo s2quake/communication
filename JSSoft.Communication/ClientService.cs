@@ -47,9 +47,9 @@ public class ClientService<TServer, TClient>
         _client = (this as TClient)!;
     }
 
-    protected TServer Server => _server ?? throw new InvalidOperationException();
+    public TServer Server => _server ?? throw new InvalidOperationException();
 
-    protected virtual TClient CreateClient(IPeer peer, TServer service)
+    protected virtual TClient CreateClient(IPeer peer)
     {
         return _client;
     }
@@ -61,7 +61,7 @@ public class ClientService<TServer, TClient>
     protected override sealed object CreateInstance(IPeer peer, object obj)
     {
         _server = (TServer?)obj;
-        return CreateClient(peer, (TServer)obj);
+        return CreateClient(peer);
     }
 
     protected override sealed void DestroyInstance(IPeer peer, object obj)

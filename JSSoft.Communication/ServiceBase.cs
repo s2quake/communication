@@ -21,67 +21,20 @@
 // SOFTWARE.
 
 using System;
-using System.Reflection;
 
 namespace JSSoft.Communication;
 
 public abstract class ServiceBase(Type serverType, Type clientType) : IService
 {
-    public Type ServerType { get; } = ValidateServerType(serverType);
+    public Type ServerType { get; } = ServiceUtility.ValidateServerType(serverType);
 
-    public Type ClientType { get; } = ValidateClientType(clientType);
+    public Type ClientType { get; } = ServiceUtility.ValidateClientType(clientType);
 
     public string Name { get; } = serverType.Name;
 
     protected abstract object CreateInstance(IPeer peer, object obj);
 
     protected abstract void DestroyInstance(IPeer peer, object obj);
-
-    private static Type ValidateServerType(Type ServiceType)
-    {
-        if (ServiceType.IsInterface != true)
-            throw new InvalidOperationException("service type must be interface.");
-
-        if (IsNestedPublicType(ServiceType) != true && IsPublicType(ServiceType) != true && IsInternalType(ServiceType) != true)
-            throw new InvalidOperationException($"'{ServiceType.Name}' must be public or internal.");
-        return ServiceType;
-    }
-
-    private static Type ValidateClientType(Type CallbackType)
-    {
-        if (CallbackType != typeof(void))
-        {
-            if (CallbackType.IsInterface != true)
-                throw new InvalidOperationException("callback type must be interface.");
-            if (IsNestedPublicType(CallbackType) != true && IsPublicType(CallbackType) != true && IsInternalType(CallbackType) != true)
-                throw new InvalidOperationException($"'{CallbackType.Name}' must be public or internal.");
-        }
-        return CallbackType;
-    }
-
-    private static bool IsNestedPublicType(Type type)
-    {
-        return type.IsNested == true && type.IsNestedPublic == true;
-    }
-
-    private static bool IsPublicType(Type type)
-    {
-        return type.IsVisible == true && type.IsPublic == true && type.IsNotPublic != true;
-    }
-
-    private static bool IsInternalType(Type t)
-    {
-        return t.IsVisible != true && t.IsPublic != true && t.IsNotPublic == true;
-    }
-
-    internal static bool IsServer(IService service)
-    {
-        if (service.GetType().GetCustomAttribute(typeof(ServiceAttribute)) is ServiceAttribute serviceAttribute)
-        {
-            return serviceAttribute.IsServer;
-        }
-        return false;
-    }
 
     #region IService
 

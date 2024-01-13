@@ -29,8 +29,8 @@ using JSSoft.Communication.Threading;
 namespace JSSoft.Communication.Services;
 
 [Export(typeof(IService))]
-class DataService
-    : ServerService<IDataService>, IDataService, IDisposable
+[Export(typeof(IDataService))]
+class DataService : ServerService<IDataService>, IDataService, IDisposable
 {
     private readonly HashSet<string> _dataBases = [];
     private Dispatcher? _dispatcher;

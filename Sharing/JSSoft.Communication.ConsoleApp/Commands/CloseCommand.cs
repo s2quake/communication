@@ -38,8 +38,16 @@ sealed class CloseCommand(IServiceContext serviceContext, Application applicatio
 
     public override bool IsEnabled => _serviceContext.ServiceState == ServiceState.Open;
 
-    protected override Task OnExecuteAsync(CancellationToken cancellationToken, IProgress<ProgressInfo> progress)
+    protected override async Task OnExecuteAsync(CancellationToken cancellationToken, IProgress<ProgressInfo> progress)
     {
-        return _serviceContext.CloseAsync(_application.Token, cancellationToken);
+        try
+        {
+            await _serviceContext.CloseAsync(_application.Token, cancellationToken);
+        }
+        catch
+        {
+            await _serviceContext.AbortAsync();
+            throw;
+        }
     }
 }

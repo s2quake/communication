@@ -75,7 +75,7 @@ sealed class ServiceInstanceBuilder
         foreach (var methodInfo in methodInfos)
         {
             var operationContractAttribute = (ServerMethodAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(ServerMethodAttribute))!;
-            var isOneWay = IsOneWay(methodInfo);
+            var isOneWay = MethodDescriptor.IsMethodOneWay(methodInfo);
             var returnType = methodInfo.ReturnType;
             if (returnType == typeof(Task))
             {
@@ -99,13 +99,6 @@ sealed class ServiceInstanceBuilder
         }
 
         return typeBuilder.CreateType();
-
-        static bool IsOneWay(MethodInfo methodInfo)
-        {
-            if (Attribute.GetCustomAttribute(methodInfo, typeof(ServerMethodAttribute)) is ServerMethodAttribute serverMethodAttribute)
-                return serverMethodAttribute.IsOneWay;
-            return false;
-        }
     }
 
     private static void CreateInvoke(TypeBuilder typeBuilder, MethodInfo methodInfo, string methodName)

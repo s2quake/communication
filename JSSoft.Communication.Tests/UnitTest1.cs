@@ -16,9 +16,9 @@ public class UnitTest1
 
     sealed class TestServer : ServerService<ITestServer, ITestClient>, ITestServer
     {
-        public Task SendMessage(string message, CancellationToken cancellationToken)
+        public async Task SendMessage(string message, CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            await Task.Delay(1000, cancellationToken);
         }
     }
 
@@ -87,5 +87,23 @@ public class UnitTest1
         {
             Assert.Equal(ServiceState.None, clientContexts[i].ServiceState);
         }
+    }
+
+    [Fact]
+    public async Task OpenAndInvokeAndClientCloseAsync()
+    {
+        var server = new TestServer();
+        var client = new TestClient();
+        var serverContext = new ServerContext(server);
+        var clientContext = new ClientContext(client);
+
+        var serverToken = await serverContext.OpenAsync(CancellationToken.None);
+        var clientToken = await clientContext.OpenAsync(CancellationToken.None);
+
+        var cancellationTokenSource = new CancellationTokenSource(500);
+        await client.Server.SendMessage("123", cancellationTokenSource.Token);
+
+        await clientContext.CloseAsync(clientToken, CancellationToken.None);
+        await serverContext.CloseAsync(serverToken, CancellationToken.None);
     }
 }

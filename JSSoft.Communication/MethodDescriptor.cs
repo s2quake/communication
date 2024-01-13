@@ -21,40 +21,22 @@
 // SOFTWARE.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JSSoft.Communication;
 
 public sealed class MethodDescriptor
 {
-    internal MethodDescriptor(MethodInfo methodInfo, ServerMethodAttribute serverMethodAttribute)
+    internal MethodDescriptor(MethodInfo methodInfo)
     {
-        MethodInfo = methodInfo;
-        ParameterTypes = methodInfo.GetParameters().Select(item => item.ParameterType).ToArray();
-        ReturnType = methodInfo.ReturnType;
-        if (ReturnType == typeof(Task))
-        {
-            ReturnType = typeof(void);
-            IsAsync = true;
-        }
-        else if (ReturnType.IsSubclassOf(typeof(Task)) == true)
-        {
-            ReturnType = ReturnType.GetGenericArguments().First();
-            IsAsync = true;
-        }
-        Name = GenerateName(methodInfo);
-        ShortName = methodInfo.Name;
-        IsOneWay = serverMethodAttribute.IsOneWay;
-        if (IsOneWay == true && ReturnType != typeof(void))
-            throw new InvalidOperationException($"'{methodInfo}'s {nameof(MethodInfo.ReturnType)} must be '{typeof(void)}'.");
-    }
+        Verify(methodInfo);
 
-    internal MethodDescriptor(MethodInfo methodInfo, ClientMethodAttribute clientMethodAttribute)
-    {
         MethodInfo = methodInfo;
-        ParameterTypes = methodInfo.GetParameters().Select(item => item.ParameterType).ToArray();
+        ParameterTypes = GetParameterTypes(methodInfo);
         ReturnType = methodInfo.ReturnType;
         if (ReturnType == typeof(Task))
         {
@@ -68,9 +50,7 @@ public sealed class MethodDescriptor
         }
         Name = GenerateName(methodInfo);
         ShortName = methodInfo.Name;
-        IsOneWay = true;
-        if (IsOneWay == true && ReturnType != typeof(void))
-            throw new InvalidOperationException($"'{methodInfo}'s {nameof(MethodInfo.ReturnType)} must be '{typeof(void)}'.");
+        IsOneWay = IsMethodOneWay(methodInfo);
     }
 
     public string Name { get; }
@@ -133,6 +113,52 @@ public sealed class MethodDescriptor
     }
 
     internal MethodInfo MethodInfo { get; }
+
+    internal static bool IsMethodOneWay(MethodInfo methodInfo)
+    {
+        if (methodInfo.GetCustomAttribute(typeof(ServerMethodAttribute)) is ServerMethodAttribute serverMethodAttribute)
+        {
+            return serverMethodAttribute.IsOneWay;
+        }
+        if (methodInfo.GetCustomAttribute(typeof(ClientMethodAttribute)) is ClientMethodAttribute clientMethodAttribute)
+        {
+            return true;
+        }
+        throw new UnreachableException();
+    }
+
+    internal static Type[] GetParameterTypes(MethodInfo methodInfo)
+    {
+        var query = from parameterInfo in methodInfo.GetParameters()
+                    let parameterType = parameterInfo.ParameterType
+                    select parameterType;
+        return [.. query];
+    }
+
+    internal static ParameterInfo[] GetParameterInfos(MethodInfo methodInfo)
+    {
+        var query = from parameterInfo in methodInfo.GetParameters()
+                    let parameterType = parameterInfo.ParameterType
+                    select parameterInfo;
+        return [.. query];
+    }
+
+    private static void Verify(MethodInfo methodInfo)
+    {
+        var parameterInfos = methodInfo.GetParameters();
+        var isAsync = typeof(Task).IsAssignableFrom(methodInfo.ReturnType);
+        if (isAsync == true)
+        {
+            if (parameterInfos.Count(item => item.ParameterType == typeof(CancellationToken)) > 1)
+                throw new InvalidOperationException($"In method '{methodInfo}', only one parameter of type {nameof(CancellationToken)} should be defined.");
+            if (parameterInfos.Count(item => item.ParameterType == typeof(CancellationToken)) == 1 &&
+                parameterInfos.Last().ParameterType != typeof(CancellationToken))
+                throw new InvalidOperationException($"The last parameter of method '{methodInfo}' must be of type {nameof(CancellationToken)}.");
+        }
+
+        if (IsMethodOneWay(methodInfo) == true && methodInfo.ReturnType != typeof(void))
+            throw new InvalidOperationException($"'{methodInfo}'s {nameof(MethodInfo.ReturnType)} must be '{typeof(void)}'.");
+    }
 
     private async Task<(Type, object?)> InvokeAsync(object? instance, object?[] args)
     {

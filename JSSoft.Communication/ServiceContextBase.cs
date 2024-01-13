@@ -34,7 +34,6 @@ public abstract class ServiceContextBase : IServiceContext
 {
     public const string DefaultHost = "localhost";
     public const int DefaultPort = 4004;
-    private static readonly object obj = new();
     private readonly ServiceInstanceBuilder? _instanceBuilder;
     private readonly InstanceContext _instanceContext;
     private readonly bool _isServer;
@@ -158,15 +157,14 @@ public abstract class ServiceContextBase : IServiceContext
         }
     }
 
-    public async Task AbortAsync(Guid token)
+    public async Task AbortAsync()
     {
         if (ServiceState != ServiceState.Faulted)
             throw new InvalidOperationException();
-        if (token == Guid.Empty || _token!.Guid != token)
-            throw new ArgumentException($"Invalid token: {token}", nameof(token));
 
         _token = null;
         _serializer = null;
+        _instanceContext.ReleaseInstance();
         if (_adaptor != null)
         {
             await _adaptor.DisposeAsync();

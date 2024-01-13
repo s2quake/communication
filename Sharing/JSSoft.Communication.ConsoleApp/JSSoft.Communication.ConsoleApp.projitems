@@ -7,8 +7,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)CommandContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IApplication.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Application.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ApplicationOptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SystemTerminal.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Settings.cs" />
 
     <Compile Include="$(MSBuildThisFileDirectory)Commands\CloseCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\ExitCommand.cs" />
@@ -17,5 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Commands\OpenCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\UserCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\DataCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\HelpCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\VersionCommand.cs" />
   </ItemGroup>
 </Project>

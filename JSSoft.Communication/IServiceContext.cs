@@ -42,7 +42,7 @@ public interface IServiceContext : IServiceProvider
 
     Task CloseAsync(Guid token, CancellationToken cancellationToken);
 
-    Task AbortAsync(Guid token);
+    Task AbortAsync();
 
     event EventHandler? Opened;
 
