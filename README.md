@@ -104,7 +104,7 @@ Visual Studio Code 를 실행후 폴더 열기로 소스 위치를 선택합니�
 
 상단의 보기 메뉴에서 터미널을 선택하여 터미널 창을 띄웁니다.
 
-> 아래 명령을 실행하여 프로젝트를 생성하고 필요한 설정을 수행합니다.
+아래 명령을 실행하여 프로젝트를 생성하고 필요한 설정을 수행합니다.
 
 ```plain
 mkdir Server-Test
@@ -113,37 +113,31 @@ dotnet sln add Server-Test
 dotnet add Server-Test reference JSSoft.Communication
 ```
 
-* Server-Test 경로를 생성합니다.
-* Server-Test 경로에 콘솔 프로젝트를 생성합니다.
-* Server-Test 프로젝트를 솔루션에 추가합니다.
-* Server-Test 프로젝트에 JSSoft.Communication 프로젝트를 추가합니다.
-
 ### 3. 나만의 서비스 정의하기
 
 서버를 구축하기 전에 클라이언트에서 사용할 간단한 서비스를 제작해봅니다.
 
-> Server-Test 경로내에 `IMyService.cs` 파일을 만들고 아래와 같은 인터페이스를 정의합니다.
+Server-Test 경로내에 `IMyService.cs` 파일을 만들고 아래와 같은 인터페이스를 정의합니다.
 
 ```csharp
-using System.Threading.Tasks;
 using JSSoft.Communication;
 
-namespace Services
-{
-    public interface IMyService
-    {
-        [ServerMethod]
-        string Login(string userID);
+namespace Services;
 
-        [ServerMethod]
-        Task<(string product, string version)> GetVersionAsync(CancellationToken cancellationToken);
-    }
+public interface IMyService
+{
+    [ServerMethod]
+    string Login(string userID);
+
+    [ServerMethod]
+    Task<(string product, string version)> GetVersionAsync(CancellationToken cancellationToken);
 }
+
 ```
 
 아주 간단한 Login 메소드와 복잡해보이고 웬지 코딩 숙련도가 높아질것 같은 비동기 메소드 GetVersionAsync 를 정의하였습니다.
 
-> 만약 인터페이스를 `internal` 으로 사용하고자 한다면 코드 상단에 다음 구문을 추가 해야 합니다.
+만약 인터페이스를 `internal` 으로 사용하고자 한다면 코드 상단에 다음 구문을 추가 해야 합니다.
 
 ```plain
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("JSSoft.Communication.Runtime")]
@@ -153,61 +147,58 @@ namespace Services
 
 이제 인터페이스를 정의했으니 실제 작업을 구현해봅니다.
 
-> Server-Test 경로내에 `MyService.cs` 파일을 만들고 아래와 같이 작업을 구현합니다.
+Server-Test 경로내에 `MyService.cs` 파일을 만들고 아래와 같이 작업을 구현합니다.
 
 ```csharp
-using System;
-using System.Threading.Tasks;
-using Services;
+using JSSoft.Communication;
 
-namespace Server_Test
+namespace Services;
+
+sealed class MyService : ServerService<IMyService>, IMyService
 {
-    sealed class MyService : ServerService<IMyService>, IMyService
+    public string Login(string userID)
     {
-        public string Login(string userID)
-        {
-            Console.WriteLine($"logged in: '{userID}'");
-            return $"{Guid.NewGuid()}";
-        }
+        Console.WriteLine($"logged in: '{userID}'");
+        return $"{Guid.NewGuid()}";
+    }
 
-        public Task<(string product, string version)> GetVersionAsync(CancellationToken cancellationToken)
+    public Task<(string product, string version)> GetVersionAsync(CancellationToken cancellationToken)
+    {
+        return Task.Run(() =>
         {
-            return Task.Run(() =>
-            {
-                return ("MyServer", "1.0.0.0");
-            }, cancellationToken);
-        }
+            return ("MyServer", "1.0.0.0");
+        }, cancellationToken);
     }
 }
+
 ```
 
 ## 5. 서버 실행하기
 
-> Server-Test 경로내에 Program.cs 내용을 다음과 같이 작성합니다.
+Server-Test 경로내에 Program.cs 내용을 다음과 같이 작성합니다.
 
 ```csharp
-using System;
-using System.Threading.Tasks;
 using JSSoft.Communication;
+using Services;
 
-namespace Server_Test
+var service = new MyService();
+var serviceContext = new ServerContext([service]);
+try
 {
-    class Program
-    {
-        static async Task Main(string[] args)
-        {
-            var service = new ServerService();
-            var serviceContext = new ServerContext([service]);
-            var token = await serviceContext.OpenAsync(CancellationToken.None);
+    var token = await serviceContext.OpenAsync(CancellationToken.None);
 
-            Console.WriteLine("서버가 시작되었습니다.");
-            Console.WriteLine("종료하려면 아무 키나 누르세요.");
-            Console.ReadKey();
+    Console.WriteLine("서버가 시작되었습니다.");
+    Console.WriteLine("종료하려면 아무 키나 누르세요.");
+    Console.ReadKey();
 
-            await serviceContext.CloseAsync(token, CancellationToken.None);
-        }
-    }
+    await serviceContext.CloseAsync(token, CancellationToken.None);
 }
+catch
+{
+    await serviceContext.AbortAsync();
+    Environment.Exit(1);
+}
+
 ```
 
 ## 7. 클라이언트 프로젝트 만들기
@@ -223,52 +214,39 @@ dotnet add Client-Test reference JSSoft.Communication
 
 ## 8. 클라이언트 구현하기
 
-> Client-Test 경로내에 ClientService.cs 파일을 만들고 내용을 다음과 같이 작성합니다.
+Client-Test 경로내에 Program.cs 내용을 다음과 같이 작성합니다.
+
+> Server-Test 에서 생성한 `IMyService.cs` 파일을 포함시킵니다.
 
 ```csharp
-using System;
 using JSSoft.Communication;
 using Services;
 
-namespace Client_Test
+var service = new ClientService<IMyService>();
+var serviceContext = new ClientContext([service]);
+
+try
 {
-    sealed class ClientService : ClientService<IMyService>
-    {
-    }
+    var token = await serviceContext.OpenAsync(CancellationToken.None);
+    var server = service.Server;
+
+    var id = server.Login("admin");
+    var (product, version) = await server.GetVersionAsync(CancellationToken.None);
+    Console.WriteLine($"logged in: {id}");
+    Console.WriteLine($"product: {product}");
+    Console.WriteLine($"version: {version}");
+
+    Console.WriteLine("종료하려면 아무 키나 누르세요.");
+    Console.ReadKey();
+
+    await serviceContext.CloseAsync(token, CancellationToken.None);
 }
-```
-
-> Client-Test 경로내에 Program.cs 내용을 다음과 같이 작성합니다.
-
-```csharp
-using System;
-using System.Threading.Tasks;
-
-namespace Client_Test
+catch
 {
-    class Program
-    {
-        static async Task Main(string[] args)
-        {
-            var service = new ClientService();
-            var serviceContext = new ClientContext([service]);
-
-            var token = await serviceContext.OpenAsync(CancellationToken.None);
-            var server = service.Server;
-
-            var id = server.Login("admin");
-            var (product, version) = await server.GetVersionAsync(CancellationToken.None);
-            Console.WriteLine($"logged in: {id}");
-            Console.WriteLine($"product: {product}");
-            Console.WriteLine($"version: {version}");
-
-            Console.WriteLine("종료하려면 아무 키나 누르세요.");
-            Console.ReadKey();
-
-            await serviceContext.CloseAsync(token, CancellationToken.None);
-        }
-    }
+    await serviceContext.AbortAsync();
+    Environment.Exit(1);
 }
+
 ```
 
 ## 9. 빌드 및 실행하기
@@ -288,5 +266,5 @@ dotnet run --project Server-Test --framework net8.0
 다시 새로운 terminal이나 PowerShell 실행후 소스 경로에서 아래의 명령을 실행하여 클라이언트를 실행합니다.
 
 ```plain
-dotnet run --projet Client-Test --framework net8.0
+dotnet run --project Client-Test --framework net8.0
 ```
