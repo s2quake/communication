@@ -37,7 +37,7 @@ namespace JSSoft.Communication.ConsoleApp;
 
 sealed class Application : IApplication, IServiceProvider
 {
-    private static readonly string postfix = TerminalEnvironment.IsWindows() == true ? ">" : "$ ";
+    private static readonly string postfix = TerminalEnvironment.IsWindows() == true ? ">" : "$";
     private readonly ApplicationOptions _option;
     private readonly IServiceContext _serviceContext;
     private readonly INotifyUserService _userServiceNotification;
@@ -133,7 +133,7 @@ sealed class Application : IApplication, IServiceProvider
             if (userID != string.Empty)
                 prompt += $"@{userID}";
         }
-        Terminal.Prompt = $"{prompt} {postfix}";
+        Terminal.Prompt = $"{prompt} {postfix} ";
     }
 
     private void ServiceContext_Opened(object? sender, EventArgs e)
