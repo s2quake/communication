@@ -11,10 +11,13 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JSSoft.Communication\JSSoft.Communication.csproj" />
-    <Reference Include="JSSoft.Terminals.dll">
+    <ProjectReference Condition="Exists('..\..\.commands\JSSoft.Commands\JSSoft.Terminals.csproj')" Include="..\..\.commands\JSSoft.Commands\JSSoft.Terminals.csproj" />
+    <ProjectReference Condition="Exists('..\..\.commands\JSSoft.Commands\JSSoft.Commands.csproj')" Include="..\..\.commands\JSSoft.Commands\JSSoft.Commands.csproj" />
+    <ProjectReference Include="..\JSSoft.Communication\JSSoft.Communication.csproj" />
+    <Reference Condition="!Exists('..\..\.commands\JSSoft.Commands\JSSoft.Terminals.csproj')" Include="JSSoft.Terminals.dll">
       <HintPath>..\Assemblies\JSSoft.Terminals.dll</HintPath>
     </Reference>
-    <Reference Include="JSSoft.Commands.dll">
+    <Reference Condition="!Exists('..\..\.commands\JSSoft.Commands\JSSoft.Commands.csproj')" Include="JSSoft.Commands.dll">
       <HintPath>..\Assemblies\JSSoft.Commands.dll</HintPath>
     </Reference>
   </ItemGroup>
