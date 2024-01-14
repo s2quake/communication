@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JSSoft.Communication;
@@ -162,6 +163,7 @@ sealed class ServiceInstanceBuilder
 
     private static void CreateInvokeAsync(TypeBuilder typeBuilder, MethodInfo methodInfo, string methodName)
     {
+        var isCancelable = MethodDescriptor.IsMethodCancelable(methodInfo);
         var parameterInfos = methodInfo.GetParameters();
         var parameterTypes = parameterInfos.Select(i => i.ParameterType).ToArray();
         var returnType = methodInfo.ReturnType;
@@ -175,14 +177,15 @@ sealed class ServiceInstanceBuilder
             methodBuilder.DefineParameter(i, ParameterAttributes.None, parameterInfos[i].Name);
         }
 
+        var parameterLength = isCancelable == true ? parameterInfos.Length - 1 : parameterInfos.Length;
         var il = methodBuilder.GetILGenerator();
         il.DeclareLocal(typeof(Type[]));
         il.DeclareLocal(typeof(object[]));
         il.DeclareLocal(returnType);
         il.Emit(OpCodes.Nop);
-        il.EmitLdc_I4(parameterInfos.Length);
+        il.EmitLdc_I4(parameterLength);
         il.Emit(OpCodes.Newarr, typeof(Type));
-        for (var i = 0; i < parameterInfos.Length; i++)
+        for (var i = 0; i < parameterLength; i++)
         {
             var item = parameterInfos[i];
             il.Emit(OpCodes.Dup);
@@ -192,9 +195,9 @@ sealed class ServiceInstanceBuilder
             il.Emit(OpCodes.Stelem_Ref);
         }
         il.Emit(OpCodes.Stloc_0);
-        il.EmitLdc_I4(parameterInfos.Length);
+        il.EmitLdc_I4(parameterLength);
         il.Emit(OpCodes.Newarr, typeof(object));
-        for (var i = 0; i < parameterInfos.Length; i++)
+        for (var i = 0; i < parameterLength; i++)
         {
             var item = parameterInfos[i];
             il.Emit(OpCodes.Dup);
@@ -211,6 +214,14 @@ sealed class ServiceInstanceBuilder
         il.Emit(OpCodes.Ldstr, MethodDescriptor.GenerateName(methodInfo));
         il.Emit(OpCodes.Ldloc_0);
         il.Emit(OpCodes.Ldloc_1);
+        if (isCancelable == true)
+        {
+            il.EmitLdarg(parameterLength + 1);
+        }
+        else
+        {
+            il.Emit(OpCodes.Call, typeof(CancellationToken).GetMethod("get_None", BindingFlags.Public | BindingFlags.Static)!);
+        }
         il.Emit(OpCodes.Call, invokeMethod);
         il.Emit(OpCodes.Nop);
         il.Emit(OpCodes.Ret);

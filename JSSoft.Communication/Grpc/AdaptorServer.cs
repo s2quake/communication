@@ -121,8 +121,9 @@ sealed class AdaptorServer : IAdaptor
         if (Peers.TryGetValue(id, out var peer) == true)
         {
             var methodDescriptor = methodDescriptors[request.Name];
+            var cancellationToken = methodDescriptor.Iscancelable == true ? (CancellationToken?)context.CancellationToken : null;
             var instance = peer.Services[service];
-            var args = _serializer.DeserializeMany(methodDescriptor.ParameterTypes, [.. request.Data]);
+            var args = _serializer.DeserializeMany(methodDescriptor.ParameterTypes, [.. request.Data], cancellationToken);
             if (methodDescriptor.IsOneWay == true)
             {
                 methodDescriptor.InvokeOneWay(_serviceContext, instance, args);
@@ -136,10 +137,6 @@ sealed class AdaptorServer : IAdaptor
             }
             else
             {
-                if (methodDescriptor.ParameterTypes.Length > 0 && methodDescriptor.ParameterTypes[methodDescriptor.ParameterTypes.Length - 1] == typeof(CancellationToken))
-                {
-                    args[args.Length - 1] = context.CancellationToken;
-                }
                 var (assemblyQualifiedName, valueType, value) = await methodDescriptor.InvokeAsync(_serviceContext, instance, args);
                 var reply = new InvokeReply()
                 {
@@ -277,12 +274,12 @@ sealed class AdaptorServer : IAdaptor
         throw new NotImplementedException();
     }
 
-    Task IAdaptor.InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args)
+    Task IAdaptor.InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    Task<T> IAdaptor.InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args)
+    Task<T> IAdaptor.InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

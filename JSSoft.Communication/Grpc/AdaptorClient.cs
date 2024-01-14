@@ -225,15 +225,6 @@ sealed class AdaptorClient : IAdaptor
         throw new UnreachableException();
     }
 
-    private static CancellationToken GetCancellationToken(ref Type[] types, ref object?[] args)
-    {
-        if (types.Length > 0 && types[types.Length - 1] == typeof(CancellationToken))
-        {
-            return (CancellationToken)args[args.Length - 1]!;
-        }
-        return CancellationToken.None;
-    }
-
     #region IAdaptor
 
     void IAdaptor.Invoke(InstanceBase instance, string name, Type[] types, object?[] args)
@@ -304,12 +295,11 @@ sealed class AdaptorClient : IAdaptor
         throw new UnreachableException();
     }
 
-    async Task IAdaptor.InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args)
+    async Task IAdaptor.InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken)
     {
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
 
-        var cancellationToken = GetCancellationToken(ref types, ref args);
         var token = _token;
         var data = _serializer.SerializeMany(types, args);
         var request = new InvokeRequest
@@ -335,12 +325,11 @@ sealed class AdaptorClient : IAdaptor
         }
     }
 
-    async Task<T> IAdaptor.InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args)
+    async Task<T> IAdaptor.InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken)
     {
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
 
-        var cancellationToken = GetCancellationToken(ref types, ref args);
         var token = _token;
         var data = _serializer.SerializeMany(types, args);
         var request = new InvokeRequest

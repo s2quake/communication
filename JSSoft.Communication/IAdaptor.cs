@@ -39,9 +39,9 @@ public interface IAdaptor : IAsyncDisposable
 
     T Invoke<T>(InstanceBase instance, string name, Type[] types, object?[] args);
 
-    Task InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args);
+    Task InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken);
 
-    Task<T> InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args);
+    Task<T> InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken);
 
     event EventHandler? Disconnected;
 }

@@ -48,7 +48,7 @@ sealed class Application : IApplication, IServiceProvider
 
     static Application()
     {
-        JSSoft.Communication.Logging.LogUtility.Logger = JSSoft.Communication.Logging.ConsoleLogger.Default;
+        Logging.LogUtility.Logger = Logging.ConsoleLogger.Default;
     }
 
 #if SERVER

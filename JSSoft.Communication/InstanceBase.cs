@@ -22,6 +22,7 @@
 
 using System;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 // https://sharplab.io/#v2:C4LglgNgPgAgTARgLACgYAYAEMEBYDcqG2CArISqgHYCGAtgKYDOADjQMYOYBywATgwYA3AHQBhAXRriA9nToBXKmHY1gYGVVQBvVJn3Y4mAJJUmwGlU4AhGkwZ6DulAdfYAzNlwmqQmQGsGAAocLFpGABpMABUATxYGAG0AXUxgeOYomQAjACsGdmAUzBo+AHMmAEpHN0xnWv0ASGAACz4ZAHdMKgYu7hlgYzoWCAZGKmAGABMAUQAPThZ1TSDKigbMAF9UGrcYT2ifP0CAHmiAPhCEMPoGKLiE4vSEpiy8gqLU0orqlwb6hrNNqdbq9HgDIYjMYMCbTeaLZZUVbrBrbSh/Wr7bAANiOAQYAEEmLErFcbpFMGw+PQmJgcvlCsVvlVdq4AbUge0uj0+hDhqNxpNZgsGEsNEi1qyDGipfosTBsWdznjAkSSewlWTurcolSaXT3oyvuUWRi3Oy3JyQTzwYN+dDYcKEeLkbKtrs0a5dvAfOZLDY7AxIRBMCBfRYrAxbPZdhbXPLvKZjsFQiVyggomAJmmynBfhs4wZGkJSmkMrSALygro4EQPJKpbRlhIyABmZMqUWeDDbQSzwEqWxRG30Jb4Ocr1YNDM+dRzGZzRk2w8t2UDIiT+KC4R77c3gU7zcyE8lZtcnoabqx/ZVDAA4jCGHwVFrvgub98827C7Ux0fJzatb1sUTbdr2ADK/BZmUh5ge2/aDsubquH+zKYFWNr0h8IHzlEn5Dm6jQwAA7Jga72Buvj4ic/aXDuvb7vej7PuwsHlnhJqnhsF61FengKreaqkqmb6Ztmn5RNkMgyCG3zuPm/yEX+3YAWCQEZDhcFBJBz5UDBXYZL2CEGS27ZSTJiErhsqEmuhU5YUac6iYuHFlJ4SFnkWJFkeujFCew263AxVGqsSVhsS8rlVFZ0punxOI0RMyqMQ+PQsf5r7pmJwCLgptQ/pgxalipdmAQgdYaY2R4QVBekRbufYTJZyEGDZFSlWCDmzk2zn4R5GxEaR5EMJRyb+YlwB0UFe4hUxaUqP59WvCeMX6Dx7ooGiQA
@@ -95,25 +96,25 @@ public abstract class InstanceBase
     }
 
     [InstanceMethod(InvokeAsyncMethod)]
-    protected Task InvokeAsync(string name, Type[] types, object?[] args)
+    protected Task InvokeAsync(string name, Type[] types, object?[] args, CancellationToken cancellationToken)
     {
-        return Adaptor.InvokeAsync(this, name, types, args);
+        return Adaptor.InvokeAsync(this, name, types, args, cancellationToken);
     }
 
-    protected Task InvokeAsync((string name, Type[] types, object?[] args) info)
+    protected Task InvokeAsync((string name, Type[] types, object?[] args) info, CancellationToken cancellationToken)
     {
-        return Adaptor.InvokeAsync(this, info.name, info.types, info.args);
+        return Adaptor.InvokeAsync(this, info.name, info.types, info.args, cancellationToken);
     }
 
     [InstanceMethod(InvokeGenericAsyncMethod)]
-    protected Task<T> InvokeAsync<T>(string name, Type[] types, object?[] args)
+    protected Task<T> InvokeAsync<T>(string name, Type[] types, object?[] args, CancellationToken cancellationToken)
     {
-        return Adaptor.InvokeAsync<T>(this, name, types, args);
+        return Adaptor.InvokeAsync<T>(this, name, types, args, cancellationToken);
     }
 
-    protected Task<T> InvokeAsync<T>((string name, Type[] types, object?[] args) info)
+    protected Task<T> InvokeAsync<T>((string name, Type[] types, object?[] args) info, CancellationToken cancellationToken)
     {
-        return Adaptor.InvokeAsync<T>(this, info.name, info.types, info.args);
+        return Adaptor.InvokeAsync<T>(this, info.name, info.types, info.args, cancellationToken);
     }
 
     protected static (string, Type[], object?[]) Info<P>(MethodInfo methodInfo, Type serviceType, P arg)

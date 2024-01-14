@@ -5,7 +5,7 @@ public class UnitTest1
     public interface ITestServer
     {
         [ServerMethod]
-        Task SendMessage(string message, CancellationToken cancellationToken);
+        Task SendMessageAsync(string message, CancellationToken cancellationToken);
     }
 
     public interface ITestClient
@@ -16,7 +16,7 @@ public class UnitTest1
 
     sealed class TestServer : ServerService<ITestServer, ITestClient>, ITestServer
     {
-        public async Task SendMessage(string message, CancellationToken cancellationToken)
+        public async Task SendMessageAsync(string message, CancellationToken cancellationToken)
         {
             await Task.Delay(1000, cancellationToken);
         }
@@ -101,7 +101,7 @@ public class UnitTest1
         var clientToken = await clientContext.OpenAsync(CancellationToken.None);
 
         var cancellationTokenSource = new CancellationTokenSource(500);
-        await client.Server.SendMessage("123", cancellationTokenSource.Token);
+        await client.Server.SendMessageAsync("123", cancellationTokenSource.Token);
 
         await clientContext.CloseAsync(clientToken, CancellationToken.None);
         await serverContext.CloseAsync(serverToken, CancellationToken.None);

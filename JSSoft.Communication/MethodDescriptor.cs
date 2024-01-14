@@ -51,6 +51,7 @@ public sealed class MethodDescriptor
         Name = GenerateName(methodInfo);
         ShortName = methodInfo.Name;
         IsOneWay = IsMethodOneWay(methodInfo);
+        Iscancelable = IsMethodCancelable(methodInfo);
     }
 
     public string Name { get; }
@@ -64,6 +65,8 @@ public sealed class MethodDescriptor
     public bool IsAsync { get; }
 
     public bool IsOneWay { get; }
+
+    public bool Iscancelable { get; }
 
     public async void InvokeOneWay(IServiceProvider serviceProvider, object instance, object?[] args)
     {
@@ -127,10 +130,19 @@ public sealed class MethodDescriptor
         throw new UnreachableException();
     }
 
+    internal static bool IsMethodCancelable(MethodInfo methodInfo)
+    {
+        var parameterInfos = methodInfo.GetParameters();
+        if (parameterInfos.Length > 0 && parameterInfos[parameterInfos.Length - 1].ParameterType == typeof(CancellationToken))
+            return true;
+        return false;
+    }
+
     internal static Type[] GetParameterTypes(MethodInfo methodInfo)
     {
         var query = from parameterInfo in methodInfo.GetParameters()
                     let parameterType = parameterInfo.ParameterType
+                    where parameterType != typeof(CancellationToken)
                     select parameterType;
         return [.. query];
     }
@@ -139,6 +151,7 @@ public sealed class MethodDescriptor
     {
         var query = from parameterInfo in methodInfo.GetParameters()
                     let parameterType = parameterInfo.ParameterType
+                    where parameterType != typeof(CancellationToken)
                     select parameterInfo;
         return [.. query];
     }
@@ -154,6 +167,11 @@ public sealed class MethodDescriptor
             if (parameterInfos.Count(item => item.ParameterType == typeof(CancellationToken)) == 1 &&
                 parameterInfos.Last().ParameterType != typeof(CancellationToken))
                 throw new InvalidOperationException($"The last parameter of method '{methodInfo}' must be of type {nameof(CancellationToken)}.");
+        }
+        else
+        {
+            if (parameterInfos.Any(item => item.ParameterType == typeof(CancellationToken)) == true)
+                throw new InvalidOperationException($"The {nameof(CancellationToken)} type cannot be used in method '{methodInfo}'.");
         }
 
         if (IsMethodOneWay(methodInfo) == true && methodInfo.ReturnType != typeof(void))

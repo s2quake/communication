@@ -21,10 +21,11 @@
 // SOFTWARE.
 
 using System;
+using System.Threading;
 
 namespace JSSoft.Communication;
 
-public static class ISerializerExtensions
+static class ISerializerExtensions
 {
     public static string[] SerializeMany(this ISerializer @this, Type[] types, object?[] args)
     {
@@ -46,6 +47,23 @@ public static class ISerializerExtensions
             var type = types[i];
             var value = datas[i];
             items[i] = @this.Deserialize(type, value);
+        }
+        return items;
+    }
+
+    public static object?[] DeserializeMany(this ISerializer @this, Type[] types, string[] datas, CancellationToken? cancellationToken)
+    {
+        var length = cancellationToken != null ? datas.Length + 1 : datas.Length;
+        var items = new object?[length];
+        for (var i = 0; i < datas.Length; i++)
+        {
+            var type = types[i];
+            var value = datas[i];
+            items[i] = @this.Deserialize(type, value);
+        }
+        if (cancellationToken != null)
+        {
+            items[datas.Length] = cancellationToken;
         }
         return items;
     }
