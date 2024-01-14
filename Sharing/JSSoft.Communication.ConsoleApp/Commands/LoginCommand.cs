@@ -32,30 +32,22 @@ namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
 [method: ImportingConstructor]
-sealed class LoginCommand(Application application, Lazy<IUserService> userService) : CommandAsyncBase
+sealed class LoginCommand(Application application, IUserService userService) : CommandAsyncBase
 {
     private readonly Application _application = application;
-    private readonly Lazy<IUserService> _userService = userService;
+    private readonly IUserService _userService = userService;
 
     [CommandPropertyRequired]
-    public string UserID
-    {
-        get; set;
-    } = string.Empty;
+    public string UserID { get; set; } = string.Empty;
 
     [CommandPropertyRequired]
-    public string Password
-    {
-        get; set;
-    } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 
     public override bool IsEnabled => _application.UserToken == Guid.Empty;
 
     protected override async Task OnExecuteAsync(CancellationToken cancellationToken, IProgress<ProgressInfo> progress)
     {
-        var token = await UserService.LoginAsync(UserID, Password);
+        var token = await _userService.LoginAsync(UserID, Password, cancellationToken);
         _application.Login(UserID, token);
     }
-
-    private IUserService UserService => _userService.Value;
 }

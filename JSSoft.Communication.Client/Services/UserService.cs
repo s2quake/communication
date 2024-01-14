@@ -22,6 +22,7 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Services;
@@ -29,57 +30,37 @@ namespace JSSoft.Communication.Services;
 [Export(typeof(IService))]
 [Export(typeof(IUserService))]
 [Export(typeof(INotifyUserService))]
-class UserService : ClientService<IUserService, IUserCallback>, IUserService, IUserCallback, INotifyUserService
+sealed class UserService : ClientService<IUserService, IUserCallback>, IUserService, IUserCallback, INotifyUserService
 {
-    public Task CreateAsync(Guid token, string userID, string password, Authority authority)
-    {
-        return Server.CreateAsync(token, userID, password, authority);
-    }
+    public Task CreateAsync(Guid token, string userID, string password, Authority authority, CancellationToken cancellationToken)
+        => Server.CreateAsync(token, userID, password, authority, cancellationToken);
 
-    public Task DeleteAsync(Guid token, string userID)
-    {
-        return Server.DeleteAsync(token, userID);
-    }
+    public Task DeleteAsync(Guid token, string userID, CancellationToken cancellationToken)
+        => Server.DeleteAsync(token, userID, cancellationToken);
 
-    public Task<(string userName, Authority authority)> GetInfoAsync(Guid token, string userID)
-    {
-        return Server.GetInfoAsync(token, userID);
-    }
+    public Task RenameAsync(Guid token, string userName, CancellationToken cancellationToken)
+        => Server.RenameAsync(token, userName, cancellationToken);
 
-    public Task<string[]> GetUsersAsync(Guid token)
-    {
-        return Server.GetUsersAsync(token);
-    }
+    public Task SetAuthorityAsync(Guid token, string userID, Authority authority, CancellationToken cancellationToken)
+        => Server.SetAuthorityAsync(token, userID, authority, cancellationToken);
 
-    public Task<bool> IsOnlineAsync(Guid token, string userID)
-    {
-        return Server.IsOnlineAsync(token, userID);
-    }
+    public Task<Guid> LoginAsync(string userID, string password, CancellationToken cancellationToken)
+        => Server.LoginAsync(userID, password, cancellationToken);
 
-    public Task<Guid> LoginAsync(string userID, string password)
-    {
-        return Server.LoginAsync(userID, password);
-    }
+    public Task LogoutAsync(Guid token, CancellationToken cancellationToken)
+        => Server.LogoutAsync(token, cancellationToken);
 
-    public Task LogoutAsync(Guid token)
-    {
-        return Server.LogoutAsync(token);
-    }
+    public Task<(string userName, Authority authority)> GetInfoAsync(Guid token, string userID, CancellationToken cancellationToken)
+        => Server.GetInfoAsync(token, userID, cancellationToken);
 
-    public Task RenameAsync(Guid token, string userName)
-    {
-        return Server.RenameAsync(token, userName);
-    }
+    public Task<string[]> GetUsersAsync(Guid token, CancellationToken cancellationToken)
+        => Server.GetUsersAsync(token, cancellationToken);
 
-    public Task SendMessageAsync(Guid token, string userID, string message)
-    {
-        return Server.SendMessageAsync(token, userID, message);
-    }
+    public Task<bool> IsOnlineAsync(Guid token, string userID, CancellationToken cancellationToken)
+        => Server.IsOnlineAsync(token, userID, cancellationToken);
 
-    public Task SetAuthorityAsync(Guid token, string userID, Authority authority)
-    {
-        return Server.SetAuthorityAsync(token, userID, authority);
-    }
+    public Task SendMessageAsync(Guid token, string userID, string message, CancellationToken cancellationToken)
+        => Server.SendMessageAsync(token, userID, message, cancellationToken);
 
     public event EventHandler<UserEventArgs>? LoggedIn;
 
@@ -95,77 +76,28 @@ class UserService : ClientService<IUserService, IUserCallback>, IUserService, IU
 
     public event EventHandler<UserAuthorityEventArgs>? AuthorityChanged;
 
-    protected virtual void OnCreated(UserEventArgs e)
-    {
-        Created?.Invoke(this, e);
-    }
-
-    protected virtual void OnDeleted(UserEventArgs e)
-    {
-        Deleted?.Invoke(this, e);
-    }
-
-    protected virtual void OnLoggedIn(UserEventArgs e)
-    {
-        LoggedIn?.Invoke(this, e);
-    }
-
-    protected virtual void OnLoggedOut(UserEventArgs e)
-    {
-        LoggedOut?.Invoke(this, e);
-    }
-
-    protected virtual void OnMessageReceived(UserMessageEventArgs e)
-    {
-        MessageReceived?.Invoke(this, e);
-    }
-
-    protected virtual void OnRenamed(UserNameEventArgs e)
-    {
-        Renamed?.Invoke(this, e);
-    }
-
-    protected virtual void OnAuthorityChanged(UserAuthorityEventArgs e)
-    {
-        AuthorityChanged?.Invoke(this, e);
-    }
-
-    #region IUserServiceCallback
+    #region IUserCallback
 
     void IUserCallback.OnCreated(string userID)
-    {
-        OnCreated(new UserEventArgs(userID));
-    }
+        => Created?.Invoke(this, new UserEventArgs(userID));
 
     void IUserCallback.OnDeleted(string userID)
-    {
-        OnDeleted(new UserEventArgs(userID));
-    }
+        => Deleted?.Invoke(this, new UserEventArgs(userID));
 
     void IUserCallback.OnLoggedIn(string userID)
-    {
-        OnLoggedIn(new UserEventArgs(userID));
-    }
+        => LoggedIn?.Invoke(this, new UserEventArgs(userID));
 
     void IUserCallback.OnLoggedOut(string userID)
-    {
-        OnLoggedOut(new UserEventArgs(userID));
-    }
+        => LoggedOut?.Invoke(this, new UserEventArgs(userID));
 
     void IUserCallback.OnMessageReceived(string sender, string receiver, string message)
-    {
-        OnMessageReceived(new UserMessageEventArgs(sender, receiver, message));
-    }
+        => MessageReceived?.Invoke(this, new UserMessageEventArgs(sender, receiver, message));
 
     void IUserCallback.OnRenamed(string userID, string userName)
-    {
-        OnRenamed(new UserNameEventArgs(userID, userName));
-    }
+        => Renamed?.Invoke(this, new UserNameEventArgs(userID, userName));
 
     void IUserCallback.OnAuthorityChanged(string userID, Authority authority)
-    {
-        OnAuthorityChanged(new UserAuthorityEventArgs(userID, authority));
-    }
+        => AuthorityChanged?.Invoke(this, new UserAuthorityEventArgs(userID, authority));
 
     #endregion
 }

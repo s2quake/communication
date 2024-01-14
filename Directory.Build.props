@@ -23,8 +23,6 @@ SOFTWARE. -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(SolutionDir)' != '' and '$(SolutionDir)' != '$(MSBuildThisFileDirectory)' and $([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../')) != ''" Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
-    <PublishGroup>communication</PublishGroup>
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)communication.snk</AssemblyOriginatorKeyFile>
     <TargetFrameworks>net8.0</TargetFrameworks>
     <AssemblyVersion>2.0</AssemblyVersion>
     <FileVersion>2.0.0</FileVersion>
@@ -46,5 +44,7 @@ SOFTWARE. -->
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Nullable>enable</Nullable>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <PublishGroup>communication</PublishGroup>
+    <AssemblyOriginatorKeyFile Condition="Exists('$(MSBuildThisFileDirectory).build/public.snk')">$(MSBuildThisFileDirectory).build/public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 </Project>

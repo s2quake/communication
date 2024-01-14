@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using JSSoft.Communication.Threading;
 
@@ -32,7 +33,7 @@ namespace JSSoft.Communication.Services;
 [Export(typeof(IService))]
 [Export(typeof(IUserService))]
 [Export(typeof(INotifyUserService))]
-class UserService : ServerService<IUserService, IUserCallback>, IUserService, INotifyUserService, IDisposable
+sealed class UserService : ServerService<IUserService, IUserCallback>, IUserService, INotifyUserService, IDisposable
 {
     private readonly Dictionary<string, UserInfo> _userByID = [];
     private readonly Dictionary<Guid, UserInfo> _userByToken = [];
@@ -63,7 +64,7 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
         _dispatcher = new Dispatcher(this);
     }
 
-    public Task CreateAsync(Guid token, string userID, string password, Authority authority)
+    public Task CreateAsync(Guid token, string userID, string password, Authority authority, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {
@@ -79,11 +80,11 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
             };
             _userByID.Add(userID, userInfo);
             Client.OnCreated(userID);
-            OnCreated(new UserEventArgs(userID));
+            Created?.Invoke(this, new UserEventArgs(userID));
         });
     }
 
-    public Task DeleteAsync(Guid token, string userID)
+    public Task DeleteAsync(Guid token, string userID, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {
@@ -91,11 +92,11 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
 
             _userByID.Remove(userID);
             Client.OnDeleted(userID);
-            OnDeleted(new UserEventArgs(userID));
+            Deleted?.Invoke(this, new UserEventArgs(userID));
         });
     }
 
-    public Task<(string, Authority)> GetInfoAsync(Guid token, string userID)
+    public Task<(string, Authority)> GetInfoAsync(Guid token, string userID, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {
@@ -107,7 +108,7 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
         });
     }
 
-    public Task<string[]> GetUsersAsync(Guid token)
+    public Task<string[]> GetUsersAsync(Guid token, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {
@@ -117,7 +118,7 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
         });
     }
 
-    public Task<bool> IsOnlineAsync(Guid token, string userID)
+    public Task<bool> IsOnlineAsync(Guid token, string userID, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {
@@ -129,7 +130,7 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
         });
     }
 
-    public Task<Guid> LoginAsync(string userID, string password)
+    public Task<Guid> LoginAsync(string userID, string password, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {
@@ -140,12 +141,12 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
             user.Token = token;
             _userByToken.Add(token, user);
             Client.OnLoggedIn(userID);
-            OnLoggedIn(new UserEventArgs(userID));
+            LoggedIn?.Invoke(this, new UserEventArgs(userID));
             return token;
         });
     }
 
-    public Task LogoutAsync(Guid token)
+    public Task LogoutAsync(Guid token, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {
@@ -155,11 +156,11 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
             user.Token = Guid.Empty;
             _userByToken.Remove(token);
             Client.OnLoggedOut(user.UserID);
-            OnLoggedOut(new UserEventArgs(user.UserID));
+            LoggedOut?.Invoke(this, new UserEventArgs(user.UserID));
         });
     }
 
-    public Task SendMessageAsync(Guid token, string userID, string message)
+    public Task SendMessageAsync(Guid token, string userID, string message, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {
@@ -169,11 +170,11 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
 
             var user = _userByToken[token];
             Client.OnMessageReceived(user.UserID, userID, message);
-            OnMessageReceived(new UserMessageEventArgs(user.UserID, userID, message));
+            MessageReceived?.Invoke(this, new UserMessageEventArgs(user.UserID, userID, message));
         });
     }
 
-    public Task RenameAsync(Guid token, string userName)
+    public Task RenameAsync(Guid token, string userName, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {
@@ -182,11 +183,11 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
             var user = _userByToken[token];
             user.UserName = userName;
             Client.OnRenamed(user.UserID, userName);
-            OnRenamed(new UserNameEventArgs(user.UserID, userName));
+            Renamed?.Invoke(this, new UserNameEventArgs(user.UserID, userName));
         });
     }
 
-    public Task SetAuthorityAsync(Guid token, string userID, Authority authority)
+    public Task SetAuthorityAsync(Guid token, string userID, Authority authority, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {
@@ -195,7 +196,7 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
             var user = _userByID[userID];
             user.Authority = authority;
             Client.OnAuthorityChanged(userID, authority);
-            OnAuthorityChanged(new UserAuthorityEventArgs(userID, authority));
+            AuthorityChanged?.Invoke(this, new UserAuthorityEventArgs(userID, authority));
         });
     }
 
@@ -232,41 +233,6 @@ class UserService : ServerService<IUserService, IUserCallback>, IUserService, IN
     public event EventHandler<UserNameEventArgs>? Renamed;
 
     public event EventHandler<UserAuthorityEventArgs>? AuthorityChanged;
-
-    protected virtual void OnCreated(UserEventArgs e)
-    {
-        Created?.Invoke(this, e);
-    }
-
-    protected virtual void OnDeleted(UserEventArgs e)
-    {
-        Deleted?.Invoke(this, e);
-    }
-
-    protected virtual void OnLoggedIn(UserEventArgs e)
-    {
-        LoggedIn?.Invoke(this, e);
-    }
-
-    protected virtual void OnLoggedOut(UserEventArgs e)
-    {
-        LoggedOut?.Invoke(this, e);
-    }
-
-    protected virtual void OnMessageReceived(UserMessageEventArgs e)
-    {
-        MessageReceived?.Invoke(this, e);
-    }
-
-    protected virtual void OnRenamed(UserNameEventArgs e)
-    {
-        Renamed?.Invoke(this, e);
-    }
-
-    protected virtual void OnAuthorityChanged(UserAuthorityEventArgs e)
-    {
-        AuthorityChanged?.Invoke(this, e);
-    }
 
     private void ValidateUser(string userID)
     {

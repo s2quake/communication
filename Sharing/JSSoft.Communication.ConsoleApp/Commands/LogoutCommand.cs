@@ -32,18 +32,16 @@ namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
 [method: ImportingConstructor]
-sealed class LogoutCommand(Application application, Lazy<IUserService> userService) : CommandAsyncBase
+sealed class LogoutCommand(Application application, IUserService userService) : CommandAsyncBase
 {
     private readonly Application _application = application;
-    private readonly Lazy<IUserService> _userService = userService;
+    private readonly IUserService _userService = userService;
 
     public override bool IsEnabled => _application.UserToken != Guid.Empty;
 
     protected override async Task OnExecuteAsync(CancellationToken cancellationToken, IProgress<ProgressInfo> progress)
     {
-        await UserService.LogoutAsync(_application.UserToken);
+        await _userService.LogoutAsync(_application.UserToken, cancellationToken);
         _application.Logout();
     }
-
-    private IUserService UserService => _userService.Value;
 }

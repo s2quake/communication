@@ -26,52 +26,53 @@ using JSSoft.Commands;
 using System;
 using System.Threading.Tasks;
 using System.ComponentModel.Composition;
+using System.Threading;
 
 namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
 [method: ImportingConstructor]
-class UserCommand(Application application, Lazy<IUserService> userService) : CommandMethodBase
+class UserCommand(Application application, IUserService userService) : CommandMethodBase
 {
     private readonly Application _application = application;
-    private readonly Lazy<IUserService> _userService = userService;
+    private readonly IUserService _userService = userService;
 
     [CommandMethod]
-    public Task CreateAsync(string userID, string password, Authority authority = Authority.Member)
+    public Task CreateAsync(string userID, string password, Authority authority, CancellationToken cancellationToken)
     {
-        return UserService.CreateAsync(_application.UserToken, userID, password, authority);
+        return _userService.CreateAsync(_application.UserToken, userID, password, authority, cancellationToken);
     }
 
     [CommandMethod]
-    public Task DeleteAsync(string userID)
+    public Task DeleteAsync(string userID, CancellationToken cancellationToken)
     {
-        return UserService.DeleteAsync(_application.UserToken, userID);
+        return _userService.DeleteAsync(_application.UserToken, userID, cancellationToken);
     }
 
     [CommandMethod]
-    public Task RenameAsync(string userName)
+    public Task RenameAsync(string userName, CancellationToken cancellationToken)
     {
-        return UserService.RenameAsync(_application.UserToken, userName);
+        return _userService.RenameAsync(_application.UserToken, userName, cancellationToken);
     }
 
     [CommandMethod]
-    public Task AuthorityAsync(string userID, Authority authority)
+    public Task AuthorityAsync(string userID, Authority authority, CancellationToken cancellationToken)
     {
-        return UserService.SetAuthorityAsync(_application.UserToken, userID, authority);
+        return _userService.SetAuthorityAsync(_application.UserToken, userID, authority, cancellationToken);
     }
 
     [CommandMethod]
-    public async Task InfoAsync(string userID)
+    public async Task InfoAsync(string userID, CancellationToken cancellationToken)
     {
-        var (userName, authority) = await UserService.GetInfoAsync(_application.UserToken, userID);
+        var (userName, authority) = await _userService.GetInfoAsync(_application.UserToken, userID, cancellationToken);
         Out.WriteLine($"UseName: {userName}");
         Out.WriteLine($"Authority: {authority}");
     }
 
     [CommandMethod]
-    public async Task ListAsync()
+    public async Task ListAsync(CancellationToken cancellationToken)
     {
-        var items = await UserService.GetUsersAsync(_application.UserToken);
+        var items = await _userService.GetUsersAsync(_application.UserToken, cancellationToken);
         foreach (var item in items)
         {
             Out.WriteLine(item);
@@ -79,9 +80,9 @@ class UserCommand(Application application, Lazy<IUserService> userService) : Com
     }
 
     [CommandMethod]
-    public Task SendMessageAsync(string userID, string message)
+    public Task SendMessageAsync(string userID, string message, CancellationToken cancellationToken)
     {
-        return UserService.SendMessageAsync(_application.UserToken, userID, message);
+        return _userService.SendMessageAsync(_application.UserToken, userID, message, cancellationToken);
     }
 
     public override bool IsEnabled => _application.UserToken != Guid.Empty;
@@ -90,6 +91,4 @@ class UserCommand(Application application, Lazy<IUserService> userService) : Com
     {
         return _application.UserToken != Guid.Empty;
     }
-
-    private IUserService UserService => _userService.Value;
 }

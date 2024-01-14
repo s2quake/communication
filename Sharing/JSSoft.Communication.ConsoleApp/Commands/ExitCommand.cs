@@ -36,10 +36,7 @@ sealed class ExitCommand(IApplication application) : CommandAsyncBase
     private readonly IApplication _application = application;
 
     [CommandPropertyRequired(DefaultValue = 0)]
-    public int ExitCode
-    {
-        get; set;
-    }
+    public int ExitCode { get; set; }
 
     protected override Task OnExecuteAsync(CancellationToken cancellationToken, IProgress<ProgressInfo> progress)
     {

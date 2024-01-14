@@ -22,16 +22,17 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Services;
 
 [Export(typeof(IService))]
 [Export(typeof(IDataService))]
-class DataService : ClientService<IDataService>, IDataService
+sealed class DataService : ClientService<IDataService>, IDataService
 {
-    public Task<DateTime> CreateDataBaseAsync(string dataBaseName)
+    public Task<DateTime> CreateDataBaseAsync(string dataBaseName, CancellationToken cancellationToken)
     {
-        return Server.CreateDataBaseAsync(dataBaseName);
+        return Server.CreateDataBaseAsync(dataBaseName, cancellationToken);
     }
 }

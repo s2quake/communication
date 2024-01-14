@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Services;
@@ -28,5 +29,5 @@ namespace JSSoft.Communication.Services;
 public interface IDataService
 {
     [ServerMethod]
-    Task<DateTime> CreateDataBaseAsync(string dataBaseName);
+    Task<DateTime> CreateDataBaseAsync(string dataBaseName, CancellationToken cancellationToken);
 }

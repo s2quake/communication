@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Threading;
 using System.Threading.Tasks;
 using JSSoft.Communication.Threading;
 
@@ -30,7 +31,7 @@ namespace JSSoft.Communication.Services;
 
 [Export(typeof(IService))]
 [Export(typeof(IDataService))]
-class DataService : ServerService<IDataService>, IDataService, IDisposable
+sealed class DataService : ServerService<IDataService>, IDataService, IDisposable
 {
     private readonly HashSet<string> _dataBases = [];
     private Dispatcher? _dispatcher;
@@ -40,7 +41,7 @@ class DataService : ServerService<IDataService>, IDataService, IDisposable
         _dispatcher = new Dispatcher(this);
     }
 
-    public Task<DateTime> CreateDataBaseAsync(string dataBaseName)
+    public Task<DateTime> CreateDataBaseAsync(string dataBaseName, CancellationToken cancellationToken)
     {
         return Dispatcher.InvokeAsync(() =>
         {

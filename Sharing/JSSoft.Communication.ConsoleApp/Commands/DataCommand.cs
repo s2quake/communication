@@ -26,20 +26,21 @@ using JSSoft.Commands;
 using System;
 using System.Threading.Tasks;
 using System.ComponentModel.Composition;
+using System.Threading;
 
 namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
 [method: ImportingConstructor]
-class DataCommand(Application application, Lazy<IDataService> dataServiceLazy) : CommandMethodBase
+class DataCommand(Application application, IDataService dataService) : CommandMethodBase
 {
     private readonly Application _application = application;
-    private readonly Lazy<IDataService> _dataServiceLazy = dataServiceLazy;
+    private readonly IDataService _dataService = dataService;
 
     [CommandMethod]
-    public Task CreateAsync(string dataBaseName)
+    public Task CreateAsync(string dataBaseName, CancellationToken cancellationToken)
     {
-        return DataService.CreateDataBaseAsync(dataBaseName);
+        return _dataService.CreateDataBaseAsync(dataBaseName, cancellationToken);
     }
 
     public override bool IsEnabled => _application.UserToken != Guid.Empty;
@@ -49,5 +50,4 @@ class DataCommand(Application application, Lazy<IDataService> dataServiceLazy) :
         return _application.UserToken != Guid.Empty;
     }
 
-    private IDataService DataService => _dataServiceLazy.Value;
 }

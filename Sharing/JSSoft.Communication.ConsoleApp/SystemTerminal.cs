@@ -32,16 +32,12 @@ namespace JSSoft.Communication.ConsoleApp;
 
 [Export]
 [method: ImportingConstructor]
-sealed class SystemTerminal(Application application, CommandContext commandContext) : SystemTerminalBase
+sealed class SystemTerminal(Application application, CommandContext commandContext)
+    : SystemTerminalBase
 {
-    private static readonly string postfix = TerminalEnvironment.IsWindows() == true ? ">" : "$ ";
+    private static readonly string postfix = TerminalEnvironment.IsWindows() == true ? "> " : "$ ";
     private readonly Application _application = application;
     private readonly CommandContext _commandContext = commandContext;
-
-    // public static IShell Create()
-    // {
-    //     return Container.GetService<IShell>();
-    // }
 
     protected override Task OnExecuteAsync(string command, CancellationToken cancellationToken)
     {
