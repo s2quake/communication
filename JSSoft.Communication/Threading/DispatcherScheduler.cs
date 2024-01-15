@@ -31,27 +31,27 @@ namespace JSSoft.Communication.Threading;
 public sealed class DispatcherScheduler : TaskScheduler
 {
     private readonly Dispatcher _dispatcher;
-    private readonly CancellationTokenSource _cancellationTokenSource;
+    private readonly CancellationToken _cancellationToken;
     private readonly ConcurrentQueue<Task> _taskQueue = [];
     private readonly ManualResetEvent _executionEventSet = new(false);
     private bool _isRunning = true;
     private bool _isClosed;
 
-    internal DispatcherScheduler(Dispatcher dispatcher, CancellationTokenSource cancellationTokenSource)
+    internal DispatcherScheduler(Dispatcher dispatcher, CancellationToken cancellationToken)
     {
         _dispatcher = dispatcher;
-        _cancellationTokenSource = cancellationTokenSource;
+        _cancellationToken = cancellationToken;
     }
 
     protected override IEnumerable<Task> GetScheduledTasks() => _taskQueue;
 
     protected override void QueueTask(Task task)
     {
-        if (_cancellationTokenSource.IsCancellationRequested == true)
-            throw new InvalidOperationException();
-
-        _taskQueue.Enqueue(task);
-        _executionEventSet.Set();
+        if (_cancellationToken.IsCancellationRequested != true)
+        {
+            _taskQueue.Enqueue(task);
+            _executionEventSet.Set();
+        }
     }
 
     protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
@@ -89,7 +89,7 @@ public sealed class DispatcherScheduler : TaskScheduler
             var stackTrace = _dispatcher.StackTrace;
 #endif
 
-            while (_cancellationTokenSource.IsCancellationRequested != true)
+            while (_cancellationToken.IsCancellationRequested != true)
             {
                 if (_taskQueue.TryDequeue(out var task) == true)
                 {

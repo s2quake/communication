@@ -36,15 +36,17 @@ public class Dispatcher : IDisposable
     private readonly TaskFactory _factory;
     private readonly CancellationTokenSource _cancellationTokenSource;
     private readonly DispatcherSynchronizationContext _context;
+    private readonly DispatcherScheduler _scheduler;
     private bool _isDisposed;
+
 #if DEBUG
     private readonly StackTrace? _stackTrace;
 #endif
     private Dispatcher(Thread thread)
     {
         _cancellationTokenSource = new CancellationTokenSource();
-        Scheduler = new DispatcherScheduler(this, _cancellationTokenSource);
-        _factory = new TaskFactory(new CancellationToken(false), TaskCreationOptions.None, TaskContinuationOptions.None, Scheduler);
+        _scheduler = new DispatcherScheduler(this, _cancellationTokenSource.Token);
+        _factory = new TaskFactory(_cancellationTokenSource.Token, TaskCreationOptions.None, TaskContinuationOptions.None, _scheduler);
         _context = new DispatcherSynchronizationContext(_factory);
         Thread = thread;
         Owner = new object();
@@ -53,14 +55,14 @@ public class Dispatcher : IDisposable
     public Dispatcher(object owner)
     {
         _cancellationTokenSource = new CancellationTokenSource();
-        Scheduler = new DispatcherScheduler(this, _cancellationTokenSource);
-        _factory = new TaskFactory(_cancellationTokenSource.Token, TaskCreationOptions.None, TaskContinuationOptions.None, Scheduler);
+        _scheduler = new DispatcherScheduler(this, _cancellationTokenSource.Token);
+        _factory = new TaskFactory(_cancellationTokenSource.Token, TaskCreationOptions.None, TaskContinuationOptions.None, _scheduler);
         _context = new DispatcherSynchronizationContext(_factory);
         Owner = owner;
 #if DEBUG
         _stackTrace = new StackTrace(true);
 #endif  
-        Thread = new Thread(Scheduler.Run)
+        Thread = new Thread(_scheduler.Run)
         {
             Name = $"{owner}: {owner.GetHashCode()}",
             IsBackground = true,
@@ -88,41 +90,46 @@ public class Dispatcher : IDisposable
 
     public void Invoke(Action action)
     {
-        if (_cancellationTokenSource.IsCancellationRequested == true)
-            throw new OperationCanceledException();
-
         if (CheckAccess() == true)
         {
             action();
         }
         else
         {
-            var task = _factory.StartNew(action, _cancellationTokenSource.Token);
+            var task = _factory.StartNew(action);
             task.Wait();
         }
     }
 
     public async Task InvokeAsync(Task task)
     {
-        if (_cancellationTokenSource.IsCancellationRequested == true)
-            throw new OperationCanceledException();
-
-        task.Start(Scheduler);
-        await task;
+        try
+        {
+            task.Start(_scheduler);
+            await task;
+        }
+        catch (TaskSchedulerException e)
+        {
+            RaiseUnhandledExceptionEvent(e);
+        }
     }
 
     public async Task<TResult> InvokeAsync<TResult>(Task<TResult> task)
     {
-        if (_cancellationTokenSource.IsCancellationRequested == true)
-            throw new OperationCanceledException();
-
-        task.Start(Scheduler);
+        task.Start(_scheduler);
         return await task;
     }
 
-    public Task InvokeAsync(Action action)
+    public async Task InvokeAsync(Action action)
     {
-        return _factory.StartNew(action, _cancellationTokenSource.Token);
+        try
+        {
+            await _factory.StartNew(action);
+        }
+        catch (TaskSchedulerException e)
+        {
+            RaiseUnhandledExceptionEvent(e);
+        }
     }
 
     public TResult Invoke<TResult>(Func<TResult> callback)
@@ -133,7 +140,7 @@ public class Dispatcher : IDisposable
         }
         else
         {
-            var task = _factory.StartNew(callback, _cancellationTokenSource.Token);
+            var task = _factory.StartNew(callback);
             task.Wait();
             return task.Result;
         }
@@ -141,7 +148,7 @@ public class Dispatcher : IDisposable
 
     public async Task<TResult> InvokeAsync<TResult>(Func<TResult> callback)
     {
-        return await _factory.StartNew(callback, _cancellationTokenSource.Token);
+        return await _factory.StartNew(callback);
     }
 
     public void Dispose()
@@ -154,7 +161,7 @@ public class Dispatcher : IDisposable
             throw new OperationCanceledException();
 
         _cancellationTokenSource.Cancel();
-        Scheduler.WaitClose();
+        _scheduler.WaitClose();
         _cancellationTokenSource.Dispose();
         _isDisposed = true;
         GC.SuppressFinalize(this);
@@ -185,7 +192,10 @@ public class Dispatcher : IDisposable
     internal string StackTrace => $"{_stackTrace}";
 #endif
 
-    private DispatcherScheduler Scheduler { get; set; }
+    internal void RaiseUnhandledExceptionEvent(TaskSchedulerException e)
+    {
+
+    }
 }
 
 public sealed class DispatcherSynchronizationContext : SynchronizationContext
