@@ -101,17 +101,9 @@ public class Dispatcher : IDisposable
         }
     }
 
-    public async Task InvokeAsync(Task task)
+    public async void Post(Action action)
     {
-        try
-        {
-            task.Start(_scheduler);
-            await task;
-        }
-        catch (TaskSchedulerException e)
-        {
-            RaiseUnhandledExceptionEvent(e);
-        }
+        await _factory.StartNew(action);
     }
 
     public async Task<TResult> InvokeAsync<TResult>(Task<TResult> task)
@@ -120,17 +112,7 @@ public class Dispatcher : IDisposable
         return await task;
     }
 
-    public async Task InvokeAsync(Action action)
-    {
-        try
-        {
-            await _factory.StartNew(action);
-        }
-        catch (TaskSchedulerException e)
-        {
-            RaiseUnhandledExceptionEvent(e);
-        }
-    }
+    public Task InvokeAsync(Action action) => _factory.StartNew(action);
 
     public TResult Invoke<TResult>(Func<TResult> callback)
     {
@@ -146,9 +128,9 @@ public class Dispatcher : IDisposable
         }
     }
 
-    public async Task<TResult> InvokeAsync<TResult>(Func<TResult> callback)
+    public Task<TResult> InvokeAsync<TResult>(Func<TResult> callback)
     {
-        return await _factory.StartNew(callback);
+        return _factory.StartNew(callback);
     }
 
     public void Dispose()
