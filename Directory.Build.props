@@ -47,4 +47,7 @@ SOFTWARE. -->
     <PublishGroup>communication</PublishGroup>
     <AssemblyOriginatorKeyFile Condition="Exists('$(MSBuildThisFileDirectory).build/public.snk')">$(MSBuildThisFileDirectory).build/public.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(SolutionDir)LICENSE.md" Pack="true" PackagePath="" />
+  </ItemGroup>
 </Project>
