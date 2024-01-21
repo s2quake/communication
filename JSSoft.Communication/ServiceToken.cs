@@ -26,17 +26,12 @@ namespace JSSoft.Communication;
 
 public sealed class ServiceToken
 {
-    internal ServiceToken(Guid guid)
-    {
-        Guid = guid;
-    }
+    internal ServiceToken(Guid guid) => Guid = guid;
 
     internal Guid Guid { get; }
 
     internal static ServiceToken NewToken()
-    {
-        return new ServiceToken(Guid.NewGuid());
-    }
+        => new(Guid.NewGuid());
 
     internal static readonly ServiceToken Empty = new(Guid.Empty);
 }

@@ -43,7 +43,7 @@ sealed class Peer(string id) : IPeer
 
     public int CloseCode { get; private set; } = int.MinValue;
 
-    public CancellationToken Begin(ManualResetEvent manualResetEvent)
+    public CancellationToken BeginPolling(ManualResetEvent manualResetEvent)
     {
         lock (_lockObject)
         {
@@ -53,7 +53,7 @@ sealed class Peer(string id) : IPeer
         }
     }
 
-    public void End()
+    public void EndPolling()
     {
         lock (_lockObject)
         {
@@ -88,35 +88,32 @@ sealed class Peer(string id) : IPeer
             {
                 Name = item.Name,
                 ServiceName = item.Service.Name,
-                Data =
-                {
-                    item.Data,
-                },
+                Data = { item.Data },
             });
         }
         return reply;
-
-        CallbackData[] Flush()
-        {
-            lock (_lockObject)
-            {
-                if (_callbackDataList.Count > 0)
-                {
-                    var items = _callbackDataList.ToArray();
-                    _callbackDataList.Clear();
-                    return items;
-                }
-                return [];
-            }
-        }
     }
 
-    public void Add(CallbackData callbackData)
+    public void AddCallback(CallbackData callbackData)
     {
         lock (_lockObject)
         {
             _callbackDataList.Add(callbackData);
             _manualResetEvent?.Set();
+        }
+    }
+
+    private CallbackData[] Flush()
+    {
+        lock (_lockObject)
+        {
+            if (_callbackDataList.Count > 0)
+            {
+                var items = _callbackDataList.ToArray();
+                _callbackDataList.Clear();
+                return items;
+            }
+            return [];
         }
     }
 }

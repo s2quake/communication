@@ -77,8 +77,6 @@ sealed class AdaptorServer : IAdaptor
         if (Peers.TryGetValue(id, out var peer) == true)
             throw new InvalidOperationException();
 
-        var serviceNames = request.ServiceNames;
-        var services = serviceNames.Select(item => _serviceByName[item]).ToArray();
         Peers.Add(_serviceContext, id);
         await Task.CompletedTask;
         return new OpenReply();
@@ -105,7 +103,7 @@ sealed class AdaptorServer : IAdaptor
         peer.PingTime = dateTime;
         _serviceContext.Debug($"{id} Ping({dateTime})");
         await Task.CompletedTask;
-        return new PingReply() { Time = peer.PingTime.Ticks };
+        return new PingReply();
     }
 
     public async Task<InvokeReply> InvokeAsync(InvokeRequest request, ServerCallContext context)
@@ -117,7 +115,7 @@ sealed class AdaptorServer : IAdaptor
         var service = _serviceByName[request.ServiceName];
         var methodDescriptors = _methodsByService[service];
         if (methodDescriptors.ContainsKey(request.Name) != true)
-            throw new InvalidOperationException($"method '{request.Name}' does not exists.");
+            throw new InvalidOperationException($"Method '{request.Name}' does not exists.");
 
         var id = context.RequestHeaders.Get("id").Value;
         if (Peers.TryGetValue(id, out var peer) != true)
@@ -147,6 +145,7 @@ sealed class AdaptorServer : IAdaptor
                 ID = $"{assemblyQualifiedName}",
                 Data = _serializer.Serialize(valueType, value)
             };
+
             _serviceContext.Debug($"{id} Invoke: {request.ServiceName}.{methodDescriptor.ShortName}");
             return reply;
         }
@@ -159,7 +158,7 @@ sealed class AdaptorServer : IAdaptor
             throw new InvalidOperationException();
 
         using var manualResetEvent = new ManualResetEvent(initialState: false);
-        var cancellationToken = peer.Begin(manualResetEvent);
+        var cancellationToken = peer.BeginPolling(manualResetEvent);
         try
         {
             while (await MoveAsync() == true)
@@ -176,7 +175,7 @@ sealed class AdaptorServer : IAdaptor
         {
             _serviceContext.Error(e.Message);
         }
-        peer.End();
+        peer.EndPolling();
         _serviceContext.Debug("Poll finished.");
 
         async Task<bool> MoveAsync()
@@ -202,7 +201,7 @@ sealed class AdaptorServer : IAdaptor
         var peers = instance.Peer is not Peer peer ? Peers.ToArray().Select(item => item.Value) : new Peer[] { peer };
         var service = instance.Service;
         var callbackData = new CallbackData(service, name, data);
-        Parallel.ForEach(peers, item => item.Add(callbackData));
+        Parallel.ForEach(peers, item => item.AddCallback(callbackData));
     }
 
     private void Timer_TimerCallback(object? state)

@@ -15,8 +15,6 @@ service Adaptor {
 }
 
 message OpenRequest {
-    repeated string serviceNames = 1;
-    int64 time = 2;
 }
 
 message OpenReply {
@@ -26,15 +24,12 @@ message CloseRequest {
 }
 
 message CloseReply {
-    int64 time = 1;
 }
 
 message PingRequest {
-    int64 time = 2;
 }
 
 message PingReply {
-    int64 time = 1;
 }
 
 message InvokeRequest {

@@ -35,7 +35,7 @@ sealed class AdaptorServerImpl(AdaptorServer adaptorServer) : Adaptor.AdaptorBas
     public override Task<CloseReply> Close(CloseRequest request, ServerCallContext context)
         => _adaptorServer.CloseAsync(request, context, context.CancellationToken);
 
-public override Task<PingReply> Ping(PingRequest request, ServerCallContext context)
+    public override Task<PingReply> Ping(PingRequest request, ServerCallContext context)
         => _adaptorServer.PingAsync(request, context);
 
     public override Task<InvokeReply> Invoke(InvokeRequest request, ServerCallContext context)

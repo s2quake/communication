@@ -91,15 +91,13 @@ public abstract class ServiceContextBase : IServiceContext
 
     public Guid Id { get; } = Guid.NewGuid();
 
-    public override string ToString()
-    {
-        return $"{_t}[{Id}]";
-    }
+    public override string ToString() => $"{_t}[{Id}]";
 
     public async Task<Guid> OpenAsync(CancellationToken cancellationToken)
     {
         if (ServiceState != ServiceState.None)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"Service can only be opened if the state is {nameof(ServiceState.None)}.");
+
         try
         {
             ServiceState = ServiceState.Opening;
@@ -129,7 +127,7 @@ public abstract class ServiceContextBase : IServiceContext
     public async Task CloseAsync(Guid token, CancellationToken cancellationToken)
     {
         if (ServiceState != ServiceState.Open)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"Service can only be closed if the state is {nameof(ServiceState.Open)}.");
         if (token == Guid.Empty || _token!.Guid != token)
             throw new ArgumentException($"Invalid token: {token}", nameof(token));
 
@@ -162,7 +160,7 @@ public abstract class ServiceContextBase : IServiceContext
     public async Task AbortAsync()
     {
         if (ServiceState != ServiceState.Faulted)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"Service can only be aborted if the state is {nameof(ServiceState.Faulted)}.");
 
         _token = null;
         _serializer = null;
@@ -200,7 +198,7 @@ public abstract class ServiceContextBase : IServiceContext
     protected virtual InstanceBase CreateInstance(Type type)
     {
         if (_instanceBuilder == null)
-            throw new InvalidOperationException($"cannot create instance of {type}");
+            throw new InvalidOperationException($"Cannot create instance of {type}");
         if (type == typeof(void))
             return InstanceBase.Empty;
         var typeName = $"{type.Name}Impl";
@@ -209,29 +207,19 @@ public abstract class ServiceContextBase : IServiceContext
     }
 
     protected virtual void OnOpened(EventArgs e)
-    {
-        Opened?.Invoke(this, e);
-    }
+        => Opened?.Invoke(this, e);
 
     protected virtual void OnClosed(EventArgs e)
-    {
-        Closed?.Invoke(this, e);
-    }
+        => Closed?.Invoke(this, e);
 
     protected virtual void OnFaulted(EventArgs e)
-    {
-        Faulted?.Invoke(this, e);
-    }
+        => Faulted?.Invoke(this, e);
 
     protected virtual void OnDisconnected(EventArgs e)
-    {
-        Disconnected?.Invoke(this, e);
-    }
+        => Disconnected?.Invoke(this, e);
 
     protected virtual void OnServiceStateChanged(EventArgs e)
-    {
-        ServiceStateChanged?.Invoke(this, e);
-    }
+        => ServiceStateChanged?.Invoke(this, e);
 
     internal static bool IsServer(ServiceContextBase serviceContext)
     {
@@ -294,9 +282,7 @@ public abstract class ServiceContextBase : IServiceContext
     }
 
     private void Debug(string message)
-    {
-        LogUtility.Debug($"{this} {message}");
-    }
+        => LogUtility.Debug($"{this} {message}");
 
     private void Adaptor_Disconnected(object? sender, EventArgs e)
     {

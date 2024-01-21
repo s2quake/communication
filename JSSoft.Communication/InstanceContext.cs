@@ -33,6 +33,8 @@ sealed class InstanceContext(ServiceContextBase serviceContext)
     private readonly PeerDescriptor _descriptor = new();
     private readonly ServiceContextBase _serviceContext = serviceContext;
 
+    public string Id => $"{_serviceContext.Id}";
+
     public void InitializeInstance()
     {
         var query = from item in _serviceContext.Services.Values
@@ -108,6 +110,4 @@ sealed class InstanceContext(ServiceContextBase serviceContext)
                     select service;
         return query.SingleOrDefault();
     }
-
-    public string Id => $"{_serviceContext.Id}";
 }

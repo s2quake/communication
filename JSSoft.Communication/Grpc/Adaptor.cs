@@ -25,36 +25,34 @@ namespace JSSoft.Communication.Grpc {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "ChJHcnBjL2FkYXB0b3IucHJvdG8SGUpTU29mdC5jb21tdW5pY2F0aW9uLmdy",
-            "cGMiMQoLT3BlblJlcXVlc3QSFAoMc2VydmljZU5hbWVzGAEgAygJEgwKBHRp",
-            "bWUYAiABKAMiCwoJT3BlblJlcGx5Ig4KDENsb3NlUmVxdWVzdCIaCgpDbG9z",
-            "ZVJlcGx5EgwKBHRpbWUYASABKAMiGwoLUGluZ1JlcXVlc3QSDAoEdGltZRgC",
-            "IAEoAyIZCglQaW5nUmVwbHkSDAoEdGltZRgBIAEoAyJACg1JbnZva2VSZXF1",
-            "ZXN0EhMKC3NlcnZpY2VOYW1lGAIgASgJEgwKBG5hbWUYAyABKAkSDAoEZGF0",
-            "YRgEIAMoCSInCgtJbnZva2VSZXBseRIKCgJJRBgBIAEoCRIMCgRkYXRhGAMg",
-            "ASgJIg0KC1BvbGxSZXF1ZXN0IkAKDVBvbGxSZXBseUl0ZW0SEwoLc2Vydmlj",
-            "ZU5hbWUYAiABKAkSDAoEbmFtZRgDIAEoCRIMCgRkYXRhGAQgAygJIlIKCVBv",
-            "bGxSZXBseRIMCgRjb2RlGAEgASgFEjcKBWl0ZW1zGAIgAygLMiguSlNTb2Z0",
-            "LmNvbW11bmljYXRpb24uZ3JwYy5Qb2xsUmVwbHlJdGVtMsQDCgdBZGFwdG9y",
-            "ElQKBE9wZW4SJi5KU1NvZnQuY29tbXVuaWNhdGlvbi5ncnBjLk9wZW5SZXF1",
-            "ZXN0GiQuSlNTb2Z0LmNvbW11bmljYXRpb24uZ3JwYy5PcGVuUmVwbHkSVwoF",
-            "Q2xvc2USJy5KU1NvZnQuY29tbXVuaWNhdGlvbi5ncnBjLkNsb3NlUmVxdWVz",
-            "dBolLkpTU29mdC5jb21tdW5pY2F0aW9uLmdycGMuQ2xvc2VSZXBseRJUCgRQ",
-            "aW5nEiYuSlNTb2Z0LmNvbW11bmljYXRpb24uZ3JwYy5QaW5nUmVxdWVzdBok",
-            "LkpTU29mdC5jb21tdW5pY2F0aW9uLmdycGMuUGluZ1JlcGx5EloKBkludm9r",
-            "ZRIoLkpTU29mdC5jb21tdW5pY2F0aW9uLmdycGMuSW52b2tlUmVxdWVzdBom",
-            "LkpTU29mdC5jb21tdW5pY2F0aW9uLmdycGMuSW52b2tlUmVwbHkSWAoEUG9s",
-            "bBImLkpTU29mdC5jb21tdW5pY2F0aW9uLmdycGMuUG9sbFJlcXVlc3QaJC5K",
-            "U1NvZnQuY29tbXVuaWNhdGlvbi5ncnBjLlBvbGxSZXBseSgBMAFiBnByb3Rv",
-            "Mw=="));
+            "cGMiDQoLT3BlblJlcXVlc3QiCwoJT3BlblJlcGx5Ig4KDENsb3NlUmVxdWVz",
+            "dCIMCgpDbG9zZVJlcGx5Ig0KC1BpbmdSZXF1ZXN0IgsKCVBpbmdSZXBseSJA",
+            "Cg1JbnZva2VSZXF1ZXN0EhMKC3NlcnZpY2VOYW1lGAIgASgJEgwKBG5hbWUY",
+            "AyABKAkSDAoEZGF0YRgEIAMoCSInCgtJbnZva2VSZXBseRIKCgJJRBgBIAEo",
+            "CRIMCgRkYXRhGAMgASgJIg0KC1BvbGxSZXF1ZXN0IkAKDVBvbGxSZXBseUl0",
+            "ZW0SEwoLc2VydmljZU5hbWUYAiABKAkSDAoEbmFtZRgDIAEoCRIMCgRkYXRh",
+            "GAQgAygJIlIKCVBvbGxSZXBseRIMCgRjb2RlGAEgASgFEjcKBWl0ZW1zGAIg",
+            "AygLMiguSlNTb2Z0LmNvbW11bmljYXRpb24uZ3JwYy5Qb2xsUmVwbHlJdGVt",
+            "MsQDCgdBZGFwdG9yElQKBE9wZW4SJi5KU1NvZnQuY29tbXVuaWNhdGlvbi5n",
+            "cnBjLk9wZW5SZXF1ZXN0GiQuSlNTb2Z0LmNvbW11bmljYXRpb24uZ3JwYy5P",
+            "cGVuUmVwbHkSVwoFQ2xvc2USJy5KU1NvZnQuY29tbXVuaWNhdGlvbi5ncnBj",
+            "LkNsb3NlUmVxdWVzdBolLkpTU29mdC5jb21tdW5pY2F0aW9uLmdycGMuQ2xv",
+            "c2VSZXBseRJUCgRQaW5nEiYuSlNTb2Z0LmNvbW11bmljYXRpb24uZ3JwYy5Q",
+            "aW5nUmVxdWVzdBokLkpTU29mdC5jb21tdW5pY2F0aW9uLmdycGMuUGluZ1Jl",
+            "cGx5EloKBkludm9rZRIoLkpTU29mdC5jb21tdW5pY2F0aW9uLmdycGMuSW52",
+            "b2tlUmVxdWVzdBomLkpTU29mdC5jb21tdW5pY2F0aW9uLmdycGMuSW52b2tl",
+            "UmVwbHkSWAoEUG9sbBImLkpTU29mdC5jb21tdW5pY2F0aW9uLmdycGMuUG9s",
+            "bFJlcXVlc3QaJC5KU1NvZnQuY29tbXVuaWNhdGlvbi5ncnBjLlBvbGxSZXBs",
+            "eSgBMAFiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.OpenRequest), global::JSSoft.Communication.Grpc.OpenRequest.Parser, new[]{ "ServiceNames", "Time" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.OpenRequest), global::JSSoft.Communication.Grpc.OpenRequest.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.OpenReply), global::JSSoft.Communication.Grpc.OpenReply.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.CloseRequest), global::JSSoft.Communication.Grpc.CloseRequest.Parser, null, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.CloseReply), global::JSSoft.Communication.Grpc.CloseReply.Parser, new[]{ "Time" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.PingRequest), global::JSSoft.Communication.Grpc.PingRequest.Parser, new[]{ "Time" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.PingReply), global::JSSoft.Communication.Grpc.PingReply.Parser, new[]{ "Time" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.CloseReply), global::JSSoft.Communication.Grpc.CloseReply.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.PingRequest), global::JSSoft.Communication.Grpc.PingRequest.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.PingReply), global::JSSoft.Communication.Grpc.PingReply.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.InvokeRequest), global::JSSoft.Communication.Grpc.InvokeRequest.Parser, new[]{ "ServiceName", "Name", "Data" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.InvokeReply), global::JSSoft.Communication.Grpc.InvokeReply.Parser, new[]{ "ID", "Data" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::JSSoft.Communication.Grpc.PollRequest), global::JSSoft.Communication.Grpc.PollRequest.Parser, null, null, null, null, null),
@@ -100,8 +98,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public OpenRequest(OpenRequest other) : this() {
-      serviceNames_ = other.serviceNames_.Clone();
-      time_ = other.time_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -109,29 +105,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public OpenRequest Clone() {
       return new OpenRequest(this);
-    }
-
-    /// <summary>Field number for the "serviceNames" field.</summary>
-    public const int ServiceNamesFieldNumber = 1;
-    private static readonly pb::FieldCodec<string> _repeated_serviceNames_codec
-        = pb::FieldCodec.ForString(10);
-    private readonly pbc::RepeatedField<string> serviceNames_ = new pbc::RepeatedField<string>();
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<string> ServiceNames {
-      get { return serviceNames_; }
-    }
-
-    /// <summary>Field number for the "time" field.</summary>
-    public const int TimeFieldNumber = 2;
-    private long time_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public long Time {
-      get { return time_; }
-      set {
-        time_ = value;
-      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -149,8 +122,6 @@ namespace JSSoft.Communication.Grpc {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if(!serviceNames_.Equals(other.serviceNames_)) return false;
-      if (Time != other.Time) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -158,8 +129,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      hash ^= serviceNames_.GetHashCode();
-      if (Time != 0L) hash ^= Time.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -178,11 +147,6 @@ namespace JSSoft.Communication.Grpc {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      serviceNames_.WriteTo(output, _repeated_serviceNames_codec);
-      if (Time != 0L) {
-        output.WriteRawTag(16);
-        output.WriteInt64(Time);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -193,11 +157,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      serviceNames_.WriteTo(ref output, _repeated_serviceNames_codec);
-      if (Time != 0L) {
-        output.WriteRawTag(16);
-        output.WriteInt64(Time);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -208,10 +167,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      size += serviceNames_.CalculateSize(_repeated_serviceNames_codec);
-      if (Time != 0L) {
-        size += 1 + pb::CodedOutputStream.ComputeInt64Size(Time);
-      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -223,10 +178,6 @@ namespace JSSoft.Communication.Grpc {
     public void MergeFrom(OpenRequest other) {
       if (other == null) {
         return;
-      }
-      serviceNames_.Add(other.serviceNames_);
-      if (other.Time != 0L) {
-        Time = other.Time;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -243,14 +194,6 @@ namespace JSSoft.Communication.Grpc {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 10: {
-            serviceNames_.AddEntriesFrom(input, _repeated_serviceNames_codec);
-            break;
-          }
-          case 16: {
-            Time = input.ReadInt64();
-            break;
-          }
         }
       }
     #endif
@@ -266,14 +209,6 @@ namespace JSSoft.Communication.Grpc {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 10: {
-            serviceNames_.AddEntriesFrom(ref input, _repeated_serviceNames_codec);
-            break;
-          }
-          case 16: {
-            Time = input.ReadInt64();
-            break;
-          }
         }
       }
     }
@@ -619,7 +554,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public CloseReply(CloseReply other) : this() {
-      time_ = other.time_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -627,18 +561,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public CloseReply Clone() {
       return new CloseReply(this);
-    }
-
-    /// <summary>Field number for the "time" field.</summary>
-    public const int TimeFieldNumber = 1;
-    private long time_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public long Time {
-      get { return time_; }
-      set {
-        time_ = value;
-      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -656,7 +578,6 @@ namespace JSSoft.Communication.Grpc {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (Time != other.Time) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -664,7 +585,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (Time != 0L) hash ^= Time.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -683,10 +603,6 @@ namespace JSSoft.Communication.Grpc {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (Time != 0L) {
-        output.WriteRawTag(8);
-        output.WriteInt64(Time);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -697,10 +613,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (Time != 0L) {
-        output.WriteRawTag(8);
-        output.WriteInt64(Time);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -711,9 +623,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (Time != 0L) {
-        size += 1 + pb::CodedOutputStream.ComputeInt64Size(Time);
-      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -725,9 +634,6 @@ namespace JSSoft.Communication.Grpc {
     public void MergeFrom(CloseReply other) {
       if (other == null) {
         return;
-      }
-      if (other.Time != 0L) {
-        Time = other.Time;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -744,10 +650,6 @@ namespace JSSoft.Communication.Grpc {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 8: {
-            Time = input.ReadInt64();
-            break;
-          }
         }
       }
     #endif
@@ -763,10 +665,6 @@ namespace JSSoft.Communication.Grpc {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 8: {
-            Time = input.ReadInt64();
-            break;
-          }
         }
       }
     }
@@ -808,7 +706,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public PingRequest(PingRequest other) : this() {
-      time_ = other.time_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -816,18 +713,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public PingRequest Clone() {
       return new PingRequest(this);
-    }
-
-    /// <summary>Field number for the "time" field.</summary>
-    public const int TimeFieldNumber = 2;
-    private long time_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public long Time {
-      get { return time_; }
-      set {
-        time_ = value;
-      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -845,7 +730,6 @@ namespace JSSoft.Communication.Grpc {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (Time != other.Time) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -853,7 +737,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (Time != 0L) hash ^= Time.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -872,10 +755,6 @@ namespace JSSoft.Communication.Grpc {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (Time != 0L) {
-        output.WriteRawTag(16);
-        output.WriteInt64(Time);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -886,10 +765,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (Time != 0L) {
-        output.WriteRawTag(16);
-        output.WriteInt64(Time);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -900,9 +775,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (Time != 0L) {
-        size += 1 + pb::CodedOutputStream.ComputeInt64Size(Time);
-      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -914,9 +786,6 @@ namespace JSSoft.Communication.Grpc {
     public void MergeFrom(PingRequest other) {
       if (other == null) {
         return;
-      }
-      if (other.Time != 0L) {
-        Time = other.Time;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -933,10 +802,6 @@ namespace JSSoft.Communication.Grpc {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 16: {
-            Time = input.ReadInt64();
-            break;
-          }
         }
       }
     #endif
@@ -952,10 +817,6 @@ namespace JSSoft.Communication.Grpc {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 16: {
-            Time = input.ReadInt64();
-            break;
-          }
         }
       }
     }
@@ -997,7 +858,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public PingReply(PingReply other) : this() {
-      time_ = other.time_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1005,18 +865,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public PingReply Clone() {
       return new PingReply(this);
-    }
-
-    /// <summary>Field number for the "time" field.</summary>
-    public const int TimeFieldNumber = 1;
-    private long time_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public long Time {
-      get { return time_; }
-      set {
-        time_ = value;
-      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1034,7 +882,6 @@ namespace JSSoft.Communication.Grpc {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (Time != other.Time) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1042,7 +889,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (Time != 0L) hash ^= Time.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1061,10 +907,6 @@ namespace JSSoft.Communication.Grpc {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (Time != 0L) {
-        output.WriteRawTag(8);
-        output.WriteInt64(Time);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1075,10 +917,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (Time != 0L) {
-        output.WriteRawTag(8);
-        output.WriteInt64(Time);
-      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -1089,9 +927,6 @@ namespace JSSoft.Communication.Grpc {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (Time != 0L) {
-        size += 1 + pb::CodedOutputStream.ComputeInt64Size(Time);
-      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -1103,9 +938,6 @@ namespace JSSoft.Communication.Grpc {
     public void MergeFrom(PingReply other) {
       if (other == null) {
         return;
-      }
-      if (other.Time != 0L) {
-        Time = other.Time;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1122,10 +954,6 @@ namespace JSSoft.Communication.Grpc {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 8: {
-            Time = input.ReadInt64();
-            break;
-          }
         }
       }
     #endif
@@ -1141,10 +969,6 @@ namespace JSSoft.Communication.Grpc {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 8: {
-            Time = input.ReadInt64();
-            break;
-          }
         }
       }
     }

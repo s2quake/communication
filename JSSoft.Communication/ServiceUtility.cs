@@ -50,19 +50,13 @@ public static class ServiceUtility
     }
 
     public static bool IsNestedPublicType(Type type)
-    {
-        return type.IsNested == true && type.IsNestedPublic == true;
-    }
+        => type.IsNested == true && type.IsNestedPublic == true;
 
     public static bool IsPublicType(Type type)
-    {
-        return type.IsVisible == true && type.IsPublic == true && type.IsNotPublic != true;
-    }
+        => type.IsVisible == true && type.IsPublic == true && type.IsNotPublic != true;
 
     public static bool IsInternalType(Type t)
-    {
-        return t.IsVisible != true && t.IsPublic != true && t.IsNotPublic == true;
-    }
+        => t.IsVisible != true && t.IsPublic != true && t.IsNotPublic == true;
 
     public static bool IsServer(IService service)
     {

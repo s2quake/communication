@@ -38,15 +38,9 @@ public abstract class ServiceBase(Type serverType, Type clientType) : IService
 
     #region IService
 
-    object IService.CreateInstance(IPeer peer, object obj)
-    {
-        return CreateInstance(peer, obj);
-    }
+    object IService.CreateInstance(IPeer peer, object obj) => CreateInstance(peer, obj);
 
-    void IService.DestroyInstance(IPeer peer, object obj)
-    {
-        DestroyInstance(peer, obj);
-    }
+    void IService.DestroyInstance(IPeer peer, object obj) => DestroyInstance(peer, obj);
 
     #endregion
 }

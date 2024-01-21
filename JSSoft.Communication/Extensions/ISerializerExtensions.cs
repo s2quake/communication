@@ -23,7 +23,7 @@
 using System;
 using System.Threading;
 
-namespace JSSoft.Communication;
+namespace JSSoft.Communication.Extensions;
 
 static class ISerializerExtensions
 {

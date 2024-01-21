@@ -47,7 +47,6 @@ sealed class AdaptorClient : IAdaptor
     private ISerializer? _serializer;
     private PeerDescriptor? _descriptor;
     private Timer? _timer;
-    private DateTime _pongDateTime;
 
     public AdaptorClient(IServiceContext serviceContext, IInstanceContext instanceContext)
     {
@@ -71,7 +70,6 @@ sealed class AdaptorClient : IAdaptor
             _serializer = (ISerializer)_serviceContext.GetService(typeof(ISerializer))!;
             _task = PollAsync(_cancellationTokenSource.Token);
             _timer = new Timer(Timer_TimerCallback, null, TimeSpan.Zero, Timeout);
-            Pong();
         }
         catch
         {
@@ -222,7 +220,6 @@ sealed class AdaptorClient : IAdaptor
 
     private void HandleReply(InvokeReply reply)
     {
-        Pong();
         if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
         {
             ThrowException(exceptionType, reply.Data);
@@ -237,11 +234,6 @@ sealed class AdaptorClient : IAdaptor
         if (Newtonsoft.Json.JsonConvert.DeserializeObject(data, exceptionType) is Exception exception)
             throw exception;
         throw new UnreachableException();
-    }
-
-    private void Pong()
-    {
-        _pongDateTime = DateTime.Now;
     }
 
     #region IAdaptor
@@ -279,7 +271,6 @@ sealed class AdaptorClient : IAdaptor
         try
         {
             await _adaptorImpl.InvokeAsync(request, metaData);
-            Pong();
         }
         catch
         {

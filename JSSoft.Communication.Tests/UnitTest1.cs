@@ -32,8 +32,9 @@ public class UnitTest1
     [Fact]
     public async Task OpenAndClientCloseAsync()
     {
-        var serverContext = new ServerContext(new TestServer());
-        var clientContext = new ClientContext(new TestClient());
+        var endPoint = EndPointUtility.GetEndPoint();
+        var serverContext = new ServerContext(new TestServer()) { EndPoint = endPoint };
+        var clientContext = new ClientContext(new TestClient()) { EndPoint = endPoint };
 
         var serverToken = await serverContext.OpenAsync(CancellationToken.None);
         var clientToken = await clientContext.OpenAsync(CancellationToken.None);
@@ -45,8 +46,9 @@ public class UnitTest1
     [Fact]
     public async Task OpenAndServerCloseAsync()
     {
-        var serverContext = new ServerContext(new TestServer());
-        var clientContext = new ClientContext(new TestClient());
+        var endPoint = EndPointUtility.GetEndPoint();
+        var serverContext = new ServerContext(new TestServer()) { EndPoint = endPoint };
+        var clientContext = new ClientContext(new TestClient()) { EndPoint = endPoint };
 
         var serverToken = await serverContext.OpenAsync(CancellationToken.None);
         var clientToken = await clientContext.OpenAsync(CancellationToken.None);
@@ -56,7 +58,6 @@ public class UnitTest1
         await serverContext.CloseAsync(serverToken, CancellationToken.None);
         if (autoResetEvent.WaitOne(1000) == true)
         {
-            await clientContext.CloseAsync(clientToken, CancellationToken.None);
             Assert.Equal(ServiceState.None, clientContext.ServiceState);
         }
         else
@@ -69,19 +70,19 @@ public class UnitTest1
     public async Task MultipleOpenAndClientCloseAsync()
     {
         var count = 20;
-        var serverContext = new ServerContext(new TestServer());
-        var clientContexts = Enumerable.Range(0, count).Select(item => new ClientContext(new TestClient())).ToArray();
+        var endPoint = EndPointUtility.GetEndPoint();
+        var serverContext = new ServerContext(new TestServer()) { EndPoint = endPoint };
+        var clientContexts = Enumerable.Range(0, count).Select(item => new ClientContext(new TestClient()) { EndPoint = endPoint }).ToArray();
         var serverToken = await serverContext.OpenAsync(CancellationToken.None);
         var openTasks = clientContexts.Select(item => item.OpenAsync(CancellationToken.None)).ToArray();
         await Task.WhenAll(openTasks);
         var closeTasks = new Task[count];
-        var serverCloseTask = serverContext.CloseAsync(serverToken, CancellationToken.None);
         for (var i = 0; i < count; i++)
         {
             closeTasks[i] = clientContexts[i].CloseAsync(openTasks[i].Result, CancellationToken.None);
         }
         await Task.WhenAll(closeTasks);
-        await serverCloseTask;
+        await serverContext.CloseAsync(serverToken, CancellationToken.None);
         Assert.Equal(ServiceState.None, serverContext.ServiceState);
         for (var i = 0; i < count; i++)
         {
@@ -92,16 +93,16 @@ public class UnitTest1
     [Fact]
     public async Task OpenAndInvokeAndClientCloseAsync()
     {
+        var endPoint = EndPointUtility.GetEndPoint();
         var server = new TestServer();
         var client = new TestClient();
-        var serverContext = new ServerContext(server);
-        var clientContext = new ClientContext(client);
+        var serverContext = new ServerContext(server) { EndPoint = endPoint };
+        var clientContext = new ClientContext(client) { EndPoint = endPoint };
 
         var serverToken = await serverContext.OpenAsync(CancellationToken.None);
         var clientToken = await clientContext.OpenAsync(CancellationToken.None);
 
-        var cancellationTokenSource = new CancellationTokenSource(500);
-        await client.Server.SendMessageAsync("123", cancellationTokenSource.Token);
+        await client.Server.SendMessageAsync("123", cancellationToken: default);
 
         await clientContext.CloseAsync(clientToken, CancellationToken.None);
         await serverContext.CloseAsync(serverToken, CancellationToken.None);

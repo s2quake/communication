@@ -16,8 +16,9 @@ public class InvokeTest : IAsyncLifetime
 
     public InvokeTest()
     {
-        _serverContext = new(_server);
-        _clientContext = new(_clientService);
+        var endPoint = EndPointUtility.GetEndPoint();
+        _serverContext = new(_server) { EndPoint = endPoint };
+        _clientContext = new(_clientService) { EndPoint = endPoint };
     }
 
     public interface ITestService

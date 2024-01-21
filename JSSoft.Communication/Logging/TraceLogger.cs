@@ -24,32 +24,17 @@ using System.Diagnostics;
 
 namespace JSSoft.Communication.Logging;
 
-public class TraceLogger : ILogger
+public sealed class TraceLogger : ILogger
 {
-    public void Debug(object message)
-    {
-        Trace.WriteLine(message);
-    }
+    public void Debug(object message) => Trace.WriteLine(message);
 
-    public void Info(object message)
-    {
-        Trace.TraceInformation($"{message}");
-    }
+    public void Info(object message) => Trace.TraceInformation($"{message}");
 
-    public void Error(object message)
-    {
-        Trace.TraceError($"{message}");
-    }
+    public void Error(object message) => Trace.TraceError($"{message}");
 
-    public void Warn(object message)
-    {
-        Trace.TraceWarning($"{message}");
-    }
+    public void Warn(object message) => Trace.TraceWarning($"{message}");
 
-    public void Fatal(object message)
-    {
-        Trace.TraceError($"{message}");
-    }
+    public void Fatal(object message) => Trace.TraceError($"{message}");
 
     public static readonly TraceLogger Default = new();
 }

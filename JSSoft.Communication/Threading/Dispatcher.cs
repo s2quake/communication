@@ -57,13 +57,21 @@ public class Dispatcher : IDisposable
         Thread.Start();
     }
 
+    public string Name => $"{Owner}";
+
+    public object Owner { get; }
+
+    public Thread Thread { get; }
+
+    public SynchronizationContext SynchronizationContext => _context;
+
     public override string ToString() => $"{Owner}";
 
     public void VerifyAccess()
     {
         if (!CheckAccess())
         {
-            throw new InvalidOperationException("ThreadCannotAccess");
+            throw new InvalidOperationException("Thread Cannot Access");
         }
     }
 
@@ -129,8 +137,6 @@ public class Dispatcher : IDisposable
 
     public void Dispose()
     {
-        if (Owner == null)
-            throw new InvalidOperationException("IndestructibleObject");
         if (_isDisposed == true)
             throw new ObjectDisposedException($"{this}");
         if (_cancellationTokenSource.IsCancellationRequested == true)
@@ -142,14 +148,6 @@ public class Dispatcher : IDisposable
         _isDisposed = true;
         GC.SuppressFinalize(this);
     }
-
-    public string Name => $"{Owner}";
-
-    public object Owner { get; }
-
-    public Thread Thread { get; }
-
-    public SynchronizationContext SynchronizationContext => _context;
 
 #if DEBUG
     internal string StackTrace => $"{_stackTrace}";

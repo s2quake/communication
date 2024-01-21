@@ -38,25 +38,15 @@ sealed class AdaptorClientImpl(Channel channel, Guid id, IService[] services)
     public async Task OpenAsync(CancellationToken cancellationToken)
     {
         var serviceNames = Services.Select(item => item.Name).ToArray();
-        var request = new OpenRequest
-        {
-            Time = DateTime.UtcNow.Ticks,
-            ServiceNames = { serviceNames },
-        };
-        var metaData = new Metadata()
-        {
-            { "id", $"{Id}" },
-        };
+        var request = new OpenRequest();
+        var metaData = new Metadata() { { "id", $"{Id}" } };
         await OpenAsync(request, metaData, cancellationToken: cancellationToken);
     }
 
     public async Task CloseAsync(CancellationToken cancellationToken)
     {
         var request = new CloseRequest();
-        var metaData = new Metadata()
-        {
-            { "id", $"{Id}" },
-        };
+        var metaData = new Metadata() { { "id", $"{Id}" } };
         await CloseAsync(request, metaData, cancellationToken: cancellationToken);
     }
 
@@ -65,10 +55,7 @@ sealed class AdaptorClientImpl(Channel channel, Guid id, IService[] services)
         try
         {
             var request = new CloseRequest();
-            var metaData = new Metadata()
-            {
-                { "id", $"{Id}" },
-            };
+            var metaData = new Metadata() { { "id", $"{Id}" } };
             await CloseAsync(request, metaData, cancellationToken: cancellationToken);
         }
         catch
