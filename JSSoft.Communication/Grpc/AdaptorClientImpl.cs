@@ -28,39 +28,48 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Grpc;
 
-sealed class AdaptorClientImpl(Channel channel, string id, IService[] services)
+sealed class AdaptorClientImpl(Channel channel, Guid id, IService[] services)
     : Adaptor.AdaptorClient(channel), IPeer
 {
-    public string Id { get; } = id;
+    public string Id { get; } = $"{id}";
 
     public IService[] Services { get; } = services;
 
-    public async Task<string> OpenAsync(CancellationToken cancellationToken)
+    public async Task OpenAsync(CancellationToken cancellationToken)
     {
         var serviceNames = Services.Select(item => item.Name).ToArray();
         var request = new OpenRequest
         {
             Time = DateTime.UtcNow.Ticks,
-            Token = Id,
-            ServiceNames =
-            {
-                serviceNames,
-            },
+            ServiceNames = { serviceNames },
         };
-        var reply = await OpenAsync(request, cancellationToken: cancellationToken);
-        return reply.Token;
+        var metaData = new Metadata()
+        {
+            { "id", $"{Id}" },
+        };
+        await OpenAsync(request, metaData, cancellationToken: cancellationToken);
     }
 
-    public async Task CloseAsync(string token, CancellationToken cancellationToken)
+    public async Task CloseAsync(CancellationToken cancellationToken)
     {
-        await CloseAsync(new CloseRequest { Token = token }, cancellationToken: cancellationToken);
+        var request = new CloseRequest();
+        var metaData = new Metadata()
+        {
+            { "id", $"{Id}" },
+        };
+        await CloseAsync(request, metaData, cancellationToken: cancellationToken);
     }
 
-    public async Task<bool> TryCloseAsync(string token, CancellationToken cancellationToken)
+    public async Task<bool> TryCloseAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await CloseAsync(new CloseRequest { Token = token }, cancellationToken: cancellationToken);
+            var request = new CloseRequest();
+            var metaData = new Metadata()
+            {
+                { "id", $"{Id}" },
+            };
+            await CloseAsync(request, metaData, cancellationToken: cancellationToken);
         }
         catch
         {

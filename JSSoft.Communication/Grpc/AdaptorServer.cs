@@ -73,21 +73,20 @@ sealed class AdaptorServer : IAdaptor
 
     public async Task<OpenReply> OpenAsync(OpenRequest request, ServerCallContext context, CancellationToken cancellationToken)
     {
-        var id = context.Peer;
+        var id = context.RequestHeaders.Get("id").Value;
         if (Peers.TryGetValue(id, out var peer) == true)
             throw new InvalidOperationException();
 
-        var token = Guid.Parse(request.Token);
         var serviceNames = request.ServiceNames;
         var services = serviceNames.Select(item => _serviceByName[item]).ToArray();
-        Peers.Add(_serviceContext, id, token);
+        Peers.Add(_serviceContext, id);
         await Task.CompletedTask;
-        return new OpenReply() { Token = $"{token}" };
+        return new OpenReply();
     }
 
     public async Task<CloseReply> CloseAsync(CloseRequest request, ServerCallContext context, CancellationToken cancellationToken)
     {
-        var id = context.Peer;
+        var id = context.RequestHeaders.Get("id").Value;
         if (Peers.TryGetValue(id, out var peer) != true)
             throw new InvalidOperationException();
 
@@ -98,13 +97,13 @@ sealed class AdaptorServer : IAdaptor
 
     public async Task<PingReply> PingAsync(PingRequest request, ServerCallContext context)
     {
-        var id = context.Peer;
+        var id = context.RequestHeaders.Get("id").Value;
         var dateTime = DateTime.UtcNow;
         if (Peers.TryGetValue(id, out var peer) != true)
             throw new InvalidOperationException();
 
         peer.PingTime = dateTime;
-        _serviceContext.Debug($"{id}, {peer.Token} Ping({dateTime})");
+        _serviceContext.Debug($"{id} Ping({dateTime})");
         await Task.CompletedTask;
         return new PingReply() { Time = peer.PingTime.Ticks };
     }
@@ -120,7 +119,7 @@ sealed class AdaptorServer : IAdaptor
         if (methodDescriptors.ContainsKey(request.Name) != true)
             throw new InvalidOperationException($"method '{request.Name}' does not exists.");
 
-        var id = context.Peer;
+        var id = context.RequestHeaders.Get("id").Value;
         if (Peers.TryGetValue(id, out var peer) != true)
             throw new InvalidOperationException();
 
@@ -136,7 +135,8 @@ sealed class AdaptorServer : IAdaptor
                 ID = string.Empty,
                 Data = _serializer.Serialize(typeof(void), null)
             };
-            LogUtility.Debug($"{context.Peer} Invoke(one way): {request.ServiceName}.{methodDescriptor.ShortName}");
+
+            _serviceContext.Debug($"{id} Invoke(one way): {request.ServiceName}.{methodDescriptor.ShortName}");
             return reply;
         }
         else
@@ -147,14 +147,14 @@ sealed class AdaptorServer : IAdaptor
                 ID = $"{assemblyQualifiedName}",
                 Data = _serializer.Serialize(valueType, value)
             };
-            LogUtility.Debug($"{context.Peer} Invoke: {request.ServiceName}.{methodDescriptor.ShortName}");
+            _serviceContext.Debug($"{id} Invoke: {request.ServiceName}.{methodDescriptor.ShortName}");
             return reply;
         }
     }
 
     public async Task PollAsync(IAsyncStreamReader<PollRequest> requestStream, IServerStreamWriter<PollReply> responseStream, ServerCallContext context)
     {
-        var id = context.Peer;
+        var id = context.RequestHeaders.Get("id").Value;
         if (Peers.TryGetValue(id, out var peer) != true)
             throw new InvalidOperationException();
 
@@ -165,14 +165,11 @@ sealed class AdaptorServer : IAdaptor
             while (await MoveAsync() == true)
             {
                 var reply = peer.Collect();
-                _serviceContext.Debug("write 1");
                 await responseStream.WriteAsync(reply);
-                _serviceContext.Debug("write 2");
                 if (cancellationToken.IsCancellationRequested == true)
                     break;
-                _serviceContext.Debug("wait 1");
+                manualResetEvent.Reset();
                 manualResetEvent.WaitOne(PollTimeout);
-                _serviceContext.Debug("wait 2");
             }
         }
         catch (Exception e)

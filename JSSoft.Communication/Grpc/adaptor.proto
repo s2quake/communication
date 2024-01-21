@@ -17,15 +17,12 @@ rpc Ping (PingRequest) returns (PingReply);
 message OpenRequest {
     repeated string serviceNames = 1;
     int64 time = 2;
-    string token = 3;
 }
 
 message OpenReply {
-    string token = 1;
 }
 
 message CloseRequest {
-    string token = 1;
 }
 
 message CloseReply {
@@ -33,17 +30,14 @@ message CloseReply {
 }
 
 message PingRequest {
-    string token = 1;
     int64 time = 2;
 }
 
 message PingReply {
     int64 time = 1;
-    string token = 2;
 }
 
 message InvokeRequest {
-    string token = 1;
     string serviceName = 2;
     string name = 3;
     repeated string data = 4;
@@ -55,7 +49,6 @@ message InvokeReply {
 }
 
 message PollRequest {
-    string token = 1;
 }
 
 message PollReplyItem {

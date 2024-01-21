@@ -35,13 +35,13 @@ sealed class PeerCollection(IInstanceContext instanceContext)
 {
     private readonly IInstanceContext _instanceContext = instanceContext;
 
-    public void Add(IServiceContext serviceContext, string id, Guid token)
+    public void Add(IServiceContext serviceContext, string id)
     {
-        var peer = new Peer(id) { Token = token };
+        var peer = new Peer(id);
         if (TryAdd(id, peer) == true)
         {
             peer.Descriptor = _instanceContext.CreateInstance(peer);
-            serviceContext.Debug($"{id}, {token} Connected");
+            serviceContext.Debug($"{id}, Connected");
         }
         else
         {
@@ -56,7 +56,7 @@ sealed class PeerCollection(IInstanceContext instanceContext)
             peer.Descriptor = null;
             _instanceContext.DestroyInstance(peer);
             peer.Disconect(closeCode);
-            serviceContext.Debug($"{peer.Id}, {peer.Token} Disconnected ({closeCode})");
+            serviceContext.Debug($"{id} Disconnected ({closeCode})");
             return true;
         }
         return false;

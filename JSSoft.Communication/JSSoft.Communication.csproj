@@ -12,6 +12,6 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <!-- <Protobuf Include="Grpc\adaptor.proto" OutputDir="%(RelativePath)" GrpcServices="Both" /> -->
+    <Protobuf Include="Grpc\adaptor.proto" OutputDir="%(RelativePath)" GrpcServices="Both" />
   </ItemGroup>
 </Project>

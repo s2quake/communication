@@ -27,7 +27,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -48,7 +47,6 @@ sealed class AdaptorClient : IAdaptor
     private ISerializer? _serializer;
     private PeerDescriptor? _descriptor;
     private Timer? _timer;
-    private string _token = string.Empty;
     private DateTime _pongDateTime;
 
     public AdaptorClient(IServiceContext serviceContext, IInstanceContext instanceContext)
@@ -66,8 +64,8 @@ sealed class AdaptorClient : IAdaptor
         try
         {
             _channel = new Channel(EndPointUtility.GetString(endPoint), ChannelCredentials.Insecure);
-            _adaptorImpl = new AdaptorClientImpl(_channel, $"{_serviceContext.Id}", _serviceByName.Values.ToArray());
-            _token = await _adaptorImpl.OpenAsync(cancellationToken);
+            _adaptorImpl = new AdaptorClientImpl(_channel, _serviceContext.Id, _serviceByName.Values.ToArray());
+            await _adaptorImpl.OpenAsync(cancellationToken);
             _descriptor = _instanceContext.CreateInstance(_adaptorImpl);
             _cancellationTokenSource = new CancellationTokenSource();
             _serializer = (ISerializer)_serviceContext.GetService(typeof(ISerializer))!;
@@ -97,7 +95,7 @@ sealed class AdaptorClient : IAdaptor
         if (_adaptorImpl != null)
         {
             _instanceContext.DestroyInstance(_adaptorImpl);
-            await _adaptorImpl.CloseAsync(_token, cancellationToken);
+            await _adaptorImpl.CloseAsync(cancellationToken);
             _adaptorImpl = null;
         }
         if (_task != null)
@@ -109,7 +107,6 @@ sealed class AdaptorClient : IAdaptor
             await _channel.ShutdownAsync();
             _channel = null;
         }
-        _token = string.Empty;
         _cancellationTokenSource?.Dispose();
         _cancellationTokenSource = null;
     }
@@ -125,7 +122,7 @@ sealed class AdaptorClient : IAdaptor
         if (_adaptorImpl != null)
         {
             _instanceContext.DestroyInstance(_adaptorImpl);
-            await _adaptorImpl.TryCloseAsync(_token, cancellationToken: default);
+            await _adaptorImpl.TryCloseAsync(cancellationToken: default);
             _adaptorImpl = null;
         }
         if (_channel != null)
@@ -144,8 +141,9 @@ sealed class AdaptorClient : IAdaptor
         {
             if (_adaptorImpl != null)
             {
-                var request = new PingRequest() { Token = _token };
-                await _adaptorImpl.PingAsync(request);
+                var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
+                var request = new PingRequest();
+                await _adaptorImpl.PingAsync(request, metaData);
             }
         }
         catch
@@ -161,8 +159,9 @@ sealed class AdaptorClient : IAdaptor
         var closeCode = int.MinValue;
         try
         {
-            using var call = _adaptorImpl.Poll();
-            var request = new PollRequest { Token = _token };
+            var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
+            using var call = _adaptorImpl.Poll(metaData);
+            var request = new PollRequest();
             await call.RequestStream.WriteAsync(request);
             while (await MoveAsync(call, cancellationToken) == true)
             {
@@ -173,9 +172,7 @@ sealed class AdaptorClient : IAdaptor
                     break;
                 }
                 InvokeCallback(reply);
-                _serviceContext.Debug("write 1");
                 await call.RequestStream.WriteAsync(request);
-                _serviceContext.Debug("write 2");
             }
             await call.RequestStream.CompleteAsync();
         }
@@ -254,16 +251,15 @@ sealed class AdaptorClient : IAdaptor
         if (_adaptorImpl == null)
             throw new InvalidOperationException();
 
-        var token = _token;
+        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
         var data = _serializer!.SerializeMany(types, args);
         var request = new InvokeRequest
         {
             ServiceName = instance.ServiceName,
             Name = name,
-            Token = token,
             Data = { data },
         };
-        var reply = _adaptorImpl.Invoke(request);
+        var reply = _adaptorImpl.Invoke(request, metaData);
         HandleReply(reply);
     }
 
@@ -272,18 +268,17 @@ sealed class AdaptorClient : IAdaptor
         if (_adaptorImpl == null)
             throw new InvalidOperationException();
 
-        var token = _token;
+        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
         var data = _serializer!.SerializeMany(types, args);
         var request = new InvokeRequest
         {
             ServiceName = instance.ServiceName,
             Name = name,
-            Token = token,
             Data = { data },
         };
         try
         {
-            await _adaptorImpl.InvokeAsync(request);
+            await _adaptorImpl.InvokeAsync(request, metaData);
             Pong();
         }
         catch
@@ -296,16 +291,15 @@ sealed class AdaptorClient : IAdaptor
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
 
-        var token = _token;
+        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
         var data = _serializer.SerializeMany(types, args);
         var request = new InvokeRequest
         {
             ServiceName = instance.ServiceName,
             Name = name,
-            Token = token,
             Data = { data },
         };
-        var reply = _adaptorImpl.Invoke(request);
+        var reply = _adaptorImpl.Invoke(request, metaData);
         HandleReply(reply);
         if (_serializer.Deserialize(typeof(T), reply.Data) is T value)
             return value;
@@ -317,18 +311,17 @@ sealed class AdaptorClient : IAdaptor
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
 
-        var token = _token;
+        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
         var data = _serializer.SerializeMany(types, args);
         var request = new InvokeRequest
         {
             ServiceName = instance.ServiceName,
             Name = name,
-            Token = token,
             Data = { data },
         };
         try
         {
-            var reply = await _adaptorImpl.InvokeAsync(request, cancellationToken: cancellationToken);
+            var reply = await _adaptorImpl.InvokeAsync(request, metaData, cancellationToken: cancellationToken);
             HandleReply(reply);
         }
         catch (RpcException e)
@@ -344,18 +337,17 @@ sealed class AdaptorClient : IAdaptor
         if (_adaptorImpl == null || _serializer == null)
             throw new InvalidOperationException();
 
-        var token = _token;
+        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
         var data = _serializer.SerializeMany(types, args);
         var request = new InvokeRequest
         {
             ServiceName = instance.ServiceName,
             Name = name,
-            Token = token
         };
         request.Data.AddRange(data);
         try
         {
-            var reply = await _adaptorImpl.InvokeAsync(request, cancellationToken: cancellationToken);
+            var reply = await _adaptorImpl.InvokeAsync(request, metaData, cancellationToken: cancellationToken);
             HandleReply(reply);
             return _serializer.Deserialize(typeof(T), reply.Data) is T value ? value : default!;
         }

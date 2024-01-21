@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.NetworkInformation;
 using System.Threading;
 
 namespace JSSoft.Communication.Grpc;
@@ -35,8 +34,6 @@ sealed class Peer(string id) : IPeer
     private ManualResetEvent? _manualResetEvent;
 
     public string Id { get; } = id;
-
-    public Guid Token { get; set; } = Guid.NewGuid();
 
     public DateTime PingTime { get; set; } = DateTime.UtcNow;
 
