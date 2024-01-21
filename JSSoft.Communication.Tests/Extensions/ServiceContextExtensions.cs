@@ -5,7 +5,7 @@ static class ServiceContextExtensions
 {
     public static async Task ReleaseAsync(this IServiceContext @this, Guid token)
     {
-        if (@this.ServiceState == ServiceState.Open || @this.ServiceState == ServiceState.Disconnected)
+        if (@this.ServiceState == ServiceState.Open)
         {
             try
             {

@@ -105,14 +105,15 @@ public abstract class ServiceContextBase : IServiceContext
             ServiceState = ServiceState.Opening;
             _token = ServiceToken.NewToken();
             _serializer = SerializerProvider.Create(this);
-            Debug($"{SerializerProvider.Name} Serializer created.");
+            Debug($"{nameof(ISerializer)} ({SerializerProvider.Name}) Serializer created.");
             _adaptor = AdaptorProvider.Create(this, _instanceContext, _token);
-            Debug($"{AdaptorProvider.Name} Adaptor created.");
+            Debug($"{nameof(IAdaptor)} ({AdaptorProvider.Name}) created.");
             _instanceContext.InitializeInstance();
+            Debug($"{nameof(InstanceContext)} initialized.");
             await _adaptor.OpenAsync(_endPoint, cancellationToken);
+            Debug($"{nameof(IAdaptor)} ({AdaptorProvider.Name}) Adaptor opened.");
             _adaptor.Disconnected += Adaptor_Disconnected;
-            Debug($"{AdaptorProvider.Name} Adaptor opened.");
-            Debug($"Service Context opened.");
+            Debug($"{nameof(IServiceContext)} ({this.GetType()}) opened.");
             ServiceState = ServiceState.Open;
             OnOpened(EventArgs.Empty);
             return _token.Guid;
@@ -127,7 +128,7 @@ public abstract class ServiceContextBase : IServiceContext
 
     public async Task CloseAsync(Guid token, CancellationToken cancellationToken)
     {
-        if (ServiceState != ServiceState.Open && ServiceState != ServiceState.Disconnected)
+        if (ServiceState != ServiceState.Open)
             throw new InvalidOperationException();
         if (token == Guid.Empty || _token!.Guid != token)
             throw new ArgumentException($"Invalid token: {token}", nameof(token));
@@ -137,16 +138,17 @@ public abstract class ServiceContextBase : IServiceContext
             ServiceState = ServiceState.Closing;
             _adaptor!.Disconnected -= Adaptor_Disconnected;
             await _adaptor!.CloseAsync(cancellationToken);
-            Debug($"{AdaptorProvider!.Name} Adaptor closed.");
+            Debug($"{nameof(IAdaptor)} ({AdaptorProvider.Name}) closed.");
             _instanceContext.ReleaseInstance();
+            Debug($"{nameof(InstanceContext)} released.");
             await _adaptor.DisposeAsync();
-            Debug($"{AdaptorProvider.Name} Adaptor disposed.");
+            Debug($"{nameof(IAdaptor)} ({AdaptorProvider.Name}) disposed.");
             _adaptor = null;
             _serializer = null;
             _token = ServiceToken.Empty;
             ServiceState = ServiceState.None;
+            Debug($"{nameof(IServiceContext)}({this.GetType()}) closed.");
             OnClosed(EventArgs.Empty);
-            Debug($"Service Context closed.");
         }
         catch (Exception e)
         {
@@ -165,9 +167,11 @@ public abstract class ServiceContextBase : IServiceContext
         _token = null;
         _serializer = null;
         _instanceContext.ReleaseInstance();
-        if (_adaptor != null)
+        Debug($"{nameof(InstanceContext)} released.");
+        if (_adaptor is not null)
         {
             await _adaptor.DisposeAsync();
+            Debug($"{nameof(IAdaptor)} ({AdaptorProvider.Name}) disposed.");
             _adaptor = null;
         }
         ServiceState = ServiceState.None;
@@ -279,7 +283,6 @@ public abstract class ServiceContextBase : IServiceContext
 
     internal void DestroyInstance(IService service, IPeer peer, object serverInstance, object clientInstance)
     {
-        var token = _token!;
         if (_isServer == true)
         {
             service.DestroyInstance(peer, serverInstance);
@@ -297,8 +300,19 @@ public abstract class ServiceContextBase : IServiceContext
 
     private void Adaptor_Disconnected(object? sender, EventArgs e)
     {
-        ServiceState = ServiceState.Disconnected;
+        ServiceState = ServiceState.Closing;
+        Debug($"{nameof(IServiceContext)} ({this.GetType()}) disconnected.");
         OnDisconnected(EventArgs.Empty);
+        _instanceContext.ReleaseInstance();
+        Debug($"{nameof(InstanceContext)} released.");
+        _adaptor!.DisposeAsync();
+        Debug($"{AdaptorProvider.Name} Adaptor disposed.");
+        _adaptor = null;
+        _serializer = null;
+        _token = ServiceToken.Empty;
+        ServiceState = ServiceState.None;
+        Debug($"{nameof(IServiceContext)} ({this.GetType()}) closed.");
+        OnClosed(EventArgs.Empty);
     }
 
     #region IService

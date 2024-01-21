@@ -28,6 +28,7 @@ sealed class AdaptorProvider : IAdaptorProvider
 {
     public const string DefaultName = "grpc";
 
+    // protoc JSSoft.Communication/Grpc/adaptor.proto --csharp_out=JSSoft.Communication/Grpc 
     public IAdaptor Create(IServiceContext serviceContext, IInstanceContext instanceContext, ServiceToken token)
     {
         // Environment.SetEnvironmentVariable("GRPC_VERBOSITY", "DEBUG");

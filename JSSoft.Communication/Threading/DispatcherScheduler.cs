@@ -99,6 +99,7 @@ public sealed class DispatcherScheduler : TaskScheduler
                 {
                     try
                     {
+                        _executionEventSet.Reset();
                         _executionEventSet.WaitOne(1000);
                     }
                     catch (ObjectDisposedException)

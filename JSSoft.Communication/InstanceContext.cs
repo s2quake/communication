@@ -109,5 +109,5 @@ sealed class InstanceContext(ServiceContextBase serviceContext)
         return query.SingleOrDefault();
     }
 
-    public string Id { get; } = "i";
+    public string Id => $"{_serviceContext.Id}";
 }

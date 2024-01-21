@@ -55,4 +55,17 @@ sealed class AdaptorClientImpl(Channel channel, string id, IService[] services)
     {
         await CloseAsync(new CloseRequest { Token = token }, cancellationToken: cancellationToken);
     }
+
+    public async Task<bool> TryCloseAsync(string token, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await CloseAsync(new CloseRequest { Token = token }, cancellationToken: cancellationToken);
+        }
+        catch
+        {
+            return true;
+        }
+        return false;
+    }
 }

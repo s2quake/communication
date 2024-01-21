@@ -22,74 +22,104 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
+using System.Threading;
 
 namespace JSSoft.Communication.Grpc;
 
-sealed class Peer : IPeer, IDisposable
+sealed class Peer(string id) : IPeer
 {
-    private readonly IService[] _services;
-    private bool _isDisposed;
+    private readonly object _lockObject = new();
+    private readonly List<CallbackData> _callbackDataList = [];
+    private CancellationTokenSource? _cancellationTokenSource;
+    private ManualResetEvent? _manualResetEvent;
 
-    public Peer(string id, IService[] services)
-    {
-        Id = id;
-        _services = services;
-        Ping(DateTime.UtcNow);
-        foreach (var item in services)
-        {
-            PollReplyItems.Add(item, []);
-        }
-    }
-
-    public string Id { get; }
+    public string Id { get; } = id;
 
     public Guid Token { get; set; } = Guid.NewGuid();
 
-    public DateTime PingTime { get; set; }
+    public DateTime PingTime { get; set; } = DateTime.UtcNow;
 
     public PeerDescriptor? Descriptor { get; set; }
 
     public Dictionary<IService, object> Services => Descriptor?.ServerInstances ?? [];
 
-    public Dictionary<IService, PollReplyItemCollection> PollReplyItems { get; } = [];
+    public int CloseCode { get; private set; } = int.MinValue;
 
-    public void Dispose()
+    public CancellationToken Begin(ManualResetEvent manualResetEvent)
     {
-        if (_isDisposed == true)
-            throw new ObjectDisposedException($"{this}");
-
-        lock (this)
+        lock (_lockObject)
         {
-            foreach (var item in _services)
-            {
-                PollReplyItems.Remove(item);
-            }
-            _isDisposed = true;
+            _manualResetEvent = manualResetEvent;
+            _cancellationTokenSource = new();
+            return _cancellationTokenSource.Token;
         }
-        GC.SuppressFinalize(this);
     }
 
-    public void Ping(DateTime dateTime)
+    public void End()
     {
-        PingTime = dateTime;
+        lock (_lockObject)
+        {
+            _cancellationTokenSource = null;
+            _manualResetEvent = null;
+        }
+    }
+
+    public void Disconect(int closeCode)
+    {
+        lock (_lockObject)
+        {
+            CloseCode = closeCode;
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource = null;
+            _manualResetEvent?.Set();
+        }
     }
 
     public PollReply Collect()
     {
-        var reply = new PollReply() { Code = int.MinValue };
-        lock (this)
+        if (_cancellationTokenSource?.IsCancellationRequested == true)
         {
-            if (_isDisposed != true)
+            return new PollReply { Code = CloseCode };
+        }
+
+        var items = Flush();
+        var reply = new PollReply() { Code = CloseCode };
+        foreach (var item in items)
+        {
+            reply.Items.Add(new PollReplyItem()
             {
-                var services = _services;
-                foreach (var item in services)
+                Name = item.Name,
+                ServiceName = item.Service.Name,
+                Data =
                 {
-                    var callbacks = PollReplyItems[item];
-                    var items = callbacks.Flush();
-                    reply.Items.AddRange(items);
-                }
-            }
+                    item.Data,
+                },
+            });
         }
         return reply;
+
+        CallbackData[] Flush()
+        {
+            lock (_lockObject)
+            {
+                if (_callbackDataList.Count > 0)
+                {
+                    var items = _callbackDataList.ToArray();
+                    _callbackDataList.Clear();
+                    return items;
+                }
+                return [];
+            }
+        }
+    }
+
+    public void Add(CallbackData callbackData)
+    {
+        lock (_lockObject)
+        {
+            _callbackDataList.Add(callbackData);
+            _manualResetEvent?.Set();
+        }
     }
 }

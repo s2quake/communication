@@ -20,27 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using Grpc.Core;
-using System.Threading.Tasks;
+using JSSoft.Communication.Logging;
 
-namespace JSSoft.Communication.Grpc;
+namespace JSSoft.Communication.Extensions;
 
-sealed class AdaptorServerImpl(AdaptorServer adaptorServer) : Adaptor.AdaptorBase
+static class IServiceContextExtensions
 {
-    private readonly AdaptorServer _adaptorServer = adaptorServer;
+    public static void Debug(this IServiceContext @this, string message)
+    {
+        LogUtility.Debug($"{@this} {message}");
+    }
 
-    public override Task<OpenReply> Open(OpenRequest request, ServerCallContext context)
-        => _adaptorServer.OpenAsync(request, context, context.CancellationToken);
-
-    public override Task<CloseReply> Close(CloseRequest request, ServerCallContext context)
-        => _adaptorServer.CloseAsync(request, context, context.CancellationToken);
-
-public override Task<PingReply> Ping(PingRequest request, ServerCallContext context)
-        => _adaptorServer.PingAsync(request, context);
-
-    public override Task<InvokeReply> Invoke(InvokeRequest request, ServerCallContext context)
-        => _adaptorServer.InvokeAsync(request, context);
-
-    public override Task Poll(IAsyncStreamReader<PollRequest> requestStream, IServerStreamWriter<PollReply> responseStream, ServerCallContext context)
-        => _adaptorServer.PollAsync(requestStream, responseStream, context);
+    public static void Error(this IServiceContext @this, string message)
+    {
+        LogUtility.Error($"{@this} {message}");
+    }
 }

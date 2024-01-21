@@ -21,11 +21,13 @@
 // SOFTWARE.
 
 using Grpc.Core;
+using JSSoft.Communication.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,6 +49,7 @@ sealed class AdaptorClient : IAdaptor
     private PeerDescriptor? _descriptor;
     private Timer? _timer;
     private string _token = string.Empty;
+    private DateTime _pongDateTime;
 
     public AdaptorClient(IServiceContext serviceContext, IInstanceContext instanceContext)
     {
@@ -70,6 +73,7 @@ sealed class AdaptorClient : IAdaptor
             _serializer = (ISerializer)_serviceContext.GetService(typeof(ISerializer))!;
             _task = PollAsync(_cancellationTokenSource.Token);
             _timer = new Timer(Timer_TimerCallback, null, TimeSpan.Zero, Timeout);
+            Pong();
         }
         catch
         {
@@ -85,10 +89,6 @@ sealed class AdaptorClient : IAdaptor
     public async Task CloseAsync(CancellationToken cancellationToken)
     {
         _cancellationTokenSource?.Cancel();
-        if (_task != null)
-        {
-            await _task;
-        }
         if (_timer != null)
         {
             await _timer.DisposeAsync();
@@ -100,6 +100,10 @@ sealed class AdaptorClient : IAdaptor
             await _adaptorImpl.CloseAsync(_token, cancellationToken);
             _adaptorImpl = null;
         }
+        if (_task != null)
+        {
+            await _task;
+        }
         if (_channel != null)
         {
             await _channel.ShutdownAsync();
@@ -110,9 +114,26 @@ sealed class AdaptorClient : IAdaptor
         _cancellationTokenSource = null;
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        return ValueTask.CompletedTask;
+        _task = null;
+        if (_timer != null)
+        {
+            await _timer.DisposeAsync();
+            _timer = null;
+        }
+        if (_adaptorImpl != null)
+        {
+            _instanceContext.DestroyInstance(_adaptorImpl);
+            await _adaptorImpl.TryCloseAsync(_token, cancellationToken: default);
+            _adaptorImpl = null;
+        }
+        if (_channel != null)
+        {
+            await _channel.ShutdownAsync();
+            _channel = null;
+        }
+        GC.SuppressFinalize(this);
     }
 
     public event EventHandler? Disconnected;
@@ -123,10 +144,7 @@ sealed class AdaptorClient : IAdaptor
         {
             if (_adaptorImpl != null)
             {
-                var request = new PingRequest()
-                {
-                    Token = _token.ToString()
-                };
+                var request = new PingRequest() { Token = _token };
                 await _adaptorImpl.PingAsync(request);
             }
         }
@@ -144,51 +162,40 @@ sealed class AdaptorClient : IAdaptor
         try
         {
             using var call = _adaptorImpl.Poll();
-            while (cancellationToken.IsCancellationRequested != true)
+            var request = new PollRequest { Token = _token };
+            await call.RequestStream.WriteAsync(request);
+            while (await MoveAsync(call, cancellationToken) == true)
             {
-                var request = new PollRequest
-                {
-                    Token = _token,
-                };
-                await call.RequestStream.WriteAsync(request);
-                if (await call.ResponseStream.MoveNext() == false)
-                    return;
                 var reply = call.ResponseStream.Current;
                 if (reply.Code != int.MinValue)
                 {
                     closeCode = reply.Code;
                     break;
                 }
-                InvokeCallback(reply.Items);
-                reply.Items.Clear();
+                InvokeCallback(reply);
+                _serviceContext.Debug("write 1");
+                await call.RequestStream.WriteAsync(request);
+                _serviceContext.Debug("write 2");
             }
             await call.RequestStream.CompleteAsync();
         }
         catch (Exception e)
         {
-            closeCode = -1;
+            closeCode = -2;
             GrpcEnvironment.Logger.Error(e, e.Message);
         }
         if (closeCode != int.MinValue)
         {
-            _task = null;
-            if (_timer != null)
-            {
-                await _timer.DisposeAsync();
-                _timer = null;
-            }
-            if (_adaptorImpl != null)
-            {
-                _instanceContext.DestroyInstance(_adaptorImpl);
-                await _adaptorImpl.CloseAsync(_token, CancellationToken.None);
-                _adaptorImpl = null;
-            }
-            if (_channel != null)
-            {
-                await _channel.ShutdownAsync();
-                _channel = null;
-            }
             Disconnected?.Invoke(this, EventArgs.Empty);
+        }
+        _serviceContext.Debug("Poll finished.");
+
+        static async Task<bool> MoveAsync(AsyncDuplexStreamingCall<PollRequest, PollReply> call, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested == true)
+                return false;
+            using var cancellationTokenSource = new CancellationTokenSource(Timeout);
+            return await call.ResponseStream.MoveNext(cancellationTokenSource.Token);
         }
     }
 
@@ -206,12 +213,22 @@ sealed class AdaptorClient : IAdaptor
         Task.Run(() => methodDescriptor.InvokeAsync(_serviceContext, instance, args));
     }
 
-    private void InvokeCallback(IEnumerable<PollReplyItem> pollItems)
+    private void InvokeCallback(PollReply reply)
     {
-        foreach (var item in pollItems)
+        foreach (var item in reply.Items)
         {
             var service = _serviceByName[item.ServiceName];
             InvokeCallback(service, item.Name, [.. item.Data]);
+        }
+        reply.Items.Clear();
+    }
+
+    private void HandleReply(InvokeReply reply)
+    {
+        Pong();
+        if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
+        {
+            ThrowException(exceptionType, reply.Data);
         }
     }
 
@@ -223,6 +240,11 @@ sealed class AdaptorClient : IAdaptor
         if (Newtonsoft.Json.JsonConvert.DeserializeObject(data, exceptionType) is Exception exception)
             throw exception;
         throw new UnreachableException();
+    }
+
+    private void Pong()
+    {
+        _pongDateTime = DateTime.Now;
     }
 
     #region IAdaptor
@@ -238,14 +260,11 @@ sealed class AdaptorClient : IAdaptor
         {
             ServiceName = instance.ServiceName,
             Name = name,
-            Token = token
+            Token = token,
+            Data = { data },
         };
-        request.Data.AddRange(data);
         var reply = _adaptorImpl.Invoke(request);
-        if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
-        {
-            ThrowException(exceptionType, reply.Data);
-        }
+        HandleReply(reply);
     }
 
     async void IAdaptor.InvokeOneWay(InstanceBase instance, string name, Type[] types, object?[] args)
@@ -259,12 +278,13 @@ sealed class AdaptorClient : IAdaptor
         {
             ServiceName = instance.ServiceName,
             Name = name,
-            Token = token
+            Token = token,
+            Data = { data },
         };
-        request.Data.AddRange(data);
         try
         {
             await _adaptorImpl.InvokeAsync(request);
+            Pong();
         }
         catch
         {
@@ -282,14 +302,11 @@ sealed class AdaptorClient : IAdaptor
         {
             ServiceName = instance.ServiceName,
             Name = name,
-            Token = token
+            Token = token,
+            Data = { data },
         };
-        request.Data.AddRange(data);
         var reply = _adaptorImpl.Invoke(request);
-        if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
-        {
-            ThrowException(exceptionType, reply.Data);
-        }
+        HandleReply(reply);
         if (_serializer.Deserialize(typeof(T), reply.Data) is T value)
             return value;
         throw new UnreachableException();
@@ -306,16 +323,13 @@ sealed class AdaptorClient : IAdaptor
         {
             ServiceName = instance.ServiceName,
             Name = name,
-            Token = token
+            Token = token,
+            Data = { data },
         };
-        request.Data.AddRange(data);
         try
         {
             var reply = await _adaptorImpl.InvokeAsync(request, cancellationToken: cancellationToken);
-            if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
-            {
-                ThrowException(exceptionType, reply.Data);
-            }
+            HandleReply(reply);
         }
         catch (RpcException e)
         {
@@ -342,10 +356,7 @@ sealed class AdaptorClient : IAdaptor
         try
         {
             var reply = await _adaptorImpl.InvokeAsync(request, cancellationToken: cancellationToken);
-            if (reply.ID != string.Empty && Type.GetType(reply.ID) is { } exceptionType)
-            {
-                ThrowException(exceptionType, reply.Data);
-            }
+            HandleReply(reply);
             return _serializer.Deserialize(typeof(T), reply.Data) is T value ? value : default!;
         }
         catch (RpcException e)

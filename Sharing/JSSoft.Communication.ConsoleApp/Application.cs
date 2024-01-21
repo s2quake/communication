@@ -261,7 +261,7 @@ sealed class Application : IApplication, IServiceProvider
             _serviceContext.Closed -= ServiceContext_Closed;
             try
             {
-                await _serviceContext.CloseAsync(Token, CancellationToken.None);
+                await _serviceContext.CloseAsync(Token, cancellationToken: default);
             }
             catch
             {

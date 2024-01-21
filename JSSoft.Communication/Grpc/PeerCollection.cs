@@ -20,7 +20,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System;
 using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using JSSoft.Communication.Extensions;
+using JSSoft.Communication.Logging;
 
 namespace JSSoft.Communication.Grpc;
 
@@ -29,30 +35,45 @@ sealed class PeerCollection(IInstanceContext instanceContext)
 {
     private readonly IInstanceContext _instanceContext = instanceContext;
 
-    public void Add(Peer item)
+    public void Add(IServiceContext serviceContext, string id, Guid token)
     {
-        var descriptor = _instanceContext.CreateInstance(item);
-        item.Descriptor = descriptor;
-        TryAdd(item.Id, item);
-    }
-
-    public void Remove(string id)
-    {
-        if (TryRemove(id, out var peer) == true)
+        var peer = new Peer(id) { Token = token };
+        if (TryAdd(id, peer) == true)
         {
-            _instanceContext.DestroyInstance(peer);
-            peer.Descriptor = null;
-            peer.Dispose();
+            peer.Descriptor = _instanceContext.CreateInstance(peer);
+            serviceContext.Debug($"{id}, {token} Connected");
+        }
+        else
+        {
+            throw new InvalidOperationException();
         }
     }
 
-    public void Detach(string id)
+    public bool Remove(IServiceContext serviceContext, string id, int closeCode)
     {
         if (TryRemove(id, out var peer) == true)
         {
-            _instanceContext.DestroyInstance(peer);
             peer.Descriptor = null;
-            peer.Dispose();
+            _instanceContext.DestroyInstance(peer);
+            peer.Disconect(closeCode);
+            serviceContext.Debug($"{peer.Id}, {peer.Token} Disconnected ({closeCode})");
+            return true;
         }
+        return false;
+    }
+
+    public async Task DisconnectAsync(IServiceContext serviceContext, CancellationToken cancellationToken)
+    {
+        var items = Values.ToArray();
+        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 3000);
+        foreach (var item in items)
+        {
+            item.Disconect(closeCode: 0);
+        }
+        while (Count > 0 && cancellationTokenSource.IsCancellationRequested != true)
+        {
+            await Task.Delay(1, cancellationToken);
+        }
+        Clear();
     }
 }
