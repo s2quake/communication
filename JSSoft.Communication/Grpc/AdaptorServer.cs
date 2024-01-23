@@ -157,7 +157,7 @@ sealed class AdaptorServer : IAdaptor
         if (Peers.TryGetValue(id, out var peer) != true)
             throw new InvalidOperationException();
 
-        using var manualResetEvent = new ManualResetEvent(initialState: false);
+        using var manualResetEvent = new ManualResetEvent(initialState: true);
         var cancellationToken = peer.BeginPolling(manualResetEvent);
         try
         {
@@ -167,6 +167,8 @@ sealed class AdaptorServer : IAdaptor
                 await responseStream.WriteAsync(reply);
                 if (cancellationToken.IsCancellationRequested == true)
                     break;
+                if (peer.CanCollect == true)
+                    continue;
                 manualResetEvent.Reset();
                 manualResetEvent.WaitOne(PollTimeout);
             }

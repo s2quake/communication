@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using JSSoft.Communication.Logging;
 
 namespace JSSoft.Communication.Grpc;
 
@@ -93,6 +94,8 @@ sealed class Peer(string id) : IPeer
         }
         return reply;
     }
+
+    public bool CanCollect => _callbackDataList.Count > 0;
 
     public void AddCallback(CallbackData callbackData)
     {
