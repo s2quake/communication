@@ -23,9 +23,7 @@
 namespace JSSoft.Communication;
 
 [ServiceContext(IsServer = true)]
-public class ServerContext(params IService[] services) : ServiceContextBase(services)
+public class ServerContext(params IService[] services)
+    : ServiceContextBase(services)
 {
-    public override IAdaptorProvider AdaptorProvider => Communication.AdaptorProvider.Default;
-
-    public override ISerializerProvider SerializerProvider => JsonSerializerProvider.Default;
 }

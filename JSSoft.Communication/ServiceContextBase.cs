@@ -53,13 +53,9 @@ public abstract class ServiceContextBase : IServiceContext
         _instanceContext = new InstanceContext(this);
     }
 
-    public abstract IAdaptorProvider AdaptorProvider { get; }
+    public virtual IAdaptorProvider AdaptorProvider => Communication.AdaptorProvider.Default;
 
-    public abstract ISerializerProvider SerializerProvider { get; }
-
-    public string AdaptorType { get; set; } = Communication.AdaptorProvider.DefaultName;
-
-    public string SerializerType { get; set; } = JsonSerializerProvider.DefaultName;
+    public virtual ISerializerProvider SerializerProvider => JsonSerializerProvider.Default;
 
     public ServiceCollection Services { get; }
 
@@ -84,7 +80,7 @@ public abstract class ServiceContextBase : IServiceContext
         set
         {
             if (ServiceState != ServiceState.None)
-                throw new InvalidOperationException($"Cannot set '{nameof(EndPoint)}'. service state is '{ServiceState}'.");
+                throw new InvalidOperationException($"Cannot set '{nameof(EndPoint)}'. service state is '{ServiceState.None}'.");
             _endPoint = value;
         }
     }
@@ -96,7 +92,7 @@ public abstract class ServiceContextBase : IServiceContext
     public async Task<Guid> OpenAsync(CancellationToken cancellationToken)
     {
         if (ServiceState != ServiceState.None)
-            throw new InvalidOperationException($"Service can only be opened if the state is {nameof(ServiceState.None)}.");
+            throw new InvalidOperationException($"Service can only be open if the state is '{ServiceState.None}'.");
 
         try
         {
@@ -112,6 +108,7 @@ public abstract class ServiceContextBase : IServiceContext
             Debug($"{nameof(IAdaptor)} ({AdaptorProvider.Name}) Adaptor opened.");
             _adaptor.Disconnected += Adaptor_Disconnected;
             Debug($"{nameof(IServiceContext)} ({this.GetType()}) opened.");
+            await Task.Delay(1, cancellationToken);
             ServiceState = ServiceState.Open;
             OnOpened(EventArgs.Empty);
             return _token.Guid;
@@ -127,9 +124,9 @@ public abstract class ServiceContextBase : IServiceContext
     public async Task CloseAsync(Guid token, CancellationToken cancellationToken)
     {
         if (ServiceState != ServiceState.Open)
-            throw new InvalidOperationException($"Service can only be closed if the state is {nameof(ServiceState.Open)}.");
+            throw new InvalidOperationException($"Service can only be closed if the state is '{ServiceState.Open}'.");
         if (token == Guid.Empty || _token!.Guid != token)
-            throw new ArgumentException($"Invalid token: {token}", nameof(token));
+            throw new ArgumentException($"'{token}' is an invalid token.", nameof(token));
 
         try
         {
@@ -144,6 +141,7 @@ public abstract class ServiceContextBase : IServiceContext
             _adaptor = null;
             _serializer = null;
             _token = ServiceToken.Empty;
+            await Task.Delay(1, cancellationToken);
             ServiceState = ServiceState.None;
             Debug($"{nameof(IServiceContext)}({this.GetType()}) closed.");
             OnClosed(EventArgs.Empty);
@@ -160,7 +158,7 @@ public abstract class ServiceContextBase : IServiceContext
     public async Task AbortAsync()
     {
         if (ServiceState != ServiceState.Faulted)
-            throw new InvalidOperationException($"Service can only be aborted if the state is {nameof(ServiceState.Faulted)}.");
+            throw new InvalidOperationException($"Service can only be aborted if the state is '{ServiceState.Faulted}'.");
 
         _token = null;
         _serializer = null;
@@ -191,6 +189,9 @@ public abstract class ServiceContextBase : IServiceContext
 
     public event EventHandler? Faulted;
 
+    /// <summary>
+    /// Disconnected event is not used on the server side.
+    /// </summary>
     public event EventHandler? Disconnected;
 
     public event EventHandler? ServiceStateChanged;

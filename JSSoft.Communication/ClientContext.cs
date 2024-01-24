@@ -28,10 +28,6 @@ namespace JSSoft.Communication;
 public class ClientContext(params IService[] services)
     : ServiceContextBase(services)
 {
-    public override IAdaptorProvider AdaptorProvider => Communication.AdaptorProvider.Default;
-
-    public override ISerializerProvider SerializerProvider => JsonSerializerProvider.Default;
-
     public override object? GetService(Type serviceType)
     {
         return base.GetService(serviceType);

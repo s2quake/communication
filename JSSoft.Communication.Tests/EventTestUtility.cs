@@ -20,25 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace JSSoft.Communication.Tests.Extensions;
+namespace JSSoft.Communication.Tests;
 
-static class ServiceContextExtensions
+public static class EventTestUtility
 {
-    public static async Task ReleaseAsync(this IServiceContext @this, Guid token)
+    public async static Task<bool> RaisesAsync(Action<EventHandler> attach, Action<EventHandler> detach, Func<Task> testCode)
     {
-        if (@this.ServiceState == ServiceState.Open)
+        using var manualResetEvent = new ManualResetEvent(initialState: false);
+        attach(handler);
+        try
         {
-            try
-            {
-                await @this.CloseAsync(token, CancellationToken.None);
-            }
-            catch
-            {
-            }
+            await testCode();
         }
-        if (@this.ServiceState == ServiceState.Faulted)
+        catch
         {
-            await @this.AbortAsync();
+            return false;
+        }
+        finally
+        {
+            detach(handler);
+        }
+        return manualResetEvent.WaitOne(millisecondsTimeout: 10000);
+        void handler(object? s, EventArgs args)
+        {
+            manualResetEvent.Set();
         }
     }
 }
