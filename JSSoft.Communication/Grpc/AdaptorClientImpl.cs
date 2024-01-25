@@ -40,14 +40,32 @@ sealed class AdaptorClientImpl(Channel channel, Guid id, IService[] services)
         var serviceNames = Services.Select(item => item.Name).ToArray();
         var request = new OpenRequest();
         var metaData = new Metadata() { { "id", $"{Id}" } };
-        await OpenAsync(request, metaData, cancellationToken: cancellationToken);
+        try
+        {
+            await OpenAsync(request, metaData, cancellationToken: cancellationToken);
+        }
+        catch (RpcException e)
+        {
+            if (e.StatusCode == StatusCode.Cancelled)
+                cancellationToken.ThrowIfCancellationRequested();
+            throw;
+        }
     }
 
     public async Task CloseAsync(CancellationToken cancellationToken)
     {
         var request = new CloseRequest();
         var metaData = new Metadata() { { "id", $"{Id}" } };
-        await CloseAsync(request, metaData, cancellationToken: cancellationToken);
+        try
+        {
+            await CloseAsync(request, metaData, cancellationToken: cancellationToken);
+        }
+        catch (RpcException e)
+        {
+            if (e.StatusCode == StatusCode.Cancelled)
+                cancellationToken.ThrowIfCancellationRequested();
+            throw;
+        }
     }
 
     public async Task<bool> TryCloseAsync(CancellationToken cancellationToken)
