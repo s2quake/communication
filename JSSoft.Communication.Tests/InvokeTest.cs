@@ -1,45 +1,10 @@
-// MIT License
-// 
-// Copyright (c) 2024 Jeesu Choi
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
-using JSSoft.Communication.Tests.Extensions;
-
 namespace JSSoft.Communication.Tests;
 
-public class InvokeTest : IAsyncLifetime
+public class InvokeTest : ClientTestBase<InvokeTest.ITestService, InvokeTest.TestServer>
 {
-    private readonly TestServer _serverService = new();
-    private readonly ClientService<ITestService> _clientService = new();
-    private readonly ServerContext _serverContext;
-    private readonly ClientContext _clientContext;
-    private ITestService? _client;
-
-    private Guid _clientToken;
-    private Guid _serverToken;
-
     public InvokeTest()
+        : base(new TestServer())
     {
-        var endPoint = EndPointUtility.GetEndPoint();
-        _serverContext = new(_serverService) { EndPoint = endPoint };
-        _clientContext = new(_clientService) { EndPoint = endPoint };
     }
 
     public interface ITestService
@@ -66,7 +31,7 @@ public class InvokeTest : IAsyncLifetime
         Task<int> InvokeAndReturnAsync(CancellationToken cancellationToken);
     }
 
-    sealed class TestServer : ServerService<ITestService>, ITestService
+    public sealed class TestServer : ServerService<ITestService>, ITestService
     {
         public object? Result { get; set; }
 
@@ -116,65 +81,52 @@ public class InvokeTest : IAsyncLifetime
     [Fact]
     public void Invoke_Test()
     {
-        _client!.Invoke();
-        Assert.Equal(nameof(_client.Invoke), _serverService.Result);
+        Client.Invoke();
+        Assert.Equal(nameof(Client.Invoke), ServerService.Result);
     }
 
     [Fact]
     public void InvokeOneWay_Test()
     {
-        _client!.InvokeOneWay();
-        Assert.NotEqual(nameof(_client.InvokeOneWay), _serverService.Result);
+        Client.InvokeOneWay();
+        Assert.NotEqual(nameof(Client.InvokeOneWay), ServerService.Result);
     }
 
     [Fact]
     public void InvokeAndReturn_Test()
     {
-        var actualValue = _client!.InvokeAndReturn();
-        Assert.Equal(nameof(_client.InvokeAndReturn), _serverService.Result);
+        var actualValue = Client.InvokeAndReturn();
+        Assert.Equal(nameof(Client.InvokeAndReturn), ServerService.Result);
         Assert.Equal(1, actualValue);
     }
 
     [Fact]
     public async Task InvokeAsync_Test()
     {
-        await _client!.InvokeAsync();
-        Assert.Equal(nameof(_client.InvokeAsync), _serverService.Result);
+        await Client.InvokeAsync();
+        Assert.Equal(nameof(Client.InvokeAsync), ServerService.Result);
     }
 
     [Fact]
     public async Task InvokeAndReturnAsync_Test()
     {
-        var actualValue = await _client!.InvokeAndReturnAsync();
-        Assert.Equal(nameof(_client.InvokeAndReturnAsync), _serverService.Result);
+        var actualValue = await Client.InvokeAndReturnAsync();
+        Assert.Equal(nameof(Client.InvokeAndReturnAsync), ServerService.Result);
         Assert.Equal(2, actualValue);
     }
 
     [Fact]
     public async Task InvokeAsyncWithCancellation_Test()
     {
-        await _client!.InvokeAsync(CancellationToken.None);
-        Assert.Equal(nameof(_client.InvokeAsync) + nameof(CancellationToken), _serverService.Result);
+        await Client.InvokeAsync(CancellationToken.None);
+        Assert.Equal(nameof(Client.InvokeAsync) + nameof(CancellationToken), ServerService.Result);
     }
 
     [Fact]
     public async Task InvokeAndReturnAsyncWithCancellation_Test()
     {
-        var actualValue = await _client!.InvokeAndReturnAsync(CancellationToken.None);
-        Assert.Equal(nameof(_client.InvokeAndReturnAsync) + nameof(CancellationToken), _serverService.Result);
+        var actualValue = await Client.InvokeAndReturnAsync(CancellationToken.None);
+        Assert.Equal(nameof(Client.InvokeAndReturnAsync) + nameof(CancellationToken), ServerService.Result);
         Assert.Equal(3, actualValue);
-    }
-
-    public async Task InitializeAsync()
-    {
-        _serverToken = await _serverContext.OpenAsync(CancellationToken.None);
-        _clientToken = await _clientContext.OpenAsync(CancellationToken.None);
-        _client = _clientService.Server;
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _serverContext.ReleaseAsync(_serverToken);
-        await _clientContext.ReleaseAsync(_clientToken);
     }
 }
