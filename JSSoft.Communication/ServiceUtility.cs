@@ -55,8 +55,8 @@ public static class ServiceUtility
     public static bool IsPublicType(Type type)
         => type.IsVisible == true && type.IsPublic == true && type.IsNotPublic != true;
 
-    public static bool IsInternalType(Type t)
-        => t.IsVisible != true && t.IsPublic != true && t.IsNotPublic == true;
+    public static bool IsInternalType(Type type)
+        => type.IsVisible != true && type.IsPublic != true && type.IsNotPublic == true;
 
     public static bool IsServer(IService service)
     {

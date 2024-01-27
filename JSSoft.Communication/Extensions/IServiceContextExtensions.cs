@@ -27,12 +27,8 @@ namespace JSSoft.Communication.Extensions;
 static class IServiceContextExtensions
 {
     public static void Debug(this IServiceContext @this, string message)
-    {
-        LogUtility.Debug($"{@this} {message}");
-    }
+        => LogUtility.Debug($"{@this} {message}");
 
     public static void Error(this IServiceContext @this, string message)
-    {
-        LogUtility.Error($"{@this} {message}");
-    }
+        => LogUtility.Error($"{@this} {message}");
 }

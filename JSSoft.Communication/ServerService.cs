@@ -35,9 +35,7 @@ public class ServerService<TServer, TClient>
 
     public ServerService(TServer server)
         : base(typeof(TServer), typeof(TClient))
-    {
-        _server = server;
-    }
+        => _server = server;
 
     public ServerService()
         : base(typeof(TServer), typeof(TClient))
@@ -49,10 +47,7 @@ public class ServerService<TServer, TClient>
 
     public TClient Client => _client ?? throw new InvalidOperationException();
 
-    protected virtual TServer CreateServer(IPeer peer)
-    {
-        return _server;
-    }
+    protected virtual TServer CreateServer(IPeer peer) => _server;
 
     protected virtual void DestroyServer(IPeer peer, TServer server)
     {
@@ -79,9 +74,7 @@ public class ServerService<TServer> : ServiceBase
 
     public ServerService(TServer server)
         : base(serverType: typeof(TServer), clientType: typeof(void))
-    {
-        _server = server;
-    }
+        => _server = server;
 
     public ServerService()
         : base(serverType: typeof(TServer), clientType: typeof(void))
@@ -91,22 +84,15 @@ public class ServerService<TServer> : ServiceBase
         _server = this as TServer;
     }
 
-    protected virtual TServer CreateServer(IPeer peer)
-    {
-        return _server!;
-    }
+    protected virtual TServer CreateServer(IPeer peer) => _server!;
 
     protected virtual void DestroyServer(IPeer peer, TServer server)
     {
     }
 
     protected override sealed object CreateInstance(IPeer peer, object obj)
-    {
-        return CreateServer(peer);
-    }
+        => CreateServer(peer);
 
     protected override sealed void DestroyInstance(IPeer peer, object obj)
-    {
-        DestroyServer(peer, (TServer)obj);
-    }
+        => DestroyServer(peer, (TServer)obj);
 }

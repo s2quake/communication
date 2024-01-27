@@ -27,9 +27,7 @@ sealed class JsonSerializerProvider : ISerializerProvider
     public const string DefaultName = "json";
 
     public ISerializer Create(IServiceContext serviceContext)
-    {
-        return new JsonSerializer();
-    }
+        => new JsonSerializer();
 
     public string Name => DefaultName;
 

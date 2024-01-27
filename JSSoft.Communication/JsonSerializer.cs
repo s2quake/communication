@@ -30,12 +30,8 @@ sealed class JsonSerializer : ISerializer
     private static readonly JsonSerializerSettings settings = new();
 
     public string Serialize(Type type, object? data)
-    {
-        return JsonConvert.SerializeObject(data, type, settings);
-    }
+        => JsonConvert.SerializeObject(data, type, settings);
 
     public object? Deserialize(Type type, string text)
-    {
-        return JsonConvert.DeserializeObject(text, type, settings);
-    }
+        => JsonConvert.DeserializeObject(text, type, settings);
 }

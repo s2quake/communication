@@ -65,78 +65,50 @@ public abstract class InstanceBase
 
     [InstanceMethod(InvokeMethod)]
     protected void Invoke(string name, Type[] types, object?[] args)
-    {
-        Adaptor.Invoke(this, name, types, args);
-    }
+        => Adaptor.Invoke(this, name, types, args);
 
     protected void Invoke((string name, Type[] types, object?[] args) info)
-    {
-        Adaptor.Invoke(this, info.name, info.types, info.args);
-    }
+        => Adaptor.Invoke(this, info.name, info.types, info.args);
 
     [InstanceMethod(InvokeOneWayMethod)]
     protected void InvokeOneWay(string name, Type[] types, object?[] args)
-    {
-        Adaptor.InvokeOneWay(this, name, types, args);
-    }
+        => Adaptor.InvokeOneWay(this, name, types, args);
 
     protected void InvokeOneWay((string name, Type[] types, object?[] args) info)
-    {
-        Adaptor.Invoke(this, info.name, info.types, info.args);
-    }
+        => Adaptor.Invoke(this, info.name, info.types, info.args);
 
     [InstanceMethod(InvokeGenericMethod)]
     protected T Invoke<T>(string name, Type[] types, object?[] args)
-    {
-        return Adaptor.Invoke<T>(this, name, types, args);
-    }
+        => Adaptor.Invoke<T>(this, name, types, args);
 
     protected T Invoke<T>((string name, Type[] types, object?[] args) info)
-    {
-        return Adaptor.Invoke<T>(this, info.name, info.types, info.args);
-    }
+        => Adaptor.Invoke<T>(this, info.name, info.types, info.args);
 
     [InstanceMethod(InvokeAsyncMethod)]
     protected Task InvokeAsync(string name, Type[] types, object?[] args, CancellationToken cancellationToken)
-    {
-        return Adaptor.InvokeAsync(this, name, types, args, cancellationToken);
-    }
+        => Adaptor.InvokeAsync(this, name, types, args, cancellationToken);
 
     protected Task InvokeAsync((string name, Type[] types, object?[] args) info, CancellationToken cancellationToken)
-    {
-        return Adaptor.InvokeAsync(this, info.name, info.types, info.args, cancellationToken);
-    }
+        => Adaptor.InvokeAsync(this, info.name, info.types, info.args, cancellationToken);
 
     [InstanceMethod(InvokeGenericAsyncMethod)]
     protected Task<T> InvokeAsync<T>(string name, Type[] types, object?[] args, CancellationToken cancellationToken)
-    {
-        return Adaptor.InvokeAsync<T>(this, name, types, args, cancellationToken);
-    }
+        => Adaptor.InvokeAsync<T>(this, name, types, args, cancellationToken);
 
     protected Task<T> InvokeAsync<T>((string name, Type[] types, object?[] args) info, CancellationToken cancellationToken)
-    {
-        return Adaptor.InvokeAsync<T>(this, info.name, info.types, info.args, cancellationToken);
-    }
+        => Adaptor.InvokeAsync<T>(this, info.name, info.types, info.args, cancellationToken);
 
     protected static (string, Type[], object?[]) Info<P>(MethodInfo methodInfo, Type serviceType, P arg)
-    {
-        return (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P) }, new object?[] { arg });
-    }
+        => (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P) }, new object?[] { arg });
 
     protected static (string, Type[], object?[]) Info<P1, P2>(MethodInfo methodInfo, Type serviceType, P1 arg1, P2 arg2)
-    {
-        return (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P1), typeof(P2) }, new object?[] { arg1, arg2 });
-    }
+        => (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P1), typeof(P2) }, new object?[] { arg1, arg2 });
 
     protected static (string, Type[], object?[]) Info<P1, P2, P3>(MethodInfo methodInfo, Type serviceType, P1 arg1, P2 arg2, P3 arg3)
-    {
-        return (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P1), typeof(P2), typeof(P3) }, new object?[] { arg1, arg2, arg3 });
-    }
+        => (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P1), typeof(P2), typeof(P3) }, new object?[] { arg1, arg2, arg3 });
 
     protected static (string, Type[], object?[]) Info<P1, P2, P3, P4>(MethodInfo methodInfo, Type serviceType, P1 arg1, P2 arg2, P3 arg3, P4 arg4)
-    {
-        return (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P1), typeof(P2), typeof(P3), typeof(P4) }, new object?[] { arg1, arg2, arg3, arg4 });
-    }
+        => (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P1), typeof(P2), typeof(P3), typeof(P4) }, new object?[] { arg1, arg2, arg3, arg4 });
 
     #region Instance
 

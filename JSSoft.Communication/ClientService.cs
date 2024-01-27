@@ -35,9 +35,7 @@ public class ClientService<TServer, TClient>
 
     public ClientService(TClient callback)
         : base(typeof(TServer), typeof(TClient))
-    {
-        _client = callback;
-    }
+        => _client = callback;
 
     public ClientService()
         : base(typeof(TServer), typeof(TClient))
@@ -49,10 +47,7 @@ public class ClientService<TServer, TClient>
 
     public TServer Server => _server ?? throw new InvalidOperationException();
 
-    protected virtual TClient CreateClient(IPeer peer)
-    {
-        return _client;
-    }
+    protected virtual TClient CreateClient(IPeer peer) => _client;
 
     protected virtual void DestroyClient(IPeer peer, TClient client)
     {
