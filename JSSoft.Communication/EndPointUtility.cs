@@ -54,6 +54,21 @@ public static class EndPointUtility
         throw new NotSupportedException($"'{endPoint}' is not supported.");
     }
 
+    public static EndPoint GetEndPoint(string endPoint)
+    {
+        var items = endPoint.Split(':');
+        if (IPAddress.TryParse(items[0], out var address) == true)
+        {
+            return new IPEndPoint(address, int.Parse(items[1]));
+        }
+        else if (items.Length == 2)
+        {
+            return new DnsEndPoint(items[0], int.Parse(items[1]));
+        }
+
+        throw new NotSupportedException($"'{endPoint}' is not supported.");
+    }
+
     internal static ServerPort GetServerPort(EndPoint endPoint, ServerCredentials credentials)
     {
         if (endPoint is DnsEndPoint dnsEndPoint)
