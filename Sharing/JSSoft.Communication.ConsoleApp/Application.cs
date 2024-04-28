@@ -129,7 +129,7 @@ sealed class Application : IApplication, IServiceProvider
 
         if (isOpened == true)
         {
-            prompt = EndPointUtility.GetString(_serviceContext.EndPoint);
+            prompt = EndPointUtility.ToString(_serviceContext.EndPoint);
             if (userID != string.Empty)
                 prompt += $"@{userID}";
         }
@@ -143,12 +143,12 @@ sealed class Application : IApplication, IServiceProvider
 
         if (_isServer)
         {
-            Title = $"Server {EndPointUtility.GetString(_serviceContext.EndPoint)}";
+            Title = $"Server {EndPointUtility.ToString(_serviceContext.EndPoint)}";
             Out.WriteLine("서버가 시작되었습니다.");
         }
         else
         {
-            Title = $"Client {EndPointUtility.GetString(_serviceContext.EndPoint)}";
+            Title = $"Client {EndPointUtility.ToString(_serviceContext.EndPoint)}";
             Out.WriteLine("서버에 연결되었습니다.");
         }
         Out.WriteLine("사용 가능한 명령을 확인려면 '--help' 을(를) 입력하세요.");

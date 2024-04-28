@@ -62,7 +62,7 @@ sealed class AdaptorClient : IAdaptor
             throw new InvalidOperationException();
         try
         {
-            _channel = new Channel(EndPointUtility.GetString(endPoint), ChannelCredentials.Insecure);
+            _channel = new Channel(EndPointUtility.ToString(endPoint), ChannelCredentials.Insecure);
             await _channel.ConnectAsync(deadline: DateTime.UtcNow.AddSeconds(15));
             _adaptorImpl = new AdaptorClientImpl(_channel, _serviceContext.Id, _serviceByName.Values.ToArray());
             await _adaptorImpl.OpenAsync(cancellationToken);

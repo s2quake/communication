@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Grpc.Core;
 
@@ -28,7 +29,7 @@ namespace JSSoft.Communication;
 
 public static class EndPointUtility
 {
-    public static (string host, int port) GetTarget(EndPoint endPoint)
+    public static (string host, int port) GetElements(EndPoint endPoint)
     {
         if (endPoint is DnsEndPoint dnsEndPoint)
         {
@@ -41,7 +42,7 @@ public static class EndPointUtility
         throw new NotSupportedException($"'{endPoint}' is not supported.");
     }
 
-    public static string GetString(EndPoint endPoint)
+    public static string ToString(EndPoint endPoint)
     {
         if (endPoint is DnsEndPoint dnsEndPoint)
         {
@@ -54,9 +55,9 @@ public static class EndPointUtility
         throw new NotSupportedException($"'{endPoint}' is not supported.");
     }
 
-    public static EndPoint GetEndPoint(string endPoint)
+    public static EndPoint Parse(string text)
     {
-        var items = endPoint.Split(':');
+        var items = text.Split(':');
         if (IPAddress.TryParse(items[0], out var address) == true)
         {
             return new IPEndPoint(address, int.Parse(items[1]));
@@ -66,7 +67,21 @@ public static class EndPointUtility
             return new DnsEndPoint(items[0], int.Parse(items[1]));
         }
 
-        throw new NotSupportedException($"'{endPoint}' is not supported.");
+        throw new NotSupportedException($"'{text}' is not supported.");
+    }
+
+    public static bool TryParse(string text, [MaybeNullWhen(false)] out EndPoint endPoint)
+    {
+        try
+        {
+            endPoint = Parse(text);
+            return true;
+        }
+        catch
+        {
+            endPoint = null;
+            return false;
+        }
     }
 
     internal static ServerPort GetServerPort(EndPoint endPoint, ServerCredentials credentials)
