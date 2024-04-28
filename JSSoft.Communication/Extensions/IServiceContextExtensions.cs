@@ -20,15 +20,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System;
+using System.Threading.Tasks;
 using JSSoft.Communication.Logging;
 
 namespace JSSoft.Communication.Extensions;
 
-static class IServiceContextExtensions
+public static class IServiceContextExtensions
 {
     public static void Debug(this IServiceContext @this, string message)
         => LogUtility.Debug($"{@this} {message}");
 
     public static void Error(this IServiceContext @this, string message)
         => LogUtility.Error($"{@this} {message}");
+
+    public static async Task ReleaseAsync(this IServiceContext @this, Guid token)
+    {
+        if (@this.ServiceState == ServiceState.Open)
+        {
+            try
+            {
+                await @this.CloseAsync(token, cancellationToken: default);
+            }
+            catch
+            {
+            }
+        }
+        if (@this.ServiceState == ServiceState.Faulted)
+        {
+            await @this.AbortAsync();
+        }
+    }
 }
