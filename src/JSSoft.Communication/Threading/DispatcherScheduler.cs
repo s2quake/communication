@@ -62,7 +62,7 @@ public sealed class DispatcherScheduler : TaskScheduler
     internal void WaitClose()
     {
         if (_isClosed == true)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Dispatcher is already closed.");
 
         while (_isRunning == true)
         {
@@ -109,7 +109,7 @@ public sealed class DispatcherScheduler : TaskScheduler
                 }
             }
             if (_isClosed == true)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Dispatcher is already closed.");
         }
         finally
         {

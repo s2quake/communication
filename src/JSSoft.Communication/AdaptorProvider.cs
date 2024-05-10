@@ -38,7 +38,8 @@ sealed class AdaptorProvider : IAdaptorProvider
             return new Grpc.AdaptorServer(serverContext, instanceContext);
         else if (serviceContext is ClientContext clientContext)
             return new Grpc.AdaptorClient(clientContext, instanceContext);
-        throw new NotImplementedException();
+
+        throw new NotSupportedException($"'{serviceContext.GetType()}' is not supported.");
     }
 
     public string Name => DefaultName;

@@ -233,7 +233,7 @@ sealed class Application : IApplication, IServiceProvider
     public async Task StartAsync()
     {
         if (_cancellationTokenSource != null)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Application is already started.");
 
         _cancellationTokenSource = new CancellationTokenSource();
         _serviceContext.EndPoint = new DnsEndPoint(_option.Host, _option.Port);
@@ -253,7 +253,7 @@ sealed class Application : IApplication, IServiceProvider
     public async Task StopAsync(int exitCode)
     {
         if (_cancellationTokenSource == null)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Application is not started.");
 
         _cancellationTokenSource.Cancel();
         if (_serviceContext.ServiceState == ServiceState.Open)

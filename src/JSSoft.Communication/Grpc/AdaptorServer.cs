@@ -75,7 +75,7 @@ sealed class AdaptorServer : IAdaptor
     {
         var id = context.RequestHeaders.Get("id").Value;
         if (Peers.TryGetValue(id, out var peer) == true)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"The peer '{id}' already exists.");
 
         Peers.Add(_serviceContext, id);
         await Task.CompletedTask;
@@ -86,7 +86,7 @@ sealed class AdaptorServer : IAdaptor
     {
         var id = context.RequestHeaders.Get("id").Value;
         if (Peers.TryGetValue(id, out var peer) != true)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"The peer '{id}' does not exists.");
 
         Peers.Remove(_serviceContext, id, closeCode: 0);
         await Task.CompletedTask;
@@ -98,7 +98,7 @@ sealed class AdaptorServer : IAdaptor
         var id = context.RequestHeaders.Get("id").Value;
         var dateTime = DateTime.UtcNow;
         if (Peers.TryGetValue(id, out var peer) != true)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"The peer '{id}' does not exists.");
 
         peer.PingTime = dateTime;
         _serviceContext.Debug($"{id} Ping({dateTime})");
@@ -109,9 +109,9 @@ sealed class AdaptorServer : IAdaptor
     public async Task<InvokeReply> InvokeAsync(InvokeRequest request, ServerCallContext context)
     {
         if (_serializer == null)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Serializer is not set.");
         if (_serviceByName.ContainsKey(request.ServiceName) != true)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"Service '{request.ServiceName}' does not exists.");
         var service = _serviceByName[request.ServiceName];
         var methodDescriptors = _methodsByService[service];
         if (methodDescriptors.ContainsKey(request.Name) != true)
@@ -119,7 +119,7 @@ sealed class AdaptorServer : IAdaptor
 
         var id = context.RequestHeaders.Get("id").Value;
         if (Peers.TryGetValue(id, out var peer) != true)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"The peer '{id}' does not exists.");
 
         var methodDescriptor = methodDescriptors[request.Name];
         var cancellationToken = methodDescriptor.Iscancelable == true ? (CancellationToken?)context.CancellationToken : null;
@@ -155,7 +155,7 @@ sealed class AdaptorServer : IAdaptor
     {
         var id = context.RequestHeaders.Get("id").Value;
         if (Peers.TryGetValue(id, out var peer) != true)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"The peer '{id}' does not exists.");
 
         using var manualResetEvent = new ManualResetEvent(initialState: true);
         var cancellationToken = peer.BeginPolling(manualResetEvent);
@@ -197,7 +197,7 @@ sealed class AdaptorServer : IAdaptor
     private void AddCallback(InstanceBase instance, string name, Type[] types, object?[] args)
     {
         if (_serializer == null)
-            throw new UnreachableException();
+            throw new UnreachableException("Serializer is not set.");
 
         var data = _serializer.SerializeMany(types, args);
         var peers = instance.Peer is not Peer peer ? Peers.ToArray().Select(item => item.Value) : new Peer[] { peer };
@@ -255,17 +255,17 @@ sealed class AdaptorServer : IAdaptor
 
     T IAdaptor.Invoke<T>(InstanceBase instance, string name, Type[] types, object?[] args)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException($"This method '{nameof(IAdaptor.Invoke)}' is not supported.");
     }
 
     Task IAdaptor.InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException($"This method '{nameof(IAdaptor.InvokeAsync)}' is not supported.");
     }
 
     Task<T> IAdaptor.InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException($"This method '{nameof(IAdaptor.InvokeAsync)}' is not supported.");
     }
 
     event EventHandler? IAdaptor.Disconnected

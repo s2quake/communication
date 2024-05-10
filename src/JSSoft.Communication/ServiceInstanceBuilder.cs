@@ -244,7 +244,8 @@ sealed class ServiceInstanceBuilder
                 return item;
             }
         }
-        throw new NotImplementedException();
+
+        throw new NotSupportedException($"'{methodName}' method is not found.");
     }
 
     private static MethodInfo FindInvokeMethod(MethodInfo[] methodInfos, string methodName)
@@ -256,6 +257,7 @@ sealed class ServiceInstanceBuilder
                 return item;
             }
         }
-        throw new NotImplementedException();
+
+        throw new NotSupportedException($"'{methodName}' method is not found.");
     }
 }

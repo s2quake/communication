@@ -45,7 +45,7 @@ sealed class PeerCollection(IInstanceContext instanceContext)
         }
         else
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"{id} is already exists");
         }
     }
 

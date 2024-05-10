@@ -33,19 +33,20 @@ public class ClientService<TServer, TClient>
     private readonly TClient _client;
     private TServer? _server;
 
-    public ClientService(TClient callback)
+    public ClientService(TClient client)
         : base(typeof(TServer), typeof(TClient))
-        => _client = callback;
+        => _client = client;
 
     public ClientService()
         : base(typeof(TServer), typeof(TClient))
     {
         if (typeof(TClient).IsAssignableFrom(this.GetType()) == false)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"This type must be implemented by {nameof(TClient)}.");
+
         _client = (this as TClient)!;
     }
 
-    public TServer Server => _server ?? throw new InvalidOperationException();
+    public TServer Server => _server ?? throw new InvalidOperationException("Server is not created.");
 
     protected virtual TClient CreateClient(IPeer peer) => _client;
 
@@ -78,7 +79,7 @@ public class ClientService<TServer>
     {
     }
 
-    public TServer Server => _server ?? throw new InvalidOperationException();
+    public TServer Server => _server ?? throw new InvalidOperationException("Server is not created.");
 
     protected virtual void OnServiceCreated(IPeer peer, TServer server)
     {

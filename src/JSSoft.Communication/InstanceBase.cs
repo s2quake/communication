@@ -43,13 +43,13 @@ public abstract class InstanceBase
 
     internal IAdaptor Adaptor
     {
-        get => _adaptor ?? throw new InvalidOperationException();
+        get => _adaptor ?? throw new InvalidOperationException("adaptor is not set.");
         set => _adaptor = value;
     }
 
     internal IService Service
     {
-        get => _service ?? throw new InvalidOperationException();
+        get => _service ?? throw new InvalidOperationException("service is not set.");
         set => _service = value;
     }
 
@@ -57,7 +57,7 @@ public abstract class InstanceBase
 
     internal IPeer Peer
     {
-        get => _peer ?? throw new InvalidOperationException();
+        get => _peer ?? throw new InvalidOperationException("peer is not set.");
         set => _peer = value;
     }
 

@@ -127,7 +127,8 @@ public sealed class MethodDescriptor
         {
             return true;
         }
-        throw new UnreachableException();
+
+        throw new UnreachableException($"This code should not be reached in {nameof(IsMethodOneWay)}.");
     }
 
     internal static bool IsMethodCancelable(MethodInfo methodInfo)

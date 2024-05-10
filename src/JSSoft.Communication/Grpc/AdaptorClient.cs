@@ -59,7 +59,7 @@ sealed class AdaptorClient : IAdaptor
     public async Task OpenAsync(EndPoint endPoint, CancellationToken cancellationToken)
     {
         if (_adaptorImpl != null)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Already opened.");
         try
         {
             _channel = new Channel(EndPointUtility.ToString(endPoint), ChannelCredentials.Insecure);
@@ -153,7 +153,7 @@ sealed class AdaptorClient : IAdaptor
     private async Task PollAsync(CancellationToken cancellationToken)
     {
         if (_adaptorImpl == null)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("adaptor is not set.");
 
         var closeCode = int.MinValue;
         try
@@ -198,10 +198,10 @@ sealed class AdaptorClient : IAdaptor
     private void InvokeCallback(IService service, string name, string[] data)
     {
         if (_adaptorImpl == null)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("adaptor is not set.");
         var methodDescriptors = _methodsByService[service];
         if (methodDescriptors.ContainsKey(name) != true)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Invalid method name.");
 
         var methodDescriptor = methodDescriptors[name];
         var args = _serializer!.DeserializeMany(methodDescriptor.ParameterTypes, data);
@@ -230,11 +230,12 @@ sealed class AdaptorClient : IAdaptor
     private void ThrowException(Type exceptionType, string data)
     {
         if (_serializer == null)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("serializer is not set.");
 
         if (Newtonsoft.Json.JsonConvert.DeserializeObject(data, exceptionType) is Exception exception)
             throw exception;
-        throw new UnreachableException();
+
+        throw new UnreachableException($"This code should not be reached in {nameof(ThrowException)}.");
     }
 
     #region IAdaptor
@@ -242,7 +243,7 @@ sealed class AdaptorClient : IAdaptor
     void IAdaptor.Invoke(InstanceBase instance, string name, Type[] types, object?[] args)
     {
         if (_adaptorImpl == null)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("adaptor is not set.");
 
         var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
         var data = _serializer!.SerializeMany(types, args);
@@ -259,7 +260,7 @@ sealed class AdaptorClient : IAdaptor
     async void IAdaptor.InvokeOneWay(InstanceBase instance, string name, Type[] types, object?[] args)
     {
         if (_adaptorImpl == null)
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("adaptor is not set.");
 
         var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
         var data = _serializer!.SerializeMany(types, args);
@@ -280,8 +281,10 @@ sealed class AdaptorClient : IAdaptor
 
     T IAdaptor.Invoke<T>(InstanceBase instance, string name, Type[] types, object?[] args)
     {
-        if (_adaptorImpl == null || _serializer == null)
-            throw new InvalidOperationException();
+        if (_adaptorImpl == null)
+            throw new InvalidOperationException("adaptor is not set.");
+        if (_serializer == null)
+            throw new InvalidOperationException("serializer is not set.");
 
         var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
         var data = _serializer.SerializeMany(types, args);
@@ -295,13 +298,16 @@ sealed class AdaptorClient : IAdaptor
         HandleReply(reply);
         if (_serializer.Deserialize(typeof(T), reply.Data) is T value)
             return value;
-        throw new UnreachableException();
+
+        throw new UnreachableException($"This code should not be reached in {nameof(IAdaptor.Invoke)}.");
     }
 
     async Task IAdaptor.InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken)
     {
-        if (_adaptorImpl == null || _serializer == null)
-            throw new InvalidOperationException();
+        if (_adaptorImpl == null)
+            throw new InvalidOperationException("adaptor is not set.");
+        if (_serializer == null)
+            throw new InvalidOperationException("serializer is not set.");
 
         var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
         var data = _serializer.SerializeMany(types, args);
@@ -326,8 +332,10 @@ sealed class AdaptorClient : IAdaptor
 
     async Task<T> IAdaptor.InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken)
     {
-        if (_adaptorImpl == null || _serializer == null)
-            throw new InvalidOperationException();
+        if (_adaptorImpl == null)
+            throw new InvalidOperationException("adaptor is not set.");
+        if (_serializer == null)
+            throw new InvalidOperationException("serializer is not set.");
 
         var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
         var data = _serializer.SerializeMany(types, args);
