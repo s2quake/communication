@@ -21,7 +21,6 @@
 // SOFTWARE.
 
 using System;
-using System.Reflection;
 
 namespace JSSoft.Communication;
 
@@ -66,16 +65,6 @@ public class ServerService<TServer, TClient>
         DestroyServer(peer, (TServer)obj);
         _client = null;
     }
-
-    protected override MethodDescriptorBase? CreateMethodDescriptor(MethodInfo methodInfo)
-    {
-        if (methodInfo.GetCustomAttribute(typeof(ServerMethodAttribute)) is ServerMethodAttribute serverMethodAttribute)
-        {
-            return new MethodDescriptor(methodInfo);
-        }
-
-        return null;
-    }
 }
 
 [Service(IsServer = true)]
@@ -108,14 +97,4 @@ public class ServerService<TServer> : ServiceBase
 
     protected override sealed void DestroyInstance(IPeer peer, object obj)
         => DestroyServer(peer, (TServer)obj);
-
-    protected override MethodDescriptorBase? CreateMethodDescriptor(MethodInfo methodInfo)
-    {
-        if (methodInfo.GetCustomAttribute(typeof(ServerMethodAttribute)) is ServerMethodAttribute serverMethodAttribute)
-        {
-            return new MethodDescriptor(methodInfo);
-        }
-
-        return null;
-    }
 }

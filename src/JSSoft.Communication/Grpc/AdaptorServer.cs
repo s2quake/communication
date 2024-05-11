@@ -62,7 +62,7 @@ sealed class AdaptorServer : IAdaptor
     {
         _serviceContext = serviceContext;
         _serviceByName = serviceContext.Services;
-        _methodsByService = _serviceByName.ToDictionary(item => item.Value, item => new MethodDescriptorCollection(item.Value));
+        _methodsByService = _serviceByName.ToDictionary(item => item.Value, item => new MethodDescriptorCollection(item.Value.ServerType));
         Peers = new PeerCollection(instanceContext);
         _timer = new Timer(Timer_TimerCallback, null, TimeSpan.Zero, Timeout);
     }
@@ -122,7 +122,7 @@ sealed class AdaptorServer : IAdaptor
             throw new InvalidOperationException($"The peer '{id}' does not exists.");
 
         var methodDescriptor = methodDescriptors[request.Name];
-        var cancellationToken = methodDescriptor.Iscancelable == true ? (CancellationToken?)context.CancellationToken : null;
+        var cancellationToken = methodDescriptor.IsCancelable == true ? (CancellationToken?)context.CancellationToken : null;
         var instance = peer.Services[service];
         var args = _serializer.DeserializeMany(methodDescriptor.ParameterTypes, [.. request.Data], cancellationToken);
         if (methodDescriptor.IsOneWay == true)

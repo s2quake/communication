@@ -53,7 +53,7 @@ sealed class AdaptorClient : IAdaptor
         _serviceContext = serviceContext;
         _instanceContext = instanceContext;
         _serviceByName = serviceContext.Services;
-        _methodsByService = _serviceByName.ToDictionary(item => item.Value, item => new MethodDescriptorCollection(item.Value));
+        _methodsByService = _serviceByName.ToDictionary(item => item.Value, item => new MethodDescriptorCollection(item.Value.ClientType));
     }
 
     public async Task OpenAsync(EndPoint endPoint, CancellationToken cancellationToken)

@@ -32,19 +32,10 @@ public abstract class ExceptionTestBase<TException> : ClientTestBase<ExceptionTe
 
     public interface ITestService
     {
-        [ServerMethod]
         void Invoke() => throw (TException)Activator.CreateInstance(typeof(TException), args: [nameof(Invoke)])!;
 
-        [ServerMethod(IsOneWay = true)]
-        void InvokeOneWay() => throw (TException)Activator.CreateInstance(typeof(TException), args: [nameof(Invoke)])!;
-
-        [ServerMethod]
-        int InvokeAndReturn() => throw (TException)Activator.CreateInstance(typeof(TException), args: [nameof(Invoke)])!;
-
-        [ServerMethod]
         Task InvokeAsync() => throw (TException)Activator.CreateInstance(typeof(TException), args: [nameof(Invoke)])!;
 
-        [ServerMethod]
         Task<int> InvokeAndReturnAsync() => throw (TException)Activator.CreateInstance(typeof(TException), args: [nameof(Invoke)])!;
     }
 
@@ -55,19 +46,7 @@ public abstract class ExceptionTestBase<TException> : ClientTestBase<ExceptionTe
     [Fact]
     public void Invoke_Test()
     {
-        Assert.Throws<TException>(() => Client.Invoke());
-    }
-
-    [Fact]
-    public void InvokeOneWay_Test()
-    {
-        Client.InvokeOneWay();
-    }
-
-    [Fact]
-    public void InvokeAndReturn_Test()
-    {
-        Assert.Throws<TException>(() => Client.InvokeAndReturn());
+        Client.Invoke();
     }
 
     [Fact]

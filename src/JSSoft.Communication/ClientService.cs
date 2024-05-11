@@ -66,16 +66,6 @@ public class ClientService<TServer, TClient>
         DestroyClient(peer, (TClient)obj);
         _server = null;
     }
-
-    protected override MethodDescriptorBase? CreateMethodDescriptor(MethodInfo methodInfo)
-    {
-        if (methodInfo.GetCustomAttribute(typeof(ClientMethodAttribute)) is ClientMethodAttribute clientMethodAttribute)
-        {
-            return new MethodDescriptor(methodInfo);
-        }
-
-        return null;
-    }
 }
 
 [Service(IsServer = false)]
@@ -111,15 +101,5 @@ public class ClientService<TServer>
     {
         OnServiceDestroyed(peer);
         _server = null;
-    }
-
-    protected override MethodDescriptorBase? CreateMethodDescriptor(MethodInfo methodInfo)
-    {
-        if (methodInfo.GetCustomAttribute(typeof(ClientMethodAttribute)) is ClientMethodAttribute clientMethodAttribute)
-        {
-            return new MethodDescriptor(methodInfo);
-        }
-
-        return null;
     }
 }

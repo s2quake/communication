@@ -99,16 +99,16 @@ public abstract class InstanceBase
         => Adaptor.InvokeAsync<T>(this, info.name, info.types, info.args, cancellationToken);
 
     protected static (string, Type[], object?[]) Info<P>(MethodInfo methodInfo, Type serviceType, P arg)
-        => (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P) }, new object?[] { arg });
+        => (MethodUtility.GenerateName(methodInfo, serviceType), [typeof(P)], [arg]);
 
     protected static (string, Type[], object?[]) Info<P1, P2>(MethodInfo methodInfo, Type serviceType, P1 arg1, P2 arg2)
-        => (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P1), typeof(P2) }, new object?[] { arg1, arg2 });
+        => (MethodUtility.GenerateName(methodInfo, serviceType), [typeof(P1), typeof(P2)], [arg1, arg2]);
 
     protected static (string, Type[], object?[]) Info<P1, P2, P3>(MethodInfo methodInfo, Type serviceType, P1 arg1, P2 arg2, P3 arg3)
-        => (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P1), typeof(P2), typeof(P3) }, new object?[] { arg1, arg2, arg3 });
+        => (MethodUtility.GenerateName(methodInfo, serviceType), [typeof(P1), typeof(P2), typeof(P3)], [arg1, arg2, arg3]);
 
     protected static (string, Type[], object?[]) Info<P1, P2, P3, P4>(MethodInfo methodInfo, Type serviceType, P1 arg1, P2 arg2, P3 arg3, P4 arg4)
-        => (MethodDescriptor.GenerateName(methodInfo, serviceType), new Type[] { typeof(P1), typeof(P2), typeof(P3), typeof(P4) }, new object?[] { arg1, arg2, arg3, arg4 });
+        => (MethodUtility.GenerateName(methodInfo, serviceType), [typeof(P1), typeof(P2), typeof(P3), typeof(P4)], [arg1, arg2, arg3, arg4]);
 
     #region Instance
 

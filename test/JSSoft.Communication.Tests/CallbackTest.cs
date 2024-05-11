@@ -45,27 +45,26 @@ public class CallbackTest : IAsyncLifetime
         _clientContext = new(_testClient) { EndPoint = endPoint };
     }
 
+    public class ValueEventArgs(object? value) : EventArgs
+    {
+        public object? Value { get; } = value;
+    }
+
     public interface ITestService
     {
-        [ServerMethod]
         void Invoke();
 
-        [ServerMethod]
         void Invoke(int value);
 
-        [ServerMethod]
         void Invoke((int value1, string value2) value);
     }
 
     public interface ITestCallback
     {
-        [ClientMethod]
         void OnInvoked();
 
-        [ClientMethod]
         void OnInvoked(int value);
 
-        [ClientMethod]
         void OnInvoked((int value1, string value2) value);
     }
 
@@ -80,67 +79,71 @@ public class CallbackTest : IAsyncLifetime
 
     sealed class TestClient : ClientService<ITestService, ITestCallback>, ITestCallback
     {
-        public event EventHandler<object?>? Invoked;
+        public AutoResetEvent AutoResetEvent { get; } = new(initialState: false);
 
-        void ITestCallback.OnInvoked() => Invoked?.Invoke(this, null);
+        public event EventHandler<ValueEventArgs>? Invoked;
 
-        void ITestCallback.OnInvoked(int value) => Invoked?.Invoke(this, value);
+        void ITestCallback.OnInvoked()
+        {
+            Invoked?.Invoke(this, new(null));
+            AutoResetEvent.Set();
+        }
+
+        void ITestCallback.OnInvoked(int value)
+        {
+            Invoked?.Invoke(this, new(value));
+            AutoResetEvent.Set();
+        }
 
         void ITestCallback.OnInvoked((int value1, string value2) value)
-            => Invoked?.Invoke(this, value);
+        {
+            Invoked?.Invoke(this, new(value));
+            AutoResetEvent.Set();
+        }
     }
 
     [Fact]
     public void Callback1_Test()
     {
-        using var manualResetEvent = new ManualResetEvent(initialState: false);
-        object? value = null;
-        _testClient.Invoked += TestClient_Invoked;
-        _server!.Invoke();
-        _logger.WriteLine("123123");
-        Assert.True(manualResetEvent.WaitOne(3000));
-        Assert.Null(value);
-
-        void TestClient_Invoked(object? sender, object? e)
-        {
-            manualResetEvent.Set();
-            _logger.WriteLine("set");
-            value = e;
-        }
+        var raised = Assert.Raises<ValueEventArgs>(
+            handler => _testClient.Invoked += handler,
+            handler => _testClient.Invoked -= handler,
+            () =>
+            {
+                _server!.Invoke();
+                _testClient.AutoResetEvent.WaitOne(1000);
+            });
+        Assert.Null(raised.Arguments.Value);
     }
 
     [Fact]
     public void Callback2_Test()
     {
-        using var manualResetEvent = new ManualResetEvent(initialState: false);
-        object? value = new();
-        _testClient.Invoked += TestClient_Invoked;
-        _server!.Invoke(123);
-        Assert.True(manualResetEvent.WaitOne(3000));
-        Assert.Equal(123, value);
-
-        void TestClient_Invoked(object? sender, object? e)
-        {
-            manualResetEvent.Set();
-            value = e;
-        }
+        var value = 123;
+        var raised = Assert.Raises<ValueEventArgs>(
+            handler => _testClient.Invoked += handler,
+            handler => _testClient.Invoked -= handler,
+            () =>
+            {
+                _server!.Invoke(value);
+                _testClient.AutoResetEvent.WaitOne(1000);
+            });
+        Assert.Equal(value, raised.Arguments.Value);
     }
 
     [Fact]
     public void Callback3_Test()
     {
-        using var manualResetEvent = new ManualResetEvent(initialState: false);
-        object? value = new();
-        _testClient.Invoked += TestClient_Invoked;
-        _server!.Invoke((123, "123"));
-        Assert.True(manualResetEvent.WaitOne(3000));
-        Assert.Equal((123, "123"), value);
-
-        void TestClient_Invoked(object? sender, object? e)
-        {
-            manualResetEvent.Set();
-            value = e;
-        }
+        var value = (123, "123");
+        var raised = Assert.Raises<ValueEventArgs>(
+            handler => _testClient.Invoked += handler,
+            handler => _testClient.Invoked -= handler,
+            () =>
+            {
+                _server!.Invoke(value);
+                _testClient.AutoResetEvent.WaitOne(1000);
+            });
+        Assert.Equal(value, raised.Arguments.Value);
     }
 
     public async Task InitializeAsync()

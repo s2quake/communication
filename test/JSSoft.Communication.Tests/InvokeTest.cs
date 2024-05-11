@@ -9,25 +9,14 @@ public class InvokeTest : ClientTestBase<InvokeTest.ITestService, InvokeTest.Tes
 
     public interface ITestService
     {
-        [ServerMethod]
         void Invoke();
 
-        [ServerMethod(IsOneWay = true)]
-        void InvokeOneWay();
-
-        [ServerMethod]
-        int InvokeAndReturn();
-
-        [ServerMethod]
         Task InvokeAsync();
 
-        [ServerMethod]
         Task<int> InvokeAndReturnAsync();
 
-        [ServerMethod]
         Task InvokeAsync(CancellationToken cancellationToken);
 
-        [ServerMethod]
         Task<int> InvokeAndReturnAsync(CancellationToken cancellationToken);
     }
 
@@ -38,19 +27,6 @@ public class InvokeTest : ClientTestBase<InvokeTest.ITestService, InvokeTest.Tes
         public void Invoke()
         {
             Result = nameof(Invoke);
-        }
-
-        public void InvokeOneWay()
-        {
-            Result = default;
-            Thread.Sleep(100);
-            Result = nameof(InvokeOneWay);
-        }
-
-        public int InvokeAndReturn()
-        {
-            Result = nameof(InvokeAndReturn);
-            return 1;
         }
 
         public Task InvokeAsync()
@@ -82,22 +58,7 @@ public class InvokeTest : ClientTestBase<InvokeTest.ITestService, InvokeTest.Tes
     public void Invoke_Test()
     {
         Client.Invoke();
-        Assert.Equal(nameof(Client.Invoke), ServerService.Result);
-    }
-
-    [Fact]
-    public void InvokeOneWay_Test()
-    {
-        Client.InvokeOneWay();
-        Assert.NotEqual(nameof(Client.InvokeOneWay), ServerService.Result);
-    }
-
-    [Fact]
-    public void InvokeAndReturn_Test()
-    {
-        var actualValue = Client.InvokeAndReturn();
-        Assert.Equal(nameof(Client.InvokeAndReturn), ServerService.Result);
-        Assert.Equal(1, actualValue);
+        Assert.Null(ServerService.Result);
     }
 
     [Fact]

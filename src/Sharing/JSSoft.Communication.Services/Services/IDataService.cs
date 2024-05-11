@@ -28,6 +28,5 @@ namespace JSSoft.Communication.Services;
 
 public interface IDataService
 {
-    [ServerMethod]
     Task<DateTime> CreateDataBaseAsync(string dataBaseName, CancellationToken cancellationToken);
 }

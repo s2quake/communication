@@ -75,7 +75,7 @@ sealed class ServiceInstanceBuilder
         var methodInfos = interfaceType.GetMethods();
         foreach (var methodInfo in methodInfos)
         {
-            var isOneWay = MethodDescriptorBase.IsMethodOneWay(methodInfo);
+            var isOneWay = MethodUtility.IsMethodOneWay(methodInfo);
             var returnType = methodInfo.ReturnType;
             if (returnType == typeof(Task))
             {
@@ -152,7 +152,7 @@ sealed class ServiceInstanceBuilder
         }
         il.Emit(OpCodes.Stloc_1);
         il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Ldstr, MethodDescriptor.GenerateName(methodInfo));
+        il.Emit(OpCodes.Ldstr, MethodUtility.GenerateName(methodInfo));
         il.Emit(OpCodes.Ldloc_0);
         il.Emit(OpCodes.Ldloc_1);
         il.Emit(OpCodes.Call, invokeMethod);
@@ -162,7 +162,7 @@ sealed class ServiceInstanceBuilder
 
     private static void CreateInvokeAsync(TypeBuilder typeBuilder, MethodInfo methodInfo, string methodName)
     {
-        var isCancelable = MethodDescriptor.IsMethodCancelable(methodInfo);
+        var isCancelable = MethodUtility.IsMethodCancelable(methodInfo);
         var parameterInfos = methodInfo.GetParameters();
         var parameterTypes = parameterInfos.Select(i => i.ParameterType).ToArray();
         var returnType = methodInfo.ReturnType;
@@ -210,7 +210,7 @@ sealed class ServiceInstanceBuilder
         }
         il.Emit(OpCodes.Stloc_1);
         il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Ldstr, MethodDescriptor.GenerateName(methodInfo));
+        il.Emit(OpCodes.Ldstr, MethodUtility.GenerateName(methodInfo));
         il.Emit(OpCodes.Ldloc_0);
         il.Emit(OpCodes.Ldloc_1);
         if (isCancelable == true)

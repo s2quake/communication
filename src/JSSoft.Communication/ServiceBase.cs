@@ -21,7 +21,6 @@
 // SOFTWARE.
 
 using System;
-using System.Reflection;
 
 namespace JSSoft.Communication;
 
@@ -33,8 +32,6 @@ public abstract class ServiceBase(Type serverType, Type clientType) : IService
 
     public string Name { get; } = serverType.Name;
 
-    protected abstract MethodDescriptorBase? CreateMethodDescriptor(MethodInfo methodInfo);
-
     protected abstract object CreateInstance(IPeer peer, object obj);
 
     protected abstract void DestroyInstance(IPeer peer, object obj);
@@ -44,9 +41,6 @@ public abstract class ServiceBase(Type serverType, Type clientType) : IService
     object IService.CreateInstance(IPeer peer, object obj) => CreateInstance(peer, obj);
 
     void IService.DestroyInstance(IPeer peer, object obj) => DestroyInstance(peer, obj);
-
-    MethodDescriptorBase? IService.CreateMethodDescriptor(MethodInfo methodInfo)
-        => CreateMethodDescriptor(methodInfo);
 
     #endregion
 }

@@ -26,14 +26,12 @@ public class UnitTest1
 {
     public interface ITestServer
     {
-        [ServerMethod]
-        Task SendMessageAsync(string message, CancellationToken cancellationToken);
+            Task SendMessageAsync(string message, CancellationToken cancellationToken);
     }
 
     public interface ITestClient
     {
-        [ClientMethod]
-        void OnMessageSend(string message);
+            void OnMessageSend(string message);
     }
 
     sealed class TestServer : ServerService<ITestServer, ITestClient>, ITestServer

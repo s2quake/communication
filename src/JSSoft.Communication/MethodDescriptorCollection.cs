@@ -20,27 +20,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace JSSoft.Communication;
 
-public sealed class MethodDescriptorCollection : IEnumerable<MethodDescriptorBase>
+public sealed class MethodDescriptorCollection : IEnumerable<MethodDescriptor>
 {
-    private readonly Dictionary<string, MethodDescriptorBase> _discriptorByName;
+    private readonly Dictionary<string, MethodDescriptor> _discriptorByName;
 
-    public MethodDescriptorCollection(IService service)
+    internal MethodDescriptorCollection(Type type)
     {
-        var isServer = ServiceUtility.IsServer(service);
-        var instanceType = isServer ? service.ServerType : service.ClientType;
-        var methods = instanceType.GetMethods();
-        var methodDescriptors = methods.Select(service.CreateMethodDescriptor).OfType<MethodDescriptorBase>();
-        _discriptorByName = methodDescriptors.ToDictionary(item => item.Name);
-        foreach (var item in _discriptorByName.Values)
+        if (type != typeof(void) && type.IsInterface != true)
         {
-            item.Verify(service);
+            throw new ArgumentException($"'{type.Name}' must be interface.");
+        }
+
+        if (type != typeof(void))
+        {
+            var methodInfos = type.GetMethods();
+            var methodDescriptors = methodInfos.Select(item => new MethodDescriptor(item));
+            _discriptorByName = methodDescriptors.ToDictionary(item => item.Name);
+        }
+        else
+        {
+            _discriptorByName = [];
         }
     }
 
@@ -48,11 +54,11 @@ public sealed class MethodDescriptorCollection : IEnumerable<MethodDescriptorBas
 
     public bool Contains(string name) => _discriptorByName.ContainsKey(name);
 
-    public MethodDescriptorBase this[string name] => _discriptorByName[name];
+    public MethodDescriptor this[string name] => _discriptorByName[name];
 
     #region IEnumerator
 
-    public IEnumerator<MethodDescriptorBase> GetEnumerator()
+    public IEnumerator<MethodDescriptor> GetEnumerator()
         => _discriptorByName.Values.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator()

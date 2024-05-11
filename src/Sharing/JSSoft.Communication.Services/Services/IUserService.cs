@@ -29,33 +29,23 @@ namespace JSSoft.Communication.Services;
 [ServiceContract]
 public interface IUserService
 {
-    [ServerMethod]
     Task CreateAsync(Guid token, string userID, string password, Authority authority, CancellationToken cancellationToken);
 
-    [ServerMethod]
     Task DeleteAsync(Guid token, string userID, CancellationToken cancellationToken);
 
-    [ServerMethod]
     Task RenameAsync(Guid token, string userName, CancellationToken cancellationToken);
 
-    [ServerMethod]
     Task SetAuthorityAsync(Guid token, string userID, Authority authority, CancellationToken cancellationToken);
 
-    [ServerMethod]
     Task<Guid> LoginAsync(string userID, string password, CancellationToken cancellationToken);
 
-    [ServerMethod]
     Task LogoutAsync(Guid token, CancellationToken cancellationToken);
 
-    [ServerMethod]
     Task<(string userName, Authority authority)> GetInfoAsync(Guid token, string userID, CancellationToken cancellationToken);
 
-    [ServerMethod]
     Task<string[]> GetUsersAsync(Guid token, CancellationToken cancellationToken);
 
-    [ServerMethod]
     Task<bool> IsOnlineAsync(Guid token, string userID, CancellationToken cancellationToken);
 
-    [ServerMethod]
     Task SendMessageAsync(Guid token, string userID, string message, CancellationToken cancellationToken);
 }
