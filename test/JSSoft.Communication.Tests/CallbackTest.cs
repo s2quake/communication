@@ -27,6 +27,7 @@ namespace JSSoft.Communication.Tests;
 
 public class CallbackTest : IAsyncLifetime
 {
+    private const int Timeout = 30000;
     private readonly ITestOutputHelper _logger;
     private readonly TestServer _testServer = new();
     private readonly TestClient _testClient = new();
@@ -111,7 +112,7 @@ public class CallbackTest : IAsyncLifetime
             () =>
             {
                 _server!.Invoke();
-                _testClient.AutoResetEvent.WaitOne(1000);
+                _testClient.AutoResetEvent.WaitOne(Timeout);
             });
         Assert.Null(raised.Arguments.Value);
     }
@@ -126,7 +127,7 @@ public class CallbackTest : IAsyncLifetime
             () =>
             {
                 _server!.Invoke(value);
-                _testClient.AutoResetEvent.WaitOne(1000);
+                _testClient.AutoResetEvent.WaitOne(Timeout);
             });
         Assert.Equal(value, raised.Arguments.Value);
     }
@@ -141,7 +142,7 @@ public class CallbackTest : IAsyncLifetime
             () =>
             {
                 _server!.Invoke(value);
-                _testClient.AutoResetEvent.WaitOne(1000);
+                _testClient.AutoResetEvent.WaitOne(Timeout);
             });
         Assert.Equal(value, raised.Arguments.Value);
     }

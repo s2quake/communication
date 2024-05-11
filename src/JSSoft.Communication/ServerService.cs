@@ -40,10 +40,15 @@ public class ServerService<TServer, TClient>
     public ServerService()
         : base(typeof(TServer), typeof(TClient))
     {
-        if (typeof(TServer).IsAssignableFrom(this.GetType()) == false)
-            throw new InvalidOperationException("This type must be implemented by TServer.");
+        if (this is TServer server)
+        {
+            _server = server;
 
-        _server = (this as TServer)!;
+        }
+        else
+        {
+            throw new InvalidOperationException($"'{GetType()}' must be implemented by '{typeof(TServer)}'.");
+        }
     }
 
     public TClient Client => _client ?? throw new InvalidOperationException("Client is not created.");
@@ -80,10 +85,14 @@ public class ServerService<TServer> : ServiceBase
     public ServerService()
         : base(serverType: typeof(TServer), clientType: typeof(void))
     {
-        if (typeof(TServer).IsAssignableFrom(this.GetType()) == false)
-            throw new InvalidOperationException("This type must be implemented by TServer.");
-
-        _server = this as TServer;
+        if (this is TServer server)
+        {
+            _server = server;
+        }
+        else
+        {
+            throw new InvalidOperationException($"'{GetType()}' must be implemented by '{typeof(TServer)}'.");
+        }
     }
 
     protected virtual TServer CreateServer(IPeer peer) => _server!;

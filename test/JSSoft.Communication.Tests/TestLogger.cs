@@ -20,41 +20,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System.Net;
-using System.Net.Sockets;
+using JSSoft.Communication.Logging;
+using Xunit.Abstractions;
 
 namespace JSSoft.Communication.Tests;
 
-static class EndPointUtility
+public sealed class TestLogger(ITestOutputHelper logger) : ILogger
 {
-    private static readonly object LockObject = new();
+    private readonly ITestOutputHelper _logger = logger;
 
-    public static EndPoint GetEndPoint()
-    {
-        lock (LockObject)
-        {
-            var listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            return new DnsEndPoint(ServiceContextBase.DefaultHost, ((IPEndPoint)listener.LocalEndpoint).Port);
-        }
-    }
+    public void Debug(object message) => _logger.WriteLine($"{message}\n");
 
-    public static EndPoint[] GetEndPoints(int count)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(count);
+    public void Info(object message) => _logger.WriteLine($"{message}\n");
 
-        var listeners = new TcpListener[count];
-        var endPoints = new EndPoint[count];
-        for (var i = 0; i < endPoints.Length; i++)
-        {
-            listeners[i] = new(IPAddress.Loopback, 0);
-            listeners[i].Start();
-            endPoints[i] = new DnsEndPoint(ServiceContextBase.DefaultHost, ((IPEndPoint)listeners[i].LocalEndpoint).Port);
-        }
-        for (var i = 0; i < listeners.Length; i++)
-        {
-            listeners[i].Stop();
-        }
-        return endPoints;
-    }
+    public void Error(object message) => _logger.WriteLine($"{message}\n");
+
+    public void Warn(object message) => _logger.WriteLine($"{message}\n");
+
+    public void Fatal(object message) => _logger.WriteLine($"{message}\n");
 }

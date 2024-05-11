@@ -41,10 +41,15 @@ public class ClientService<TServer, TClient>
     public ClientService()
         : base(typeof(TServer), typeof(TClient))
     {
-        if (typeof(TClient).IsAssignableFrom(this.GetType()) == false)
-            throw new InvalidOperationException($"This type must be implemented by {nameof(TClient)}.");
+        if (this is TClient client)
+        {
+            _client = client;
 
-        _client = (this as TClient)!;
+        }
+        else
+        {
+            throw new InvalidOperationException($"'{GetType()}' must be implemented by '{typeof(TClient)}'.");
+        }
     }
 
     public TServer Server => _server ?? throw new InvalidOperationException("Server is not created.");

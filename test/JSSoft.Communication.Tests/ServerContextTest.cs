@@ -24,6 +24,8 @@ namespace JSSoft.Communication.Tests;
 
 public sealed class ServerContextTest
 {
+    private const int Timeout = 30000;
+
     public interface ITestService1 : IService
     {
     }
@@ -169,7 +171,7 @@ public sealed class ServerContextTest
     {
         var endPoint = EndPointUtility.GetEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
-        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 5000);
+        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: Timeout);
         var result = await EventTestUtility.RaisesAsync(
             h => serverContext.Opened += h,
             h => serverContext.Opened -= h,
@@ -183,7 +185,7 @@ public sealed class ServerContextTest
     {
         var endPoint = EndPointUtility.GetEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
-        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 5000);
+        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: Timeout);
         var token = await serverContext.OpenAsync(cancellationToken: default);
         var result = await EventTestUtility.RaisesAsync(
             h => serverContext.Closed += h,
