@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29025.244
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication", "JSSoft.Communication\JSSoft.Communication.csproj", "{46F9FF22-9DEB-4D24-84C1-5FD07F2A1993}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication", "src\JSSoft.Communication\JSSoft.Communication.csproj", "{46F9FF22-9DEB-4D24-84C1-5FD07F2A1993}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication.Server", "JSSoft.Communication.Server\JSSoft.Communication.Server.csproj", "{49BBC2E5-4CE6-47EA-A427-0C3E88F22E19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication.Server", "src\JSSoft.Communication.Server\JSSoft.Communication.Server.csproj", "{49BBC2E5-4CE6-47EA-A427-0C3E88F22E19}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication.Client", "JSSoft.Communication.Client\JSSoft.Communication.Client.csproj", "{CD2B8A1E-F105-4847-B820-8637C50670AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSSoft.Communication.Client", "src\JSSoft.Communication.Client\JSSoft.Communication.Client.csproj", "{CD2B8A1E-F105-4847-B820-8637C50670AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSSoft.Communication.Tests", "JSSoft.Communication.Tests\JSSoft.Communication.Tests.csproj", "{E9D01298-B0B5-465B-974D-A39739B87B53}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSSoft.Communication.Tests", "test\JSSoft.Communication.Tests\JSSoft.Communication.Tests.csproj", "{E9D01298-B0B5-465B-974D-A39739B87B53}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -37,6 +37,6 @@ SOFTWARE. -->
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <ProjectReference Include="..\JSSoft.Communication\JSSoft.Communication.csproj" />
+    <ProjectReference Include="..\..\src\JSSoft.Communication\JSSoft.Communication.csproj" />
   </ItemGroup>
 </Project>

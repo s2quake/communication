@@ -23,9 +23,9 @@ SOFTWARE. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <DefineConstants>CLIENT</DefineConstants>
-    <AssemblyName>client</AssemblyName>
-    <PublishName>communication\client</PublishName>
+    <DefineConstants>SERVER</DefineConstants>
+    <AssemblyName>server</AssemblyName>
+    <PublishName>communication\server</PublishName>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.ComponentModel.Composition" Version="4.7.0" />
@@ -36,12 +36,12 @@ SOFTWARE. -->
     <ProjectReference Condition="Exists('..\..\.commands\JSSoft.Commands\JSSoft.Commands.csproj')" Include="..\..\.commands\JSSoft.Commands\JSSoft.Commands.csproj" />
     <ProjectReference Include="..\JSSoft.Communication\JSSoft.Communication.csproj" />
     <Reference Condition="!Exists('..\..\.commands\JSSoft.Commands\JSSoft.Terminals.csproj')" Include="JSSoft.Terminals.dll">
-      <HintPath>..\Assemblies\JSSoft.Terminals.dll</HintPath>
+      <HintPath>..\..\assemblies\JSSoft.Terminals.dll</HintPath>
     </Reference>
     <Reference Condition="!Exists('..\..\.commands\JSSoft.Commands\JSSoft.Commands.csproj')" Include="JSSoft.Commands.dll">
-      <HintPath>..\Assemblies\JSSoft.Commands.dll</HintPath>
+      <HintPath>..\..\assemblies\JSSoft.Commands.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <Import Project="..\Sharing\JSSoft.Communication.ConsoleApp\JSSoft.Communication.ConsoleApp.projitems" Label="Shared" />
   <Import Project="..\Sharing\JSSoft.Communication.Services\JSSoft.Communication.Services.projitems" Label="Shared" />
+  <Import Project="..\Sharing\JSSoft.Communication.ConsoleApp\JSSoft.Communication.ConsoleApp.projitems" Label="Shared" />
 </Project>
