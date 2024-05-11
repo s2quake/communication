@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Reflection;
 
 namespace JSSoft.Communication;
 
@@ -35,4 +36,6 @@ public interface IService
     object CreateInstance(IPeer peer, object obj);
 
     void DestroyInstance(IPeer peer, object obj);
+
+    MethodDescriptorBase? CreateMethodDescriptor(MethodInfo methodInfo);
 }

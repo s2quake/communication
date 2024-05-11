@@ -75,8 +75,7 @@ sealed class ServiceInstanceBuilder
         var methodInfos = interfaceType.GetMethods();
         foreach (var methodInfo in methodInfos)
         {
-            var operationContractAttribute = (ServerMethodAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(ServerMethodAttribute))!;
-            var isOneWay = MethodDescriptor.IsMethodOneWay(methodInfo);
+            var isOneWay = MethodDescriptorBase.IsMethodOneWay(methodInfo);
             var returnType = methodInfo.ReturnType;
             if (returnType == typeof(Task))
             {

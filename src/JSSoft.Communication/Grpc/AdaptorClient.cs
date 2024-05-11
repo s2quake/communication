@@ -200,7 +200,7 @@ sealed class AdaptorClient : IAdaptor
         if (_adaptorImpl == null)
             throw new InvalidOperationException("adaptor is not set.");
         var methodDescriptors = _methodsByService[service];
-        if (methodDescriptors.ContainsKey(name) != true)
+        if (methodDescriptors.Contains(name) != true)
             throw new InvalidOperationException("Invalid method name.");
 
         var methodDescriptor = methodDescriptors[name];

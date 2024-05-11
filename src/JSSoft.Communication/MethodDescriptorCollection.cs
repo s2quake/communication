@@ -20,30 +20,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace JSSoft.Communication;
 
-public sealed class MethodDescriptorCollection : Dictionary<string, MethodDescriptor>
+public sealed class MethodDescriptorCollection : IEnumerable<MethodDescriptorBase>
 {
+    private readonly Dictionary<string, MethodDescriptorBase> _discriptorByName;
+
     public MethodDescriptorCollection(IService service)
     {
         var isServer = ServiceUtility.IsServer(service);
         var instanceType = isServer ? service.ServerType : service.ClientType;
         var methods = instanceType.GetMethods();
-        foreach (var item in methods)
+        var methodDescriptors = methods.Select(service.CreateMethodDescriptor).OfType<MethodDescriptorBase>();
+        _discriptorByName = methodDescriptors.ToDictionary(item => item.Name);
+        foreach (var item in _discriptorByName.Values)
         {
-            if (item.GetCustomAttribute(typeof(ClientMethodAttribute)) is ClientMethodAttribute clientMethodAttribute)
-            {
-                var methodDescriptor = new MethodDescriptor(item);
-                Add(methodDescriptor.Name, methodDescriptor);
-            }
-            if (item.GetCustomAttribute(typeof(ServerMethodAttribute)) is ServerMethodAttribute serverMethodAttribute)
-            {
-                var methodDescriptor = new MethodDescriptor(item);
-                Add(methodDescriptor.Name, methodDescriptor);
-            }
+            item.Verify(service);
         }
     }
+
+    public int Count => _discriptorByName.Count;
+
+    public bool Contains(string name) => _discriptorByName.ContainsKey(name);
+
+    public MethodDescriptorBase this[string name] => _discriptorByName[name];
+
+    #region IEnumerator
+
+    public IEnumerator<MethodDescriptorBase> GetEnumerator()
+        => _discriptorByName.Values.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator()
+        => _discriptorByName.Values.GetEnumerator();
+
+    #endregion
 }

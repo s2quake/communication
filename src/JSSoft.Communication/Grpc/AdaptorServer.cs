@@ -114,7 +114,7 @@ sealed class AdaptorServer : IAdaptor
             throw new InvalidOperationException($"Service '{request.ServiceName}' does not exists.");
         var service = _serviceByName[request.ServiceName];
         var methodDescriptors = _methodsByService[service];
-        if (methodDescriptors.ContainsKey(request.Name) != true)
+        if (methodDescriptors.Contains(request.Name) != true)
             throw new InvalidOperationException($"Method '{request.Name}' does not exists.");
 
         var id = context.RequestHeaders.Get("id").Value;
