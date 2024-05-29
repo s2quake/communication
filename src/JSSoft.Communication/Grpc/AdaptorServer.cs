@@ -28,7 +28,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,7 +39,6 @@ sealed class AdaptorServer : IAdaptor
 {
     private static readonly TimeSpan Timeout = new(0, 0, 30);
     private static readonly TimeSpan PollTimeout = new(0, 0, 10);
-    private static readonly string localAddress = "127.0.0.1";
     private readonly IServiceContext _serviceContext;
     private readonly IReadOnlyDictionary<string, IService> _serviceByName;
     private readonly Dictionary<IService, MethodDescriptorCollection> _methodsByService;
@@ -49,14 +47,6 @@ sealed class AdaptorServer : IAdaptor
     private ISerializer? _serializer;
     private readonly Timer _timer;
     private EventHandler? _disconnectedEventHandler;
-
-    static AdaptorServer()
-    {
-        var addressList = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
-        var address = addressList.FirstOrDefault(item => $"{item}" != "127.0.0.1" && item.AddressFamily == AddressFamily.InterNetwork);
-        if (address != null)
-            localAddress = $"{address}";
-    }
 
     public AdaptorServer(IServiceContext serviceContext, IInstanceContext instanceContext)
     {
