@@ -180,7 +180,6 @@ sealed class AdaptorServer : IAdaptor
     public async ValueTask DisposeAsync()
     {
         await _timer.DisposeAsync();
-        await ValueTask.CompletedTask;
         GC.SuppressFinalize(this);
     }
 

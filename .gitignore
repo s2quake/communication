@@ -33,3 +33,4 @@ packages/
 *.suo
 launchSettings.json
 build-temp.ps1
+.example/
