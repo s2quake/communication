@@ -23,7 +23,8 @@ SOFTWARE. -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(SolutionDir)' != '' and '$(SolutionDir)' != '$(MSBuildThisFileDirectory)' and $([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../')) != ''" Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(_IsPacking)'=='true'">net6.0;net7.0;net8.0;netstandard2.1</TargetFrameworks>
+    <TargetFramework Condition="'$(_IsPacking)'!='true'">net8.0</TargetFramework>
     <AssemblyVersion>2.0</AssemblyVersion>
     <FileVersion>2.0.0</FileVersion>
 	  <RepositoryType>git</RepositoryType>
@@ -32,9 +33,12 @@ SOFTWARE. -->
 	  <Copyright>Copyright (c) 2024 Jeesu Choi</Copyright>
 	  <Description>grpc-based communication library for crema project</Description>
 	  <Authors>s2quake</Authors>
-	  <PackageProjectUrl>https://github.com/s2quake/communication</PackageProjectUrl>
-	  <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
-    <LangVersion>preview</LangVersion>
+	  <PackageVersion>$(FileVersion)</PackageVersion>
+    <PackageProjectUrl>https://github.com/s2quake/communication</PackageProjectUrl>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>communication</PackageTags>
+    <LangVersion>12</LangVersion>
     <RootPath Condition="'$(SolutionDir)' != ''">$(SolutionDir)</RootPath>
     <RootPath Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)\</RootPath>
     <ConfigurationType Condition="'$(Configuration)' == ''">Debug</ConfigurationType>
@@ -49,5 +53,6 @@ SOFTWARE. -->
   </PropertyGroup>
   <ItemGroup>
     <None Include="$(SolutionDir)LICENSE.md" Pack="true" PackagePath="" />
+    <None Include="$(SolutionDir)README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>
