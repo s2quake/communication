@@ -50,7 +50,10 @@ sealed class RandomEndPoint : IDisposable
 
     public void Dispose()
     {
-        ObjectDisposedException.ThrowIf(_isDisposed, this);
+        if (_isDisposed == true)
+        {
+            throw new ObjectDisposedException($"{this}");
+        }
 
         lock (LockObject)
         {

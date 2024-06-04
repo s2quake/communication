@@ -21,16 +21,20 @@
 // SOFTWARE.
 
 using Grpc.Core;
-using Grpc.Net.Client;
 using JSSoft.Communication.Extensions;
 using JSSoft.Communication.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+#if NETSTANDARD
+using GrpcChannel = Grpc.Core.Channel;
+#elif NET
+using System.Diagnostics;
+using GrpcChannel = Grpc.Net.Client.GrpcChannel;
+#endif
 
 namespace JSSoft.Communication.Grpc;
 
@@ -64,8 +68,13 @@ sealed class AdaptorClient : IAdaptor
             throw new InvalidOperationException("Already opened.");
         try
         {
+#if NETSTANDARD
+            _channel = new Channel(EndPointUtility.ToString(endPoint), ChannelCredentials.Insecure);
+            await _channel.ConnectAsync(deadline: DateTime.UtcNow.AddSeconds(15));
+#elif NET
             _channel = GrpcChannel.ForAddress($"http://{EndPointUtility.ConvertToIPEndPoint(endPoint)}");
             await _channel.ConnectAsync(cancellationToken);
+#endif
             _adaptorImpl = new AdaptorClientImpl(_channel, _serviceContext.Id, _serviceByName.Values.ToArray());
             await _adaptorImpl.OpenAsync(cancellationToken);
             _descriptor = _instanceContext.CreateInstance(_adaptorImpl);

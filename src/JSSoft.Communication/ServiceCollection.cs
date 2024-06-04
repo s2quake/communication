@@ -41,8 +41,13 @@ public class ServiceCollection(IEnumerable<IService> services) : IReadOnlyDictio
 
     public bool ContainsKey(string key) => _serviceByName.ContainsKey(key);
 
+#if NETSTANDARD
+    public bool TryGetValue(string key, out IService value)
+        => _serviceByName.TryGetValue(key, out value);
+#elif NET
     public bool TryGetValue(string key, [MaybeNullWhen(false)] out IService value)
         => _serviceByName.TryGetValue(key, out value);
+#endif
 
     #region IEnumerable
 

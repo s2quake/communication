@@ -23,12 +23,14 @@ SOFTWARE. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PublishName>communication\lib</PublishName>
+    <IsNet Condition="$(TargetFramework.StartsWith('net')) and !$(TargetFramework.StartsWith('netstandard'))">true</IsNet>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.25.1" />
-    <PackageReference Include="Grpc.AspNetCore" Version="2.63.0" />
-    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.63.0" />
-    <PackageReference Include="Grpc.Net.Client" Version="2.63.0" />
+    <PackageReference Condition="'$(IsNet)'=='true'" Include="Grpc.AspNetCore" Version="2.63.0" />
+    <PackageReference Condition="'$(IsNet)'=='true'" Include="Grpc.AspNetCore.Server" Version="2.63.0" />
+    <PackageReference Condition="'$(IsNet)'=='true'" Include="Grpc.Net.Client" Version="2.63.0" />
+    <PackageReference Condition="'$(IsNet)'!='true'" Include="Grpc.Core" Version="2.46.6" />
     <PackageReference Include="Grpc.Tools" Version="2.64.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
