@@ -21,7 +21,9 @@
 // SOFTWARE.
 
 using Grpc.Core;
+using Grpc.Net.Client;
 using JSSoft.Communication.Extensions;
+using JSSoft.Communication.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -42,7 +44,7 @@ sealed class AdaptorClient : IAdaptor
     private readonly Dictionary<IService, MethodDescriptorCollection> _methodsByService;
     private CancellationTokenSource? _cancellationTokenSource;
     private Task? _task;
-    private Channel? _channel;
+    private GrpcChannel? _channel;
     private AdaptorClientImpl? _adaptorImpl;
     private ISerializer? _serializer;
     private PeerDescriptor? _descriptor;
@@ -62,8 +64,8 @@ sealed class AdaptorClient : IAdaptor
             throw new InvalidOperationException("Already opened.");
         try
         {
-            _channel = new Channel(EndPointUtility.ToString(endPoint), ChannelCredentials.Insecure);
-            await _channel.ConnectAsync(deadline: DateTime.UtcNow.AddSeconds(15));
+            _channel = GrpcChannel.ForAddress($"http://{EndPointUtility.ConvertToIPEndPoint(endPoint)}");
+            await _channel.ConnectAsync(cancellationToken);
             _adaptorImpl = new AdaptorClientImpl(_channel, _serviceContext.Id, _serviceByName.Values.ToArray());
             await _adaptorImpl.OpenAsync(cancellationToken);
             _descriptor = _instanceContext.CreateInstance(_adaptorImpl);
@@ -178,7 +180,7 @@ sealed class AdaptorClient : IAdaptor
         catch (Exception e)
         {
             closeCode = -2;
-            GrpcEnvironment.Logger.Error(e, e.Message);
+            LogUtility.Error(e);
         }
         if (closeCode != int.MinValue)
         {

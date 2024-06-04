@@ -22,8 +22,9 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Net;
-using Grpc.Core;
+using System.Net.Sockets;
 
 namespace JSSoft.Communication;
 
@@ -84,16 +85,22 @@ public static class EndPointUtility
         }
     }
 
-    internal static ServerPort GetServerPort(EndPoint endPoint, ServerCredentials credentials)
+    internal static IPEndPoint ConvertToIPEndPoint(EndPoint endPoint)
     {
-        if (endPoint is DnsEndPoint dnsEndPoint)
+        var (host, port) = GetElements(endPoint);
+        if (IPAddress.TryParse(host, out var address) == true)
         {
-            return new(dnsEndPoint.Host, dnsEndPoint.Port, credentials);
+            return new IPEndPoint(address, port);
         }
-        else if (endPoint is IPEndPoint iPEndPoint)
+
+        var addresses = Dns.GetHostAddresses(host)
+                           .Where(item => item.AddressFamily == AddressFamily.InterNetwork)
+                           .ToArray();
+        if (addresses.Length > 0)
         {
-            return new($"{iPEndPoint.Address}", iPEndPoint.Port, credentials);
+            return new IPEndPoint(addresses[0], port);
         }
-        throw new NotSupportedException($"'{endPoint}' is not supported.");
+
+        throw new NotSupportedException($"'{host}' is not supported.");
     }
 }
