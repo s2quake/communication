@@ -85,6 +85,21 @@ public static class EndPointUtility
         }
     }
 
+#if NETSTANDARD
+    internal static global::Grpc.Core.ServerPort GetServerPort(EndPoint endPoint, global::Grpc.Core.ServerCredentials credentials)
+    {
+        if (endPoint is DnsEndPoint dnsEndPoint)
+        {
+            return new(dnsEndPoint.Host, dnsEndPoint.Port, credentials);
+        }
+        else if (endPoint is IPEndPoint iPEndPoint)
+        {
+            return new($"{iPEndPoint.Address}", iPEndPoint.Port, credentials);
+        }
+        throw new NotSupportedException($"'{endPoint}' is not supported.");
+    }
+#endif
+
     internal static IPEndPoint ConvertToIPEndPoint(EndPoint endPoint)
     {
         var (host, port) = GetElements(endPoint);

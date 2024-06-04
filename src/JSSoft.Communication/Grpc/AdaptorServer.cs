@@ -25,17 +25,19 @@ using JSSoft.Communication.Logging;
 using JSSoft.Communication.Extensions;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+#if NET
+using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+#endif
 
 namespace JSSoft.Communication.Grpc;
 
@@ -48,7 +50,12 @@ sealed class AdaptorServer : IAdaptor
     private readonly IServiceContext _serviceContext;
     private readonly IReadOnlyDictionary<string, IService> _serviceByName;
     private readonly Dictionary<IService, MethodDescriptorCollection> _methodsByService;
+#if NETSTANDARD
+    private Server? _server;
+    private AdaptorServerImpl? _adaptor;
+#elif NET
     private IHost? _host;
+#endif
     private ISerializer? _serializer;
     private readonly Timer _timer;
     private EventHandler? _disconnectedEventHandler;
@@ -226,6 +233,29 @@ sealed class AdaptorServer : IAdaptor
 
     #region IAdaptor
 
+#if NETSTANDARD
+    async Task IAdaptor.OpenAsync(EndPoint endPoint, CancellationToken cancellationToken)
+    {
+        _adaptor = new AdaptorServerImpl(this);
+        _server = new Server()
+        {
+            Services = { Adaptor.BindService(_adaptor) },
+            Ports = { EndPointUtility.GetServerPort(endPoint, ServerCredentials.Insecure) },
+        };
+        _serializer = _serviceContext.GetService(typeof(ISerializer)) as ISerializer;
+        await Task.Run(_server.Start, cancellationToken);
+    }
+
+    async Task IAdaptor.CloseAsync(CancellationToken cancellationToken)
+    {
+        await Peers.DisconnectAsync(_serviceContext, cancellationToken);
+        await _server!.ShutdownAsync();
+        _adaptor = null;
+        _serializer = null;
+        _server = null;
+    }
+
+#elif NET
     async Task IAdaptor.OpenAsync(EndPoint endPoint, CancellationToken cancellationToken)
     {
         var builder = Host.CreateDefaultBuilder();
@@ -280,6 +310,7 @@ sealed class AdaptorServer : IAdaptor
         _host.Dispose();
         _host = null;
     }
+#endif
 
     void IAdaptor.Invoke(InstanceBase instance, string name, Type[] types, object?[] args)
     {

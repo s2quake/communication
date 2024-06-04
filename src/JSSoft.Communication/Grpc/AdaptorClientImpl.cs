@@ -21,11 +21,15 @@
 // SOFTWARE.
 
 using Grpc.Core;
-using Grpc.Net.Client;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+#if NETSTANDARD
+using GrpcChannel = Grpc.Core.Channel;
+#elif NET
+using GrpcChannel = Grpc.Net.Client.GrpcChannel;
+#endif
 
 namespace JSSoft.Communication.Grpc;
 
