@@ -26,13 +26,14 @@ SOFTWARE. -->
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.25.1" />
-    <PackageReference Include="Grpc" Version="2.41.0" />
-    <PackageReference Include="Contrib.Grpc.Core.M1" Version="2.41.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.41.0">
+    <PackageReference Include="Grpc.AspNetCore" Version="2.63.0" />
+    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.63.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.63.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.64.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <!-- <Protobuf Include="Grpc\adaptor.proto" OutputDir="%(RelativePath)" GrpcServices="Both" /> -->
+    <Protobuf Include="Grpc\adaptor.proto" GrpcServices="All" />
   </ItemGroup>
 </Project>

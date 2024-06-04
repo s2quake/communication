@@ -25,36 +25,61 @@ using System.Net.Sockets;
 
 namespace JSSoft.Communication.Tests;
 
-static class EndPointUtility
+sealed class RandomEndPoint : IDisposable
 {
     private static readonly object LockObject = new();
+    private static readonly List<int> PortList = [];
 
-    public static EndPoint GetEndPoint()
+    private readonly DnsEndPoint _endPoint;
+    private bool _isDisposed;
+
+    public RandomEndPoint()
+    {
+        _endPoint = new DnsEndPoint("localhost", GetPort());
+    }
+
+    public static implicit operator EndPoint(RandomEndPoint endPointObject)
+    {
+        return endPointObject._endPoint;
+    }
+
+    public override string ToString()
+    {
+        return $"{_endPoint.Host}:{_endPoint.Port}";
+    }
+
+    public void Dispose()
+    {
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
+
+        lock (LockObject)
+        {
+            PortList.Remove(_endPoint.Port);
+        }
+        _isDisposed = true;
+    }
+
+    private static int GetPort()
     {
         lock (LockObject)
         {
-            var listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            return new DnsEndPoint(ServiceContextBase.DefaultHost, ((IPEndPoint)listener.LocalEndpoint).Port);
+            var port = GetRandomPort();
+            while (PortList.Contains(port) == true)
+            {
+                port = GetRandomPort();
+            }
+
+            PortList.Add(port);
+            return port;
         }
     }
 
-    public static EndPoint[] GetEndPoints(int count)
+    private static int GetRandomPort()
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(count);
-
-        var listeners = new TcpListener[count];
-        var endPoints = new EndPoint[count];
-        for (var i = 0; i < endPoints.Length; i++)
-        {
-            listeners[i] = new(IPAddress.Loopback, 0);
-            listeners[i].Start();
-            endPoints[i] = new DnsEndPoint(ServiceContextBase.DefaultHost, ((IPEndPoint)listeners[i].LocalEndpoint).Port);
-        }
-        for (var i = 0; i < listeners.Length; i++)
-        {
-            listeners[i].Stop();
-        }
-        return endPoints;
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
     }
 }

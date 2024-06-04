@@ -20,11 +20,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using JSSoft.Communication.Extensions;
+
 namespace JSSoft.Communication.Tests;
 
 public sealed class ClientContextTest : IAsyncLifetime
 {
     private readonly ServerContext _serverContext;
+    private readonly RandomEndPoint _endPoint = new();
     private Guid _token;
 
     public interface ITestService1 : IService
@@ -45,8 +48,7 @@ public sealed class ClientContextTest : IAsyncLifetime
 
     public ClientContextTest()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
-        _serverContext = new() { EndPoint = endPoint };
+        _serverContext = new() { EndPoint = _endPoint };
     }
 
     [Fact]
@@ -86,7 +88,7 @@ public sealed class ClientContextTest : IAsyncLifetime
     public async Task Open_SetEndPoint_FailTestAsynx()
     {
         var endPoint1 = _serverContext.EndPoint;
-        var endPoint2 = EndPointUtility.GetEndPoint();
+        using var endPoint2 = new RandomEndPoint();
         var clientContext = new ClientContext() { EndPoint = endPoint1 };
         await clientContext.OpenAsync(cancellationToken: default);
         Assert.Throws<InvalidOperationException>(() => clientContext.EndPoint = endPoint2);
@@ -119,7 +121,9 @@ public sealed class ClientContextTest : IAsyncLifetime
         var token = await clientContext.OpenAsync(cancellationToken: default);
         Assert.Equal(ServiceState.Open, clientContext.ServiceState);
         await Assert.ThrowsAsync<ArgumentException>(
-            () => clientContext.CloseAsync(Guid.Empty, cancellationToken: default));
+            async () => await clientContext.CloseAsync(Guid.Empty, cancellationToken: default));
+
+        await clientContext.ReleaseAsync(token);
     }
 
     [Fact]
@@ -140,10 +144,12 @@ public sealed class ClientContextTest : IAsyncLifetime
     {
         var endPoint = _serverContext.EndPoint;
         var clientContext = new ClientContext() { EndPoint = endPoint };
-        await clientContext.OpenAsync(cancellationToken: default);
+        var token = await clientContext.OpenAsync(cancellationToken: default);
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => clientContext.OpenAsync(cancellationToken: default));
+            async () => await clientContext.OpenAsync(cancellationToken: default));
         Assert.Equal(ServiceState.Open, clientContext.ServiceState);
+
+        await clientContext.ReleaseAsync(token);
     }
 
     [Fact]
@@ -178,13 +184,15 @@ public sealed class ClientContextTest : IAsyncLifetime
     {
         var endPoint = _serverContext.EndPoint;
         var clientContext = new ClientContext() { EndPoint = endPoint };
+        var token = Guid.Empty;
         var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 5000);
         var result = await EventTestUtility.RaisesAsync(
             h => clientContext.Opened += h,
             h => clientContext.Opened -= h,
-            () => clientContext.OpenAsync(cancellationTokenSource.Token));
+            async () => token = await clientContext.OpenAsync(cancellationTokenSource.Token));
 
         Assert.True(result);
+        await clientContext.ReleaseAsync(token);
     }
 
     [Fact]
@@ -197,7 +205,7 @@ public sealed class ClientContextTest : IAsyncLifetime
         var result = await EventTestUtility.RaisesAsync(
             h => clientContext.Closed += h,
             h => clientContext.Closed -= h,
-            () => clientContext.CloseAsync(token, cancellationTokenSource.Token));
+            async () => await clientContext.CloseAsync(token, cancellationTokenSource.Token));
 
         Assert.True(result);
     }
@@ -253,12 +261,14 @@ public sealed class ClientContextTest : IAsyncLifetime
     {
         var endPoint = _serverContext.EndPoint;
         var clientContext = new ClientContext() { EndPoint = endPoint };
+        var token = Guid.Empty;
         var result = await EventTestUtility.RaisesAsync(
             h => clientContext.ServiceStateChanged += h,
             h => clientContext.ServiceStateChanged -= h,
-            () => clientContext.OpenAsync(cancellationToken: default));
+            async () => token = await clientContext.OpenAsync(cancellationToken: default));
 
         Assert.True(result);
+        await clientContext.ReleaseAsync(token);
     }
 
     public async Task InitializeAsync()
@@ -272,5 +282,6 @@ public sealed class ClientContextTest : IAsyncLifetime
         {
             await _serverContext.CloseAsync(_token, cancellationToken: default);
         }
+        _endPoint.Dispose();
     }
 }

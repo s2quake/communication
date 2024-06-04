@@ -30,6 +30,12 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace JSSoft.Communication.Grpc;
 
@@ -42,8 +48,7 @@ sealed class AdaptorServer : IAdaptor
     private readonly IServiceContext _serviceContext;
     private readonly IReadOnlyDictionary<string, IService> _serviceByName;
     private readonly Dictionary<IService, MethodDescriptorCollection> _methodsByService;
-    private Server? _server;
-    private AdaptorServerImpl? _adaptor;
+    private IHost? _host;
     private ISerializer? _serializer;
     private readonly Timer _timer;
     private EventHandler? _disconnectedEventHandler;
@@ -63,7 +68,7 @@ sealed class AdaptorServer : IAdaptor
 
     public async Task<OpenReply> OpenAsync(OpenRequest request, ServerCallContext context, CancellationToken cancellationToken)
     {
-        var id = context.RequestHeaders.Get("id").Value;
+        var id = GetId(context);
         if (Peers.TryGetValue(id, out var peer) == true)
             throw new InvalidOperationException($"The peer '{id}' already exists.");
 
@@ -74,7 +79,7 @@ sealed class AdaptorServer : IAdaptor
 
     public async Task<CloseReply> CloseAsync(CloseRequest request, ServerCallContext context, CancellationToken cancellationToken)
     {
-        var id = context.RequestHeaders.Get("id").Value;
+        var id = GetId(context);
         if (Peers.TryGetValue(id, out var peer) != true)
             throw new InvalidOperationException($"The peer '{id}' does not exists.");
 
@@ -85,7 +90,7 @@ sealed class AdaptorServer : IAdaptor
 
     public async Task<PingReply> PingAsync(PingRequest request, ServerCallContext context)
     {
-        var id = context.RequestHeaders.Get("id").Value;
+        var id = GetId(context);
         var dateTime = DateTime.UtcNow;
         if (Peers.TryGetValue(id, out var peer) != true)
             throw new InvalidOperationException($"The peer '{id}' does not exists.");
@@ -107,7 +112,7 @@ sealed class AdaptorServer : IAdaptor
         if (methodDescriptors.Contains(request.Name) != true)
             throw new InvalidOperationException($"Method '{request.Name}' does not exists.");
 
-        var id = context.RequestHeaders.Get("id").Value;
+        var id = GetId(context);
         if (Peers.TryGetValue(id, out var peer) != true)
             throw new InvalidOperationException($"The peer '{id}' does not exists.");
 
@@ -143,7 +148,7 @@ sealed class AdaptorServer : IAdaptor
 
     public async Task PollAsync(IAsyncStreamReader<PollRequest> requestStream, IServerStreamWriter<PollReply> responseStream, ServerCallContext context)
     {
-        var id = context.RequestHeaders.Get("id").Value;
+        var id = GetId(context);
         if (Peers.TryGetValue(id, out var peer) != true)
             throw new InvalidOperationException($"The peer '{id}' does not exists.");
 
@@ -183,6 +188,16 @@ sealed class AdaptorServer : IAdaptor
         GC.SuppressFinalize(this);
     }
 
+    private static string GetId(ServerCallContext context)
+    {
+        if (context.RequestHeaders.Get("id") is { } entry)
+        {
+            return entry.Value;
+        }
+
+        throw new ArgumentException("The id is not found.");
+    }
+
     private void AddCallback(InstanceBase instance, string name, Type[] types, object?[] args)
     {
         if (_serializer == null)
@@ -213,23 +228,57 @@ sealed class AdaptorServer : IAdaptor
 
     async Task IAdaptor.OpenAsync(EndPoint endPoint, CancellationToken cancellationToken)
     {
-        _adaptor = new AdaptorServerImpl(this);
-        _server = new Server()
+        var builder = Host.CreateDefaultBuilder();
+        builder.ConfigureWebHostDefaults(webBuilder =>
         {
-            Services = { Adaptor.BindService(_adaptor) },
-            Ports = { EndPointUtility.GetServerPort(endPoint, ServerCredentials.Insecure) },
-        };
+            webBuilder.ConfigureKestrel(options =>
+            {
+                options.Limits.MaxConcurrentConnections = 100;
+                options.Limits.MaxConcurrentUpgradedConnections = 100;
+                options.Limits.MaxRequestBodySize = 10 * 1024;
+                options.Limits.MinRequestBodyDataRate =
+                    new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
+                options.Limits.MinResponseDataRate =
+                    new MinDataRate(bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
+                options.ConfigureEndpointDefaults(listenOptions =>
+                {
+                    listenOptions.Protocols = HttpProtocols.Http2;
+                });
+                options.Listen(EndPointUtility.ConvertToIPEndPoint(endPoint));
+            });
+            webBuilder.Configure((context, app) =>
+            {
+                app.UseRouting();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapGrpcService<AdaptorServerImpl>();
+                });
+            });
+            webBuilder.ConfigureServices(services =>
+            {
+                services.AddGrpc();
+                services.AddSingleton(this);
+            });
+        });
+
+        builder.ConfigureLogging(logging =>
+        {
+            logging.ClearProviders();
+            logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+        });
+
+        _host = builder.Build();
         _serializer = _serviceContext.GetService(typeof(ISerializer)) as ISerializer;
-        await Task.Run(_server.Start, cancellationToken);
+        await _host.StartAsync(cancellationToken);
     }
 
     async Task IAdaptor.CloseAsync(CancellationToken cancellationToken)
     {
         await Peers.DisconnectAsync(_serviceContext, cancellationToken);
-        await _server!.ShutdownAsync();
-        _adaptor = null;
+        await _host!.StopAsync(cancellationToken);
         _serializer = null;
-        _server = null;
+        _host.Dispose();
+        _host = null;
     }
 
     void IAdaptor.Invoke(InstanceBase instance, string name, Type[] types, object?[] args)

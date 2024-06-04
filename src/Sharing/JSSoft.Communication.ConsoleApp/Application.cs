@@ -48,7 +48,7 @@ sealed class Application : IApplication, IServiceProvider
 
     static Application()
     {
-        Logging.LogUtility.Logger = Logging.ConsoleLogger.Default;
+        Logging.LogUtility.Logger = Logging.TraceLogger.Default;
     }
 
 #if SERVER

@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using Grpc.Core;
+using Grpc.Net.Client;
 using System;
 using System.Linq;
 using System.Threading;
@@ -28,7 +29,7 @@ using System.Threading.Tasks;
 
 namespace JSSoft.Communication.Grpc;
 
-sealed class AdaptorClientImpl(Channel channel, Guid id, IService[] services)
+sealed class AdaptorClientImpl(GrpcChannel channel, Guid id, IService[] services)
     : Adaptor.AdaptorClient(channel), IPeer
 {
     public string Id { get; } = $"{id}";

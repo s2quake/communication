@@ -20,6 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System.Security.Principal;
+using JSSoft.Communication.Extensions;
+
 namespace JSSoft.Communication.Tests;
 
 public sealed class ServerContextTest
@@ -70,7 +73,7 @@ public sealed class ServerContextTest
     [Fact]
     public void EndPoint_Test()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
         Assert.Equal(endPoint, serverContext.EndPoint);
     }
@@ -78,8 +81,8 @@ public sealed class ServerContextTest
     [Fact]
     public async Task Open_SetEndPoint_FailTestAsynx()
     {
-        var endPoint1 = EndPointUtility.GetEndPoint();
-        var endPoint2 = EndPointUtility.GetEndPoint();
+        using var endPoint1 = new RandomEndPoint();
+        using var endPoint2 = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint1 };
         await serverContext.OpenAsync(cancellationToken: default);
         Assert.Throws<InvalidOperationException>(() => serverContext.EndPoint = endPoint2);
@@ -95,7 +98,7 @@ public sealed class ServerContextTest
     [Fact]
     public async Task Open_Close_TestAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
         Assert.Equal(ServiceState.None, serverContext.ServiceState);
         var token = await serverContext.OpenAsync(cancellationToken: default);
@@ -107,18 +110,20 @@ public sealed class ServerContextTest
     [Fact]
     public async Task Open_CloseWithInvalidToken_FailTestAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
         var token = await serverContext.OpenAsync(cancellationToken: default);
         Assert.Equal(ServiceState.Open, serverContext.ServiceState);
         await Assert.ThrowsAsync<ArgumentException>(
             () => serverContext.CloseAsync(Guid.Empty, cancellationToken: default));
+
+        await serverContext.ReleaseAsync(token);
     }
 
     [Fact]
     public async Task Open_Cancel_Abort_TestAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
         var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
@@ -131,7 +136,7 @@ public sealed class ServerContextTest
     [Fact]
     public async Task Open_Open_FailTestAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
         await serverContext.OpenAsync(cancellationToken: default);
         await Assert.ThrowsAsync<InvalidOperationException>(
@@ -142,7 +147,7 @@ public sealed class ServerContextTest
     [Fact]
     public async Task Open_Close_Cancel_Abort_TestAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
         var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
         var token = await serverContext.OpenAsync(cancellationToken: default);
@@ -156,7 +161,7 @@ public sealed class ServerContextTest
     [Fact]
     public async Task Open_Close_Close_FailTestAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
         var token = await serverContext.OpenAsync(cancellationToken: default);
         var task = serverContext.CloseAsync(token, cancellationToken: default);
@@ -164,26 +169,29 @@ public sealed class ServerContextTest
             () => serverContext.CloseAsync(token, cancellationToken: default));
         await task;
         Assert.Equal(ServiceState.None, serverContext.ServiceState);
+        await serverContext.ReleaseAsync(token);
     }
 
     [Fact]
     public async Task Opened_TestAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
+        var token = Guid.Empty;
         var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: Timeout);
         var result = await EventTestUtility.RaisesAsync(
             h => serverContext.Opened += h,
             h => serverContext.Opened -= h,
-            () => serverContext.OpenAsync(cancellationTokenSource.Token));
+            async () => token = await serverContext.OpenAsync(cancellationTokenSource.Token));
 
         Assert.True(result);
+        await serverContext.ReleaseAsync(token);
     }
 
     [Fact]
     public async Task Closed_TestAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
         var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: Timeout);
         var token = await serverContext.OpenAsync(cancellationToken: default);
@@ -198,7 +206,7 @@ public sealed class ServerContextTest
     [Fact]
     public async Task Faulted_TestAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
         var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
         var result = await EventTestUtility.RaisesAsync(
@@ -221,13 +229,15 @@ public sealed class ServerContextTest
     [Fact]
     public async Task ServiceStateChanged_TestAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
+        var token = Guid.NewGuid();
         var result = await EventTestUtility.RaisesAsync(
             h => serverContext.ServiceStateChanged += h,
             h => serverContext.ServiceStateChanged -= h,
-            () => serverContext.OpenAsync(cancellationToken: default));
+            async () => token = await serverContext.OpenAsync(cancellationToken: default));
 
         Assert.True(result);
+        await serverContext.ReleaseAsync(token);
     }
 }
