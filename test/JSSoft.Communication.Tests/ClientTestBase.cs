@@ -30,6 +30,7 @@ public abstract class ClientTestBase<TService> : IAsyncLifetime
     private readonly ClientService<TService> _clientService = new();
     private readonly ServerContext _serverContext;
     private readonly ClientContext _clientContext;
+    private readonly RandomEndPoint _endPoint = new();
     private TService? _client;
 
     private Guid _clientToken;
@@ -37,10 +38,9 @@ public abstract class ClientTestBase<TService> : IAsyncLifetime
 
     protected ClientTestBase(ServerService<TService> serverService)
     {
-        var endPoint = EndPointUtility.GetEndPoint();
         ServerService = serverService;
-        _serverContext = new(ServerService) { EndPoint = endPoint };
-        _clientContext = new(_clientService) { EndPoint = endPoint };
+        _serverContext = new(ServerService) { EndPoint = _endPoint };
+        _clientContext = new(_clientService) { EndPoint = _endPoint };
     }
 
     public async Task InitializeAsync()
@@ -54,6 +54,7 @@ public abstract class ClientTestBase<TService> : IAsyncLifetime
     {
         await _serverContext.ReleaseAsync(_serverToken);
         await _clientContext.ReleaseAsync(_clientToken);
+        _endPoint.Dispose();
     }
 
     protected TService Client => _client!;
@@ -68,6 +69,7 @@ public abstract class ClientTestBase<TService, TServerSevice> : IAsyncLifetime
     private readonly ClientService<TService> _clientService = new();
     private readonly ServerContext _serverContext;
     private readonly ClientContext _clientContext;
+    private readonly RandomEndPoint _endPoint = new();
     private TService? _client;
 
     private Guid _clientToken;
@@ -75,10 +77,9 @@ public abstract class ClientTestBase<TService, TServerSevice> : IAsyncLifetime
 
     protected ClientTestBase(TServerSevice serverService)
     {
-        var endPoint = EndPointUtility.GetEndPoint();
         ServerService = serverService;
-        _serverContext = new(ServerService) { EndPoint = endPoint };
-        _clientContext = new(_clientService) { EndPoint = endPoint };
+        _serverContext = new(ServerService) { EndPoint = _endPoint };
+        _clientContext = new(_clientService) { EndPoint = _endPoint };
     }
 
     public async Task InitializeAsync()
@@ -92,6 +93,7 @@ public abstract class ClientTestBase<TService, TServerSevice> : IAsyncLifetime
     {
         await _serverContext.ReleaseAsync(_serverToken);
         await _clientContext.ReleaseAsync(_clientToken);
+        _endPoint.Dispose();
     }
 
     protected TService Client => _client!;

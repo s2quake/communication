@@ -26,12 +26,12 @@ public class UnitTest1
 {
     public interface ITestServer
     {
-            Task SendMessageAsync(string message, CancellationToken cancellationToken);
+        Task SendMessageAsync(string message, CancellationToken cancellationToken);
     }
 
     public interface ITestClient
     {
-            void OnMessageSend(string message);
+        void OnMessageSend(string message);
     }
 
     sealed class TestServer : ServerService<ITestServer, ITestClient>, ITestServer
@@ -52,7 +52,7 @@ public class UnitTest1
     [Fact]
     public async Task OpenAndClientCloseAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext(new TestServer()) { EndPoint = endPoint };
         var clientContext = new ClientContext(new TestClient()) { EndPoint = endPoint };
 
@@ -66,7 +66,7 @@ public class UnitTest1
     [Fact]
     public async Task OpenAndServerCloseAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext(new TestServer()) { EndPoint = endPoint };
         var clientContext = new ClientContext(new TestClient()) { EndPoint = endPoint };
 
@@ -90,16 +90,16 @@ public class UnitTest1
     public async Task MultipleOpenAndClientCloseAsync()
     {
         var count = 20;
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext(new TestServer()) { EndPoint = endPoint };
         var clientContexts = Enumerable.Range(0, count).Select(item => new ClientContext(new TestClient()) { EndPoint = endPoint }).ToArray();
         var serverToken = await serverContext.OpenAsync(CancellationToken.None);
         var openTasks = clientContexts.Select(item => item.OpenAsync(CancellationToken.None)).ToArray();
-        await Task.WhenAll(openTasks);
+        var tokens = await Task.WhenAll(openTasks);
         var closeTasks = new Task[count];
         for (var i = 0; i < count; i++)
         {
-            closeTasks[i] = clientContexts[i].CloseAsync(openTasks[i].Result, CancellationToken.None);
+            closeTasks[i] = clientContexts[i].CloseAsync(tokens[i], CancellationToken.None);
         }
         await Task.WhenAll(closeTasks);
         await serverContext.CloseAsync(serverToken, CancellationToken.None);
@@ -113,7 +113,7 @@ public class UnitTest1
     [Fact]
     public async Task OpenAndInvokeAndClientCloseAsync()
     {
-        var endPoint = EndPointUtility.GetEndPoint();
+        using var endPoint = new RandomEndPoint();
         var server = new TestServer();
         var client = new TestClient();
         var serverContext = new ServerContext(server) { EndPoint = endPoint };

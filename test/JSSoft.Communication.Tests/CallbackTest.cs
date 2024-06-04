@@ -33,6 +33,7 @@ public class CallbackTest : IAsyncLifetime
     private readonly TestClient _testClient = new();
     private readonly ServerContext _serverContext;
     private readonly ClientContext _clientContext;
+    private readonly RandomEndPoint _endPoint = new();
     private ITestService? _server;
 
     private Guid _clientToken;
@@ -40,10 +41,10 @@ public class CallbackTest : IAsyncLifetime
 
     public CallbackTest(ITestOutputHelper logger)
     {
-        var endPoint = EndPointUtility.GetEndPoint();
         _logger = logger;
-        _serverContext = new(_testServer) { EndPoint = endPoint };
-        _clientContext = new(_testClient) { EndPoint = endPoint };
+        _serverContext = new(_testServer) { EndPoint = _endPoint };
+        _clientContext = new(_testClient) { EndPoint = _endPoint };
+        logger.WriteLine($"{_endPoint}");
     }
 
     public class ValueEventArgs(object? value) : EventArgs
@@ -149,14 +150,19 @@ public class CallbackTest : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
+        _logger.WriteLine($"InitializeAsync 1");
         _serverToken = await _serverContext.OpenAsync(CancellationToken.None);
         _clientToken = await _clientContext.OpenAsync(CancellationToken.None);
         _server = _testServer;
+        _logger.WriteLine($"InitializeAsync 2");
     }
 
     public async Task DisposeAsync()
     {
+        _logger.WriteLine($"DisposeAsync 1");
         await _serverContext.ReleaseAsync(_serverToken);
         await _clientContext.ReleaseAsync(_clientToken);
+        _endPoint.Dispose();
+        _logger.WriteLine($"DisposeAsync 2");
     }
 }
