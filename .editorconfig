@@ -1,28 +1,89 @@
-﻿[*.{cs,vb}]
+﻿# https://editorconfig.org/
+root = true
 
-# IDE0060: 사용하지 않는 매개 변수를 제거하세요.
-dotnet_code_quality_unused_parameters = non_public:none
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+tab_width = 8
+trim_trailing_whitespace = true
+max_line_length = 80
+indent_style = space
+continuation_indent_size = 4
+indent_size = 4
 
-# IDE0003: 한정자 제거
-dotnet_style_qualification_for_event = false:none
+[*.{json,ps1,sh,yaml,yml}]
+indent_size = 2
+continuation_indent_size = 2
 
-# IDE0003: 한정자 제거
-dotnet_style_qualification_for_field = false:none
+[*.{csproj,xml}]
+indent_size = 2
+quote_type = double
 
-# IDE0003: 한정자 제거
-dotnet_style_qualification_for_method = false:none
+[*.cs]
+max_line_length = 100
+curly_bracket_next_line = true
+spaces_around_operators = true
+indent_brace_style = Allman
+dotnet_naming_rule.public_members_must_be_capitalized.symbols = public_symbols
+dotnet_naming_symbols.public_symbols.applicable_kinds = property,method,field,event,delegate
+dotnet_naming_symbols.public_symbols.applicable_accessibilities = public
+dotnet_naming_rule.public_members_must_be_capitalized.style = first_word_upper_case_style
+dotnet_naming_style.first_word_upper_case_style.capitalization = first_word_upper
+dotnet_naming_rule.public_members_must_be_capitalized.severity = warning
 
-# IDE0003: 한정자 제거
-dotnet_style_qualification_for_property = false:none
+# SA0001: XML comment analysis is disabled due to project configuration
+dotnet_diagnostic.SA0001.severity = none
 
-# IDE0059: 불필요한 값 할당
-csharp_style_unused_value_assignment_preference = unused_local_variable:suggestion
+# SA1101: Prefix local calls with this
+dotnet_diagnostic.SA1101.severity = none
 
-# IDE0056: 인덱스 연산자 사용
-csharp_style_prefer_index_operator = true:silent
+# SA1309: Field names should not begin with underscore
+dotnet_diagnostic.SA1309.severity = none
 
-# IDE0032: auto 속성 사용
-dotnet_style_prefer_auto_properties = true:suggestion
+# SA1600: Elements should be documented
+dotnet_diagnostic.SA1600.severity = none
 
-# IDE0057: 범위 연산자 사용
-csharp_style_prefer_range_operator = false
+# S1133: Deprecated code should be removed
+dotnet_diagnostic.S1133.severity = none
+
+# S1125: Boolean literals should not be redundant
+dotnet_diagnostic.S1125.severity = none
+
+# S2372: Exceptions should not be thrown from property getters
+dotnet_diagnostic.S2372.severity = none
+
+# S3881: "IDisposable" should be implemented correctly
+dotnet_diagnostic.S3881.severity = none
+
+# S3971: "GC.SuppressFinalize" should not be called
+dotnet_diagnostic.S3971.severity = none
+
+# S4143: Collection elements should not be replaced unconditionally
+dotnet_diagnostic.S4143.severity = none
+
+# S6605: Collection-specific "Exists" method should be used instead of the "Any" extension
+dotnet_diagnostic.S6605.severity = none
+
+# S6608: Prefer indexing instead of "Enumerable" methods on types implementing "IList"
+dotnet_diagnostic.S6608.severity = none
+
+# MEN007: Use a single return
+dotnet_diagnostic.MEN007.severity = none
+
+# MEN016: Avoid top-level statements
+dotnet_diagnostic.MEN016.severity = none
+
+[*.csproj]
+quote_type = double
+
+[*.sln]
+indent_style = tab
+indent_size = 2
+
+[hooks/*]
+indent_size = 2
+continuation_indent_size = 2
+
+[stylecop.json]
+max_line_length =

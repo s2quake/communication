@@ -1,24 +1,7 @@
-// MIT License
-// 
-// Copyright (c) 2024 Jeesu Choi
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// <copyright file="CallbackTest.cs" company="JSSoft">
+//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
+//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
+// </copyright>
 
 using JSSoft.Communication.Tests.Extensions;
 using Xunit.Abstractions;
@@ -47,18 +30,13 @@ public class CallbackTest : IAsyncLifetime
         logger.WriteLine($"{_endPoint}");
     }
 
-    public class ValueEventArgs(object? value) : EventArgs
-    {
-        public object? Value { get; } = value;
-    }
-
     public interface ITestService
     {
         void Invoke();
 
         void Invoke(int value);
 
-        void Invoke((int value1, string value2) value);
+        void Invoke((int Value1, string Value2) value);
     }
 
     public interface ITestCallback
@@ -67,41 +45,7 @@ public class CallbackTest : IAsyncLifetime
 
         void OnInvoked(int value);
 
-        void OnInvoked((int value1, string value2) value);
-    }
-
-    sealed class TestServer : ServerService<ITestService, ITestCallback>, ITestService
-    {
-        public void Invoke() => Client.OnInvoked();
-
-        public void Invoke(int value) => Client.OnInvoked(value);
-
-        public void Invoke((int value1, string value2) value) => Client.OnInvoked(value);
-    }
-
-    sealed class TestClient : ClientService<ITestService, ITestCallback>, ITestCallback
-    {
-        public AutoResetEvent AutoResetEvent { get; } = new(initialState: false);
-
-        public event EventHandler<ValueEventArgs>? Invoked;
-
-        void ITestCallback.OnInvoked()
-        {
-            Invoked?.Invoke(this, new(null));
-            AutoResetEvent.Set();
-        }
-
-        void ITestCallback.OnInvoked(int value)
-        {
-            Invoked?.Invoke(this, new(value));
-            AutoResetEvent.Set();
-        }
-
-        void ITestCallback.OnInvoked((int value1, string value2) value)
-        {
-            Invoked?.Invoke(this, new(value));
-            AutoResetEvent.Set();
-        }
+        void OnInvoked((int Value1, string Value2) value);
     }
 
     [Fact]
@@ -164,5 +108,44 @@ public class CallbackTest : IAsyncLifetime
         await _clientContext.ReleaseAsync(_clientToken);
         _endPoint.Dispose();
         _logger.WriteLine($"DisposeAsync 2");
+    }
+
+    public class ValueEventArgs(object? value) : EventArgs
+    {
+        public object? Value { get; } = value;
+    }
+
+    private sealed class TestServer : ServerService<ITestService, ITestCallback>, ITestService
+    {
+        public void Invoke() => Client.OnInvoked();
+
+        public void Invoke(int value) => Client.OnInvoked(value);
+
+        public void Invoke((int Value1, string Value2) value) => Client.OnInvoked(value);
+    }
+
+    private sealed class TestClient : ClientService<ITestService, ITestCallback>, ITestCallback
+    {
+        public event EventHandler<ValueEventArgs>? Invoked;
+
+        public AutoResetEvent AutoResetEvent { get; } = new(initialState: false);
+
+        void ITestCallback.OnInvoked()
+        {
+            Invoked?.Invoke(this, new(null));
+            AutoResetEvent.Set();
+        }
+
+        void ITestCallback.OnInvoked(int value)
+        {
+            Invoked?.Invoke(this, new(value));
+            AutoResetEvent.Set();
+        }
+
+        void ITestCallback.OnInvoked((int Value1, string Value2) value)
+        {
+            Invoked?.Invoke(this, new(value));
+            AutoResetEvent.Set();
+        }
     }
 }
