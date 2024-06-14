@@ -1,26 +1,8 @@
-// MIT License
-// 
-// Copyright (c) 2024 Jeesu Choi
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// <copyright file="ServerContextTest.cs" company="JSSoft">
+//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
+//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
+// </copyright>
 
-using System.Security.Principal;
 using JSSoft.Communication.Extensions;
 
 namespace JSSoft.Communication.Tests;
@@ -37,29 +19,14 @@ public sealed class ServerContextTest
     {
     }
 
-    sealed class TestService1 : ServerService<ITestService1>, ITestService1
-    {
-    }
-
-    sealed class TestService2 : ServerService<ITestService2>, ITestService2
-    {
-    }
-
     [Fact]
     public void Constructor_Test()
     {
         var serverContext0 = new ServerContext();
         Assert.Empty(serverContext0.Services);
-        var serverContext1 = new ServerContext(services:
-        [
-            new TestService2(),
-        ]);
+        var serverContext1 = new ServerContext(new TestService2());
         Assert.Single(serverContext1.Services);
-        var serverContext2 = new ServerContext(services:
-        [
-            new TestService1(),
-            new TestService2(),
-        ]);
+        var serverContext2 = new ServerContext(new TestService1(), new TestService2());
         Assert.Equal(2, serverContext2.Services.Count);
     }
 
@@ -125,7 +92,7 @@ public sealed class ServerContextTest
     {
         using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
-        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
+        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => serverContext.OpenAsync(cancellationTokenSource.Token));
         Assert.Equal(ServiceState.Faulted, serverContext.ServiceState);
@@ -149,7 +116,7 @@ public sealed class ServerContextTest
     {
         using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
-        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
+        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
         var token = await serverContext.OpenAsync(cancellationToken: default);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => serverContext.CloseAsync(token, cancellationTokenSource.Token));
@@ -178,7 +145,7 @@ public sealed class ServerContextTest
         using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
         var token = Guid.Empty;
-        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: Timeout);
+        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: Timeout);
         var result = await EventTestUtility.RaisesAsync(
             h => serverContext.Opened += h,
             h => serverContext.Opened -= h,
@@ -193,7 +160,7 @@ public sealed class ServerContextTest
     {
         using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
-        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: Timeout);
+        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: Timeout);
         var token = await serverContext.OpenAsync(cancellationToken: default);
         var result = await EventTestUtility.RaisesAsync(
             h => serverContext.Closed += h,
@@ -208,7 +175,7 @@ public sealed class ServerContextTest
     {
         using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext() { EndPoint = endPoint };
-        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
+        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
         var result = await EventTestUtility.RaisesAsync(
             h => serverContext.Faulted += h,
             h => serverContext.Faulted -= h,
@@ -220,6 +187,7 @@ public sealed class ServerContextTest
                 }
                 catch
                 {
+                    // do nothing
                 }
             });
 
@@ -239,5 +207,13 @@ public sealed class ServerContextTest
 
         Assert.True(result);
         await serverContext.ReleaseAsync(token);
+    }
+
+    private sealed class TestService1 : ServerService<ITestService1>, ITestService1
+    {
+    }
+
+    private sealed class TestService2 : ServerService<ITestService2>, ITestService2
+    {
     }
 }
