@@ -4,6 +4,14 @@
     <Import_RootNamespace>JSSoft.Communication.Services</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)**\*.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Authority.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\UserEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\UserMessageEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\UserNameEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\UserAuthorityEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IUserService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\INotifyUserService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IUserCallback.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IDataService.cs" />
   </ItemGroup>
 </Project>

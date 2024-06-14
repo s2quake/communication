@@ -1,7 +1,24 @@
-// <copyright file="InstanceContext.cs" company="JSSoft">
-//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
-//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
-// </copyright>
+// MIT License
+// 
+// Copyright (c) 2024 Jeesu Choi
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 using System;
 using System.Collections.Concurrent;
@@ -9,7 +26,7 @@ using System.Linq;
 
 namespace JSSoft.Communication;
 
-internal sealed class InstanceContext(ServiceContextBase serviceContext)
+sealed class InstanceContext(ServiceContextBase serviceContext)
     : IInstanceContext, IPeer
 {
     private readonly ConcurrentDictionary<IPeer, PeerDescriptor> _descriptorByPeer = new();
@@ -32,6 +49,7 @@ internal sealed class InstanceContext(ServiceContextBase serviceContext)
 
     public void ReleaseInstance()
     {
+        var isServer = ServiceContextBase.IsServer(_serviceContext);
         var query = from item in _serviceContext.Services.Values.Reverse()
                     where ServiceContextBase.IsPerPeer(_serviceContext, item) != true
                     select item;
@@ -55,12 +73,10 @@ internal sealed class InstanceContext(ServiceContextBase serviceContext)
             }
             else
             {
-                var service = _descriptor.ServerInstances[item];
-                var callback = _descriptor.ClientInstances[item];
+                var (service, callback) = (_descriptor.ServerInstances[item], _descriptor.ClientInstances[item]);
                 peerDescriptor.AddInstance(item, service, callback);
             }
         }
-
         _descriptorByPeer.TryAdd(peer, peerDescriptor);
         return peerDescriptor;
     }
@@ -68,10 +84,7 @@ internal sealed class InstanceContext(ServiceContextBase serviceContext)
     public void DestroyInstance(IPeer peer)
     {
         if (_descriptorByPeer.TryRemove(peer, out var peerDescriptor) == false)
-        {
             return;
-        }
-
         foreach (var item in _serviceContext.Services.Values.Reverse())
         {
             var isPerPeer = ServiceContextBase.IsPerPeer(_serviceContext, item);
@@ -85,15 +98,15 @@ internal sealed class InstanceContext(ServiceContextBase serviceContext)
                 peerDescriptor.RemoveInstance(item);
             }
         }
-
         peerDescriptor.Dispose();
+
     }
 
     public object? GetService(Type serviceType)
     {
         var query = from descriptor in _descriptorByPeer.Values
                     from service in descriptor.ServerInstances.Values
-                    where serviceType.IsInstanceOfType(service) == true
+                    where serviceType.IsAssignableFrom(service.GetType()) == true
                     select service;
         return query.SingleOrDefault();
     }

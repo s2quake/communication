@@ -1,7 +1,24 @@
-// <copyright file="MethodDescriptor.cs" company="JSSoft">
-//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
-//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
-// </copyright>
+// MIT License
+// 
+// Copyright (c) 2024 Jeesu Choi
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 using System;
 using System.Linq;
@@ -26,10 +43,9 @@ public class MethodDescriptor
         }
         else if (ReturnType.IsSubclassOf(typeof(Task)) == true)
         {
-            ReturnType = ReturnType.GetGenericArguments()[0];
+            ReturnType = ReturnType.GetGenericArguments().First();
             IsAsync = true;
         }
-
         Name = GenerateName(methodInfo);
         ShortName = methodInfo.Name;
         IsOneWay = IsMethodOneWay(methodInfo);
@@ -53,56 +69,6 @@ public class MethodDescriptor
 
     public MethodInfo MethodInfo { get; }
 
-    // "async" methods should not return "void"
-#pragma warning disable S3168
-    internal async void InvokeOneWay(
-        IServiceProvider serviceProvider, object instance, object?[] args)
-    {
-        try
-        {
-            await InvokeAsync(instance, args);
-        }
-        catch
-        {
-            // do nothing
-        }
-    }
-#pragma warning restore S3168
-
-    internal async Task<InvokeResult> InvokeAsync(
-        IServiceProvider serviceProvider, object instance, object?[] args)
-    {
-        try
-        {
-            var (valueType, value) = await InvokeAsync(instance, args);
-            return new InvokeResult
-            {
-                AssemblyQualifiedName = string.Empty,
-                ValueType = valueType,
-                Value = value,
-            };
-        }
-        catch (TargetInvocationException e)
-        {
-            var exception = e.InnerException ?? e;
-            return new InvokeResult
-            {
-                AssemblyQualifiedName = exception.GetType().AssemblyQualifiedName!,
-                ValueType = exception.GetType(),
-                Value = exception,
-            };
-        }
-        catch (Exception e)
-        {
-            return new InvokeResult
-            {
-                AssemblyQualifiedName = e.GetType().AssemblyQualifiedName!,
-                ValueType = e.GetType(),
-                Value = e,
-            };
-        }
-    }
-
     private static void Verify(MethodInfo methodInfo)
     {
         var parameterInfos = methodInfo.GetParameters();
@@ -110,46 +76,52 @@ public class MethodDescriptor
         if (isAsync == true)
         {
             if (parameterInfos.Count(item => item.ParameterType == typeof(CancellationToken)) > 1)
-            {
-                var message = $"""
-                    In method '{methodInfo}', only one parameter of type 
-                    {nameof(CancellationToken)} should be defined.
-                    """;
-                throw new InvalidOperationException(message);
-            }
-
-            if (parameterInfos.Count(item => item.ParameterType == typeof(CancellationToken)) == 1
-                && parameterInfos.Last().ParameterType != typeof(CancellationToken))
-            {
-                var message = $"""
-                    The last parameter of method '{methodInfo}' must be of 
-                    type {nameof(CancellationToken)}.
-                    """;
-                throw new InvalidOperationException(message);
-            }
+                throw new InvalidOperationException($"In method '{methodInfo}', only one parameter of type {nameof(CancellationToken)} should be defined.");
+            if (parameterInfos.Count(item => item.ParameterType == typeof(CancellationToken)) == 1 &&
+                parameterInfos.Last().ParameterType != typeof(CancellationToken))
+                throw new InvalidOperationException($"The last parameter of method '{methodInfo}' must be of type {nameof(CancellationToken)}.");
         }
         else if (methodInfo.ReturnType == typeof(void))
         {
             if (parameterInfos.Any(item => item.ParameterType == typeof(CancellationToken)) == true)
-            {
-                var message = $"""
-                    The {nameof(CancellationToken)} type cannot be used in method '{methodInfo}'.
-                    """;
-                throw new InvalidOperationException(message);
-            }
+                throw new InvalidOperationException($"The {nameof(CancellationToken)} type cannot be used in method '{methodInfo}'.");
         }
         else
         {
-            var message = $"""
-                The return type of method '{methodInfo}' must be 
-                '{typeof(Task)}' or '{typeof(void)}'.
-                """;
-            throw new InvalidOperationException(message);
+            throw new InvalidOperationException($"The return type of method '{methodInfo}' must be '{typeof(Task)}' or '{typeof(void)}'.");
         }
     }
 
-    private async Task<(Type ValueType, object? Value)> InvokeAsync(
-        object? instance, object?[] args)
+    internal async void InvokeOneWay(IServiceProvider serviceProvider, object instance, object?[] args)
+    {
+        try
+        {
+            await InvokeAsync(instance, args);
+        }
+        catch
+        {
+        }
+    }
+
+    internal async Task<(string, Type, object?)> InvokeAsync(IServiceProvider serviceProvider, object instance, object?[] args)
+    {
+        try
+        {
+            var (type, value) = await InvokeAsync(instance, args);
+            return (string.Empty, type, value);
+        }
+        catch (TargetInvocationException e)
+        {
+            var exception = e.InnerException ?? e;
+            return (exception.GetType().AssemblyQualifiedName!, exception.GetType(), exception);
+        }
+        catch (Exception e)
+        {
+            return (e.GetType().AssemblyQualifiedName!, e.GetType(), e);
+        }
+    }
+
+    private async Task<(Type, object?)> InvokeAsync(object? instance, object?[] args)
     {
         var value = await Task.Run(() => MethodInfo.Invoke(instance, args));
         var valueType = MethodInfo.ReturnType;

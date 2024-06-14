@@ -1,7 +1,24 @@
-// <copyright file="InstanceBase.cs" company="JSSoft">
-//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
-//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
-// </copyright>
+// MIT License
+// 
+// Copyright (c) 2024 Jeesu Choi
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 using System;
 using System.Reflection;
@@ -24,8 +41,6 @@ public abstract class InstanceBase
     private IService? _service;
     private IPeer? _peer;
 
-    internal static InstanceBase Empty { get; } = new Instance();
-
     internal IAdaptor Adaptor
     {
         get => _adaptor ?? throw new InvalidOperationException("adaptor is not set.");
@@ -46,118 +61,60 @@ public abstract class InstanceBase
         set => _peer = value;
     }
 
+    internal static InstanceBase Empty { get; } = new Instance();
+
     [InstanceMethod(InvokeMethod)]
     protected void Invoke(string name, Type[] types, object?[] args)
-        => Adaptor.Invoke(new InvokeOptions
-        {
-            Instance = this,
-            Name = name,
-            Types = types,
-            Args = args,
-        });
+        => Adaptor.Invoke(this, name, types, args);
 
-    protected void Invoke((string Name, Type[] Types, object?[] Args) info)
-        => Adaptor.Invoke(new InvokeOptions
-        {
-            Instance = this,
-            Name = info.Name,
-            Types = info.Types,
-            Args = info.Args,
-        });
-
-    [InstanceMethod(InvokeGenericMethod)]
-    protected T Invoke<T>(string name, Type[] types, object?[] args)
-        => Adaptor.Invoke<T>(new InvokeOptions
-        {
-            Instance = this,
-            Name = name,
-            Types = types,
-            Args = args,
-        });
-
-    protected T Invoke<T>((string Name, Type[] Types, object?[] Args) info)
-        => Adaptor.Invoke<T>(new InvokeOptions
-        {
-            Instance = this,
-            Name = info.Name,
-            Types = info.Types,
-            Args = info.Args,
-        });
+    protected void Invoke((string name, Type[] types, object?[] args) info)
+        => Adaptor.Invoke(this, info.name, info.types, info.args);
 
     [InstanceMethod(InvokeOneWayMethod)]
     protected void InvokeOneWay(string name, Type[] types, object?[] args)
-        => Adaptor.InvokeOneWay(new InvokeOptions
-        {
-            Instance = this,
-            Name = name,
-            Types = types,
-            Args = args,
-        });
+        => Adaptor.InvokeOneWay(this, name, types, args);
 
-    protected void InvokeOneWay((string Name, Type[] Types, object?[] Args) info)
-        => Adaptor.Invoke(new InvokeOptions
-        {
-            Instance = this,
-            Name = info.Name,
-            Types = info.Types,
-            Args = info.Args,
-        });
+    protected void InvokeOneWay((string name, Type[] types, object?[] args) info)
+        => Adaptor.Invoke(this, info.name, info.types, info.args);
+
+    [InstanceMethod(InvokeGenericMethod)]
+    protected T Invoke<T>(string name, Type[] types, object?[] args)
+        => Adaptor.Invoke<T>(this, name, types, args);
+
+    protected T Invoke<T>((string name, Type[] types, object?[] args) info)
+        => Adaptor.Invoke<T>(this, info.name, info.types, info.args);
 
     [InstanceMethod(InvokeAsyncMethod)]
-    protected Task InvokeAsync(
-        string name, Type[] types, object?[] args, CancellationToken cancellationToken)
-    {
-        var options = new InvokeOptions
-        {
-            Instance = this,
-            Name = name,
-            Types = types,
-            Args = args,
-        };
-        return Adaptor.InvokeAsync(options, cancellationToken);
-    }
+    protected Task InvokeAsync(string name, Type[] types, object?[] args, CancellationToken cancellationToken)
+        => Adaptor.InvokeAsync(this, name, types, args, cancellationToken);
 
-    protected Task InvokeAsync(
-        (string Name, Type[] Types, object?[] Args) info, CancellationToken cancellationToken)
-    {
-        var options = new InvokeOptions
-        {
-            Instance = this,
-            Name = info.Name,
-            Types = info.Types,
-            Args = info.Args,
-        };
-        return Adaptor.InvokeAsync(options, cancellationToken);
-    }
+    protected Task InvokeAsync((string name, Type[] types, object?[] args) info, CancellationToken cancellationToken)
+        => Adaptor.InvokeAsync(this, info.name, info.types, info.args, cancellationToken);
 
     [InstanceMethod(InvokeGenericAsyncMethod)]
-    protected Task<T> InvokeAsync<T>(
-        string name, Type[] types, object?[] args, CancellationToken cancellationToken)
+    protected Task<T> InvokeAsync<T>(string name, Type[] types, object?[] args, CancellationToken cancellationToken)
+        => Adaptor.InvokeAsync<T>(this, name, types, args, cancellationToken);
+
+    protected Task<T> InvokeAsync<T>((string name, Type[] types, object?[] args) info, CancellationToken cancellationToken)
+        => Adaptor.InvokeAsync<T>(this, info.name, info.types, info.args, cancellationToken);
+
+    protected static (string, Type[], object?[]) Info<P>(MethodInfo methodInfo, Type serviceType, P arg)
+        => (MethodUtility.GenerateName(methodInfo, serviceType), [typeof(P)], [arg]);
+
+    protected static (string, Type[], object?[]) Info<P1, P2>(MethodInfo methodInfo, Type serviceType, P1 arg1, P2 arg2)
+        => (MethodUtility.GenerateName(methodInfo, serviceType), [typeof(P1), typeof(P2)], [arg1, arg2]);
+
+    protected static (string, Type[], object?[]) Info<P1, P2, P3>(MethodInfo methodInfo, Type serviceType, P1 arg1, P2 arg2, P3 arg3)
+        => (MethodUtility.GenerateName(methodInfo, serviceType), [typeof(P1), typeof(P2), typeof(P3)], [arg1, arg2, arg3]);
+
+    protected static (string, Type[], object?[]) Info<P1, P2, P3, P4>(MethodInfo methodInfo, Type serviceType, P1 arg1, P2 arg2, P3 arg3, P4 arg4)
+        => (MethodUtility.GenerateName(methodInfo, serviceType), [typeof(P1), typeof(P2), typeof(P3), typeof(P4)], [arg1, arg2, arg3, arg4]);
+
+    #region Instance
+
+    sealed class Instance : InstanceBase
     {
-        var options = new InvokeOptions
-        {
-            Instance = this,
-            Name = name,
-            Types = types,
-            Args = args,
-        };
-        return Adaptor.InvokeAsync<T>(options, cancellationToken);
     }
 
-    protected Task<T> InvokeAsync<T>(
-        (string Name, Type[] Types, object?[] Args) info, CancellationToken cancellationToken)
-    {
-        var options = new InvokeOptions
-        {
-            Instance = this,
-            Name = info.Name,
-            Types = info.Types,
-            Args = info.Args,
-        };
-        return Adaptor.InvokeAsync<T>(options, cancellationToken);
-    }
-
-    private sealed class Instance : InstanceBase
-    {
-    }
+    #endregion
 }

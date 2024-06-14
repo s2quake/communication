@@ -1,10 +1,24 @@
-// <copyright file="ClientTestBase.cs" company="JSSoft">
-//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
-//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
-// </copyright>
-
-// File may only contain a single type
-#pragma warning disable SA1402
+// MIT License
+// 
+// Copyright (c) 2024 Jeesu Choi
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 using JSSoft.Communication.Tests.Extensions;
 
@@ -29,10 +43,6 @@ public abstract class ClientTestBase<TService> : IAsyncLifetime
         _clientContext = new(_clientService) { EndPoint = _endPoint };
     }
 
-    protected TService Client => _client!;
-
-    protected ServerService<TService> ServerService { get; }
-
     public async Task InitializeAsync()
     {
         _serverToken = await _serverContext.OpenAsync(cancellationToken: default);
@@ -46,6 +56,10 @@ public abstract class ClientTestBase<TService> : IAsyncLifetime
         await _clientContext.ReleaseAsync(_clientToken);
         _endPoint.Dispose();
     }
+
+    protected TService Client => _client!;
+
+    protected ServerService<TService> ServerService { get; }
 }
 
 public abstract class ClientTestBase<TService, TServerSevice> : IAsyncLifetime
@@ -68,10 +82,6 @@ public abstract class ClientTestBase<TService, TServerSevice> : IAsyncLifetime
         _clientContext = new(_clientService) { EndPoint = _endPoint };
     }
 
-    protected TService Client => _client!;
-
-    protected TServerSevice ServerService { get; }
-
     public async Task InitializeAsync()
     {
         _serverToken = await _serverContext.OpenAsync(cancellationToken: default);
@@ -85,4 +95,8 @@ public abstract class ClientTestBase<TService, TServerSevice> : IAsyncLifetime
         await _clientContext.ReleaseAsync(_clientToken);
         _endPoint.Dispose();
     }
+
+    protected TService Client => _client!;
+
+    protected TServerSevice ServerService { get; }
 }

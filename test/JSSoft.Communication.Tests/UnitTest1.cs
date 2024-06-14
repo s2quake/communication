@@ -1,7 +1,24 @@
-// <copyright file="UnitTest1.cs" company="JSSoft">
-//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
-//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
-// </copyright>
+// MIT License
+// 
+// Copyright (c) 2024 Jeesu Choi
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 namespace JSSoft.Communication.Tests;
 
@@ -17,6 +34,21 @@ public class UnitTest1
         void OnMessageSend(string message);
     }
 
+    sealed class TestServer : ServerService<ITestServer, ITestClient>, ITestServer
+    {
+        public async Task SendMessageAsync(string message, CancellationToken cancellationToken)
+        {
+            await Task.Delay(1000, cancellationToken);
+        }
+    }
+
+    sealed class TestClient : ClientService<ITestServer, ITestClient>, ITestClient
+    {
+        public void OnMessageSend(string message)
+        {
+        }
+    }
+
     [Fact]
     public async Task OpenAndClientCloseAsync()
     {
@@ -29,9 +61,6 @@ public class UnitTest1
 
         await clientContext.CloseAsync(clientToken, CancellationToken.None);
         await serverContext.CloseAsync(serverToken, CancellationToken.None);
-
-        Assert.Equal(ServiceState.None, clientContext.ServiceState);
-        Assert.Equal(ServiceState.None, serverContext.ServiceState);
     }
 
     [Fact]
@@ -41,9 +70,9 @@ public class UnitTest1
         var serverContext = new ServerContext(new TestServer()) { EndPoint = endPoint };
         var clientContext = new ClientContext(new TestClient()) { EndPoint = endPoint };
 
-        var autoResetEvent = new AutoResetEvent(initialState: false);
         var serverToken = await serverContext.OpenAsync(CancellationToken.None);
-        await clientContext.OpenAsync(CancellationToken.None);
+        var clientToken = await clientContext.OpenAsync(CancellationToken.None);
+        var autoResetEvent = new AutoResetEvent(initialState: false);
         clientContext.Disconnected += (s, e) => autoResetEvent.Set();
 
         await serverContext.CloseAsync(serverToken, CancellationToken.None);
@@ -63,33 +92,21 @@ public class UnitTest1
         var count = 20;
         using var endPoint = new RandomEndPoint();
         var serverContext = new ServerContext(new TestServer()) { EndPoint = endPoint };
-        var clientContexts = Enumerable.Range(0, count)
-                                       .Select(CreateClientContext)
-                                       .ToArray();
+        var clientContexts = Enumerable.Range(0, count).Select(item => new ClientContext(new TestClient()) { EndPoint = endPoint }).ToArray();
         var serverToken = await serverContext.OpenAsync(CancellationToken.None);
-        var openTasks = clientContexts.Select(item => item.OpenAsync(CancellationToken.None))
-                                      .ToArray();
+        var openTasks = clientContexts.Select(item => item.OpenAsync(CancellationToken.None)).ToArray();
         var tokens = await Task.WhenAll(openTasks);
         var closeTasks = new Task[count];
         for (var i = 0; i < count; i++)
         {
             closeTasks[i] = clientContexts[i].CloseAsync(tokens[i], CancellationToken.None);
         }
-
         await Task.WhenAll(closeTasks);
         await serverContext.CloseAsync(serverToken, CancellationToken.None);
         Assert.Equal(ServiceState.None, serverContext.ServiceState);
         for (var i = 0; i < count; i++)
         {
             Assert.Equal(ServiceState.None, clientContexts[i].ServiceState);
-        }
-
-        ClientContext CreateClientContext(int index)
-        {
-            return new ClientContext(new TestClient())
-            {
-                EndPoint = endPoint,
-            };
         }
     }
 
@@ -109,23 +126,5 @@ public class UnitTest1
 
         await clientContext.CloseAsync(clientToken, CancellationToken.None);
         await serverContext.CloseAsync(serverToken, CancellationToken.None);
-
-        Assert.Equal(ServiceState.None, clientContext.ServiceState);
-        Assert.Equal(ServiceState.None, serverContext.ServiceState);
-    }
-
-    private sealed class TestServer : ServerService<ITestServer, ITestClient>, ITestServer
-    {
-        public async Task SendMessageAsync(string message, CancellationToken cancellationToken)
-        {
-            await Task.Delay(1000, cancellationToken);
-        }
-    }
-
-    private sealed class TestClient : ClientService<ITestServer, ITestClient>, ITestClient
-    {
-        public void OnMessageSend(string message)
-        {
-        }
     }
 }

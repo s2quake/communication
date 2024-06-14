@@ -20,28 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using JSSoft.Communication.ConsoleApp;
-using JSSoft.Communication.Services;
-using JSSoft.Commands;
 using System;
-using System.ComponentModel.Composition;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace JSSoft.Communication.Commands;
+namespace JSSoft.Communication.Services;
 
-[Export(typeof(ICommand))]
-[method: ImportingConstructor]
-sealed class LogoutCommand(Application application, IUserService userService) : CommandAsyncBase
+class UserInfo
 {
-    private readonly Application _application = application;
-    private readonly IUserService _userService = userService;
+    public string UserID { get; set; } = string.Empty;
 
-    public override bool IsEnabled => _application.UserToken != Guid.Empty;
+    public string UserName { get; set; } = string.Empty;
 
-    protected override async Task OnExecuteAsync(CancellationToken cancellationToken, IProgress<ProgressInfo> progress)
-    {
-        await _userService.LogoutAsync(_application.UserToken, cancellationToken);
-        _application.Logout();
-    }
+    public string Password { get; set; } = string.Empty;
+
+    public Authority Authority { get; set; }
+
+    public Guid Token { get; set; }
 }

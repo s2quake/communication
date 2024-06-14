@@ -1,7 +1,24 @@
-// <copyright file="ClientContextTest.cs" company="JSSoft">
-//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
-//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
-// </copyright>
+// MIT License
+// 
+// Copyright (c) 2024 Jeesu Choi
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 using JSSoft.Communication.Extensions;
 
@@ -13,11 +30,6 @@ public sealed class ClientContextTest : IAsyncLifetime
     private readonly RandomEndPoint _endPoint = new();
     private Guid _token;
 
-    public ClientContextTest()
-    {
-        _serverContext = new() { EndPoint = _endPoint };
-    }
-
     public interface ITestService1 : IService
     {
     }
@@ -26,14 +38,34 @@ public sealed class ClientContextTest : IAsyncLifetime
     {
     }
 
+    sealed class TestService1 : ClientService<ITestService1>
+    {
+    }
+
+    sealed class TestService2 : ClientService<ITestService2>
+    {
+    }
+
+    public ClientContextTest()
+    {
+        _serverContext = new() { EndPoint = _endPoint };
+    }
+
     [Fact]
     public void Constructor_Test()
     {
         var clientContext0 = new ClientContext();
         Assert.Empty(clientContext0.Services);
-        var clientContext1 = new ClientContext(new TestService2());
+        var clientContext1 = new ClientContext(services:
+        [
+            new TestService2(),
+        ]);
         Assert.Single(clientContext1.Services);
-        var clientContext2 = new ClientContext(new TestService1(), new TestService2());
+        var clientContext2 = new ClientContext(services:
+        [
+            new TestService1(),
+            new TestService2(),
+        ]);
         Assert.Equal(2, clientContext2.Services.Count);
     }
 
@@ -99,7 +131,7 @@ public sealed class ClientContextTest : IAsyncLifetime
     {
         var endPoint = _serverContext.EndPoint;
         var clientContext = new ClientContext() { EndPoint = endPoint };
-        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
+        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => clientContext.OpenAsync(cancellationTokenSource.Token));
         Assert.Equal(ServiceState.Faulted, clientContext.ServiceState);
@@ -125,7 +157,7 @@ public sealed class ClientContextTest : IAsyncLifetime
     {
         var endPoint = _serverContext.EndPoint;
         var clientContext = new ClientContext() { EndPoint = endPoint };
-        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
+        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
         var token = await clientContext.OpenAsync(cancellationToken: default);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
             () => clientContext.CloseAsync(token, cancellationTokenSource.Token));
@@ -153,7 +185,7 @@ public sealed class ClientContextTest : IAsyncLifetime
         var endPoint = _serverContext.EndPoint;
         var clientContext = new ClientContext() { EndPoint = endPoint };
         var token = Guid.Empty;
-        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 5000);
+        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 5000);
         var result = await EventTestUtility.RaisesAsync(
             h => clientContext.Opened += h,
             h => clientContext.Opened -= h,
@@ -168,7 +200,7 @@ public sealed class ClientContextTest : IAsyncLifetime
     {
         var endPoint = _serverContext.EndPoint;
         var clientContext = new ClientContext() { EndPoint = endPoint };
-        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 5000);
+        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 5000);
         var token = await clientContext.OpenAsync(cancellationToken: default);
         var result = await EventTestUtility.RaisesAsync(
             h => clientContext.Closed += h,
@@ -183,7 +215,7 @@ public sealed class ClientContextTest : IAsyncLifetime
     {
         var endPoint = _serverContext.EndPoint;
         var clientContext = new ClientContext() { EndPoint = endPoint };
-        using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
+        var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 0);
         var result = await EventTestUtility.RaisesAsync(
             h => clientContext.Faulted += h,
             h => clientContext.Faulted -= h,
@@ -195,7 +227,6 @@ public sealed class ClientContextTest : IAsyncLifetime
                 }
                 catch
                 {
-                    // do nothing
                 }
             });
 
@@ -219,7 +250,6 @@ public sealed class ClientContextTest : IAsyncLifetime
                 }
                 catch
                 {
-                    // do nothing
                 }
             });
 
@@ -252,15 +282,6 @@ public sealed class ClientContextTest : IAsyncLifetime
         {
             await _serverContext.CloseAsync(_token, cancellationToken: default);
         }
-
         _endPoint.Dispose();
-    }
-
-    private sealed class TestService1 : ClientService<ITestService1>
-    {
-    }
-
-    private sealed class TestService2 : ClientService<ITestService2>
-    {
     }
 }
