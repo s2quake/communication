@@ -1,24 +1,41 @@
-// <copyright file="SystemTerminal.cs" company="JSSoft">
-//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
-//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
-// </copyright>
+// MIT License
+// 
+// Copyright (c) 2024 Jeesu Choi
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
-using System.ComponentModel.Composition;
+using JSSoft.Commands.Extensions;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using JSSoft.Commands.Extensions;
+using System.ComponentModel.Composition;
 using JSSoft.Terminals;
 
 namespace JSSoft.Communication.ConsoleApp;
 
 [Export]
 [method: ImportingConstructor]
-internal sealed class SystemTerminal(Application application, CommandContext commandContext)
+sealed class SystemTerminal(Application application, CommandContext commandContext)
     : SystemTerminalBase
 {
-    private static readonly string Postfix = TerminalEnvironment.IsWindows() == true ? "> " : "$ ";
+    private static readonly string postfix = TerminalEnvironment.IsWindows() == true ? "> " : "$ ";
     private readonly Application _application = application;
     private readonly CommandContext _commandContext = commandContext;
 
@@ -35,20 +52,20 @@ internal sealed class SystemTerminal(Application application, CommandContext com
 
     protected override string FormatPrompt(string prompt)
     {
-        if (_application.UserId == string.Empty)
+        if (_application.UserID == string.Empty)
         {
             return prompt;
         }
         else
         {
             var tb = new TerminalStringBuilder();
-            var pattern = $"(.+@)(.+).{{{Postfix.Length}}}";
+            var pattern = $"(.+@)(.+).{{{postfix.Length}}}";
             var match = Regex.Match(prompt, pattern);
             tb.Append(match.Groups[1].Value);
             tb.Foreground = TerminalColorType.BrightGreen;
             tb.Append(match.Groups[2].Value);
             tb.Foreground = null;
-            tb.Append(Postfix);
+            tb.Append(postfix);
             return tb.ToString();
         }
     }

@@ -1,9 +1,4 @@
 {
-    "[csharp]": {
-        "editor.rulers": [
-            100
-        ]
-    },
     "files.exclude": {
         ".vs": true,
         "**/bin": true,

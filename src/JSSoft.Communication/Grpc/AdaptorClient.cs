@@ -1,19 +1,34 @@
-// <copyright file="AdaptorClient.cs" company="JSSoft">
-//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
-//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
-// </copyright>
+// MIT License
+// 
+// Copyright (c) 2024 Jeesu Choi
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
+using Grpc.Core;
+using JSSoft.Communication.Extensions;
+using JSSoft.Communication.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Grpc.Core;
-using JSSoft.Communication.Extensions;
-using JSSoft.Communication.Logging;
-using Newtonsoft.Json;
-
 #if NETSTANDARD
 using GrpcChannel = Grpc.Core.Channel;
 #elif NET
@@ -23,7 +38,7 @@ using GrpcChannel = Grpc.Net.Client.GrpcChannel;
 
 namespace JSSoft.Communication.Grpc;
 
-internal sealed class AdaptorClient : IAdaptor
+sealed class AdaptorClient : IAdaptor
 {
     private static readonly TimeSpan Timeout = new(0, 0, 15);
 
@@ -44,32 +59,23 @@ internal sealed class AdaptorClient : IAdaptor
         _serviceContext = serviceContext;
         _instanceContext = instanceContext;
         _serviceByName = serviceContext.Services;
-        _methodsByService = _serviceByName.ToDictionary(
-            keySelector: item => item.Value,
-            elementSelector: item => new MethodDescriptorCollection(item.Value.ClientType));
+        _methodsByService = _serviceByName.ToDictionary(item => item.Value, item => new MethodDescriptorCollection(item.Value.ClientType));
     }
-
-    public event EventHandler? Disconnected;
 
     public async Task OpenAsync(EndPoint endPoint, CancellationToken cancellationToken)
     {
         if (_adaptorImpl != null)
-        {
             throw new InvalidOperationException("Already opened.");
-        }
-
         try
         {
 #if NETSTANDARD
             _channel = new Channel(EndPointUtility.ToString(endPoint), ChannelCredentials.Insecure);
             await _channel.ConnectAsync(deadline: DateTime.UtcNow.AddSeconds(15));
 #elif NET
-            _channel = GrpcChannel.ForAddress(
-                $"http://{EndPointUtility.ConvertToIPEndPoint(endPoint)}");
+            _channel = GrpcChannel.ForAddress($"http://{EndPointUtility.ConvertToIPEndPoint(endPoint)}");
             await _channel.ConnectAsync(cancellationToken);
 #endif
-            _adaptorImpl = new AdaptorClientImpl(
-                _channel, _serviceContext.Id, _serviceByName.Values.ToArray());
+            _adaptorImpl = new AdaptorClientImpl(_channel, _serviceContext.Id, _serviceByName.Values.ToArray());
             await _adaptorImpl.OpenAsync(cancellationToken);
             _descriptor = _instanceContext.CreateInstance(_adaptorImpl);
             _cancellationTokenSource = new CancellationTokenSource();
@@ -84,43 +90,35 @@ internal sealed class AdaptorClient : IAdaptor
                 await _channel.ShutdownAsync();
                 _channel = null;
             }
-
             throw;
         }
     }
 
     public async Task CloseAsync(CancellationToken cancellationToken)
     {
-        if (_cancellationTokenSource is not null)
-        {
-            await _cancellationTokenSource.CancelAsync();
-            _cancellationTokenSource.Dispose();
-            _cancellationTokenSource = null;
-        }
-
+        _cancellationTokenSource?.Cancel();
         if (_timer != null)
         {
             await _timer.DisposeAsync();
             _timer = null;
         }
-
         if (_adaptorImpl != null)
         {
             _instanceContext.DestroyInstance(_adaptorImpl);
             await _adaptorImpl.CloseAsync(cancellationToken);
             _adaptorImpl = null;
         }
-
         if (_task != null)
         {
             await _task;
         }
-
         if (_channel != null)
         {
             await _channel.ShutdownAsync();
             _channel = null;
         }
+        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = null;
     }
 
     public async ValueTask DisposeAsync()
@@ -131,209 +129,21 @@ internal sealed class AdaptorClient : IAdaptor
             await _timer.DisposeAsync();
             _timer = null;
         }
-
         if (_adaptorImpl != null)
         {
             _instanceContext.DestroyInstance(_adaptorImpl);
             await _adaptorImpl.TryCloseAsync(cancellationToken: default);
             _adaptorImpl = null;
         }
-
         if (_channel != null)
         {
             await _channel.ShutdownAsync();
             _channel = null;
         }
-
         GC.SuppressFinalize(this);
     }
 
-    void IAdaptor.Invoke(InvokeOptions options)
-    {
-        if (_adaptorImpl == null)
-        {
-            throw new InvalidOperationException("adaptor is not set.");
-        }
-
-        var instance = options.Instance;
-        var name = options.Name;
-        var types = options.Types;
-        var args = options.Args;
-        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
-        var data = _serializer!.SerializeMany(types, args);
-        var request = new InvokeRequest
-        {
-            ServiceName = instance.ServiceName,
-            Name = name,
-            Data = { data },
-        };
-        var reply = _adaptorImpl.Invoke(request, metaData);
-        HandleReply(reply);
-    }
-
-    async void IAdaptor.InvokeOneWay(InvokeOptions options)
-    {
-        if (_adaptorImpl == null)
-        {
-            throw new InvalidOperationException("adaptor is not set.");
-        }
-
-        var instance = options.Instance;
-        var name = options.Name;
-        var types = options.Types;
-        var args = options.Args;
-        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
-        var data = _serializer!.SerializeMany(types, args);
-        var request = new InvokeRequest
-        {
-            ServiceName = instance.ServiceName,
-            Name = name,
-            Data = { data },
-        };
-        try
-        {
-            await _adaptorImpl.InvokeAsync(request, metaData);
-        }
-        catch
-        {
-            // do nothing
-        }
-    }
-
-    T IAdaptor.Invoke<T>(InvokeOptions options)
-    {
-        if (_adaptorImpl == null)
-        {
-            throw new InvalidOperationException("adaptor is not set.");
-        }
-
-        if (_serializer == null)
-        {
-            throw new InvalidOperationException("serializer is not set.");
-        }
-
-        var instance = options.Instance;
-        var name = options.Name;
-        var types = options.Types;
-        var args = options.Args;
-        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
-        var data = _serializer.SerializeMany(types, args);
-        var request = new InvokeRequest
-        {
-            ServiceName = instance.ServiceName,
-            Name = name,
-            Data = { data },
-        };
-        var reply = _adaptorImpl.Invoke(request, metaData);
-        HandleReply(reply);
-        if (_serializer.Deserialize(typeof(T), reply.Data) is T value)
-        {
-            return value;
-        }
-
-        throw new UnreachableException(
-            $"This code should not be reached in {nameof(IAdaptor.Invoke)}.");
-    }
-
-    async Task IAdaptor.InvokeAsync(InvokeOptions options, CancellationToken cancellationToken)
-    {
-        if (_adaptorImpl == null)
-        {
-            throw new InvalidOperationException("adaptor is not set.");
-        }
-
-        if (_serializer == null)
-        {
-            throw new InvalidOperationException("serializer is not set.");
-        }
-
-        var instance = options.Instance;
-        var name = options.Name;
-        var types = options.Types;
-        var args = options.Args;
-        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
-        var data = _serializer.SerializeMany(types, args);
-        var request = new InvokeRequest
-        {
-            ServiceName = instance.ServiceName,
-            Name = name,
-            Data = { data },
-        };
-        try
-        {
-            var reply = await _adaptorImpl.InvokeAsync(
-                request: request,
-                headers: metaData,
-                cancellationToken: cancellationToken);
-            HandleReply(reply);
-        }
-        catch (RpcException e)
-        {
-            if (e.StatusCode == StatusCode.Cancelled)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-
-            throw;
-        }
-    }
-
-    async Task<T> IAdaptor.InvokeAsync<T>(
-        InvokeOptions options, CancellationToken cancellationToken)
-    {
-        if (_adaptorImpl == null)
-        {
-            throw new InvalidOperationException("adaptor is not set.");
-        }
-
-        if (_serializer == null)
-        {
-            throw new InvalidOperationException("serializer is not set.");
-        }
-
-        var instance = options.Instance;
-        var name = options.Name;
-        var types = options.Types;
-        var args = options.Args;
-        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
-        var data = _serializer.SerializeMany(types, args);
-        var request = new InvokeRequest
-        {
-            ServiceName = instance.ServiceName,
-            Name = name,
-        };
-        request.Data.AddRange(data);
-        try
-        {
-            var reply = await _adaptorImpl.InvokeAsync(
-                request: request,
-                headers: metaData,
-                cancellationToken: cancellationToken);
-            HandleReply(reply);
-            return _serializer.Deserialize(typeof(T), reply.Data) is T value ? value : default!;
-        }
-        catch (RpcException e)
-        {
-            if (e.StatusCode == StatusCode.Cancelled)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-
-            throw;
-        }
-    }
-
-    private static async Task<bool> MoveAsync(
-        AsyncDuplexStreamingCall<PollRequest, PollReply> call, CancellationToken cancellationToken)
-    {
-        if (cancellationToken.IsCancellationRequested == true)
-        {
-            return false;
-        }
-
-        using var cancellationTokenSource = new CancellationTokenSource(Timeout);
-        return await call.ResponseStream.MoveNext(cancellationTokenSource.Token);
-    }
+    public event EventHandler? Disconnected;
 
     private async void Timer_TimerCallback(object? state)
     {
@@ -348,16 +158,13 @@ internal sealed class AdaptorClient : IAdaptor
         }
         catch
         {
-            // do nothing
         }
     }
 
     private async Task PollAsync(CancellationToken cancellationToken)
     {
         if (_adaptorImpl == null)
-        {
             throw new InvalidOperationException("adaptor is not set.");
-        }
 
         var closeCode = int.MinValue;
         try
@@ -374,11 +181,9 @@ internal sealed class AdaptorClient : IAdaptor
                     closeCode = reply.Code;
                     break;
                 }
-
                 InvokeCallback(reply);
                 await call.RequestStream.WriteAsync(request);
             }
-
             await call.RequestStream.CompleteAsync();
         }
         catch (Exception e)
@@ -386,27 +191,28 @@ internal sealed class AdaptorClient : IAdaptor
             closeCode = -2;
             LogUtility.Error(e);
         }
-
         if (closeCode != int.MinValue)
         {
             Disconnected?.Invoke(this, EventArgs.Empty);
         }
-
         _serviceContext.Debug("Poll finished.");
+
+        static async Task<bool> MoveAsync(AsyncDuplexStreamingCall<PollRequest, PollReply> call, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested == true)
+                return false;
+            using var cancellationTokenSource = new CancellationTokenSource(Timeout);
+            return await call.ResponseStream.MoveNext(cancellationTokenSource.Token);
+        }
     }
 
     private void InvokeCallback(IService service, string name, string[] data)
     {
         if (_adaptorImpl == null)
-        {
             throw new InvalidOperationException("adaptor is not set.");
-        }
-
         var methodDescriptors = _methodsByService[service];
         if (methodDescriptors.Contains(name) != true)
-        {
             throw new InvalidOperationException("Invalid method name.");
-        }
 
         var methodDescriptor = methodDescriptors[name];
         var args = _serializer!.DeserializeMany(methodDescriptor.ParameterTypes, data);
@@ -421,7 +227,6 @@ internal sealed class AdaptorClient : IAdaptor
             var service = _serviceByName[item.ServiceName];
             InvokeCallback(service, item.Name, [.. item.Data]);
         }
-
         reply.Items.Clear();
     }
 
@@ -436,16 +241,134 @@ internal sealed class AdaptorClient : IAdaptor
     private void ThrowException(Type exceptionType, string data)
     {
         if (_serializer == null)
-        {
             throw new InvalidOperationException("serializer is not set.");
-        }
 
-        if (JsonConvert.DeserializeObject(data, exceptionType) is Exception exception)
-        {
+        if (Newtonsoft.Json.JsonConvert.DeserializeObject(data, exceptionType) is Exception exception)
             throw exception;
-        }
 
-        throw new UnreachableException(
-            $"This code should not be reached in {nameof(ThrowException)}.");
+        throw new UnreachableException($"This code should not be reached in {nameof(ThrowException)}.");
     }
+
+    #region IAdaptor
+
+    void IAdaptor.Invoke(InstanceBase instance, string name, Type[] types, object?[] args)
+    {
+        if (_adaptorImpl == null)
+            throw new InvalidOperationException("adaptor is not set.");
+
+        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
+        var data = _serializer!.SerializeMany(types, args);
+        var request = new InvokeRequest
+        {
+            ServiceName = instance.ServiceName,
+            Name = name,
+            Data = { data },
+        };
+        var reply = _adaptorImpl.Invoke(request, metaData);
+        HandleReply(reply);
+    }
+
+    async void IAdaptor.InvokeOneWay(InstanceBase instance, string name, Type[] types, object?[] args)
+    {
+        if (_adaptorImpl == null)
+            throw new InvalidOperationException("adaptor is not set.");
+
+        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
+        var data = _serializer!.SerializeMany(types, args);
+        var request = new InvokeRequest
+        {
+            ServiceName = instance.ServiceName,
+            Name = name,
+            Data = { data },
+        };
+        try
+        {
+            await _adaptorImpl.InvokeAsync(request, metaData);
+        }
+        catch
+        {
+        }
+    }
+
+    T IAdaptor.Invoke<T>(InstanceBase instance, string name, Type[] types, object?[] args)
+    {
+        if (_adaptorImpl == null)
+            throw new InvalidOperationException("adaptor is not set.");
+        if (_serializer == null)
+            throw new InvalidOperationException("serializer is not set.");
+
+        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
+        var data = _serializer.SerializeMany(types, args);
+        var request = new InvokeRequest
+        {
+            ServiceName = instance.ServiceName,
+            Name = name,
+            Data = { data },
+        };
+        var reply = _adaptorImpl.Invoke(request, metaData);
+        HandleReply(reply);
+        if (_serializer.Deserialize(typeof(T), reply.Data) is T value)
+            return value;
+
+        throw new UnreachableException($"This code should not be reached in {nameof(IAdaptor.Invoke)}.");
+    }
+
+    async Task IAdaptor.InvokeAsync(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken)
+    {
+        if (_adaptorImpl == null)
+            throw new InvalidOperationException("adaptor is not set.");
+        if (_serializer == null)
+            throw new InvalidOperationException("serializer is not set.");
+
+        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
+        var data = _serializer.SerializeMany(types, args);
+        var request = new InvokeRequest
+        {
+            ServiceName = instance.ServiceName,
+            Name = name,
+            Data = { data },
+        };
+        try
+        {
+            var reply = await _adaptorImpl.InvokeAsync(request, metaData, cancellationToken: cancellationToken);
+            HandleReply(reply);
+        }
+        catch (RpcException e)
+        {
+            if (e.StatusCode == StatusCode.Cancelled)
+                cancellationToken.ThrowIfCancellationRequested();
+            throw;
+        }
+    }
+
+    async Task<T> IAdaptor.InvokeAsync<T>(InstanceBase instance, string name, Type[] types, object?[] args, CancellationToken cancellationToken)
+    {
+        if (_adaptorImpl == null)
+            throw new InvalidOperationException("adaptor is not set.");
+        if (_serializer == null)
+            throw new InvalidOperationException("serializer is not set.");
+
+        var metaData = new Metadata { { "id", $"{_serviceContext.Id}" } };
+        var data = _serializer.SerializeMany(types, args);
+        var request = new InvokeRequest
+        {
+            ServiceName = instance.ServiceName,
+            Name = name,
+        };
+        request.Data.AddRange(data);
+        try
+        {
+            var reply = await _adaptorImpl.InvokeAsync(request, metaData, cancellationToken: cancellationToken);
+            HandleReply(reply);
+            return _serializer.Deserialize(typeof(T), reply.Data) is T value ? value : default!;
+        }
+        catch (RpcException e)
+        {
+            if (e.StatusCode == StatusCode.Cancelled)
+                cancellationToken.ThrowIfCancellationRequested();
+            throw;
+        }
+    }
+
+    #endregion
 }

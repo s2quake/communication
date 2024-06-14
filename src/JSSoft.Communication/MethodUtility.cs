@@ -1,7 +1,24 @@
-// <copyright file="MethodUtility.cs" company="JSSoft">
-//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
-//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
-// </copyright>
+// MIT License
+// 
+// Copyright (c) 2024 Jeesu Choi
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 using System;
 using System.Linq;
@@ -14,28 +31,17 @@ public static class MethodUtility
 {
     public static string GenerateName(MethodInfo methodInfo)
     {
-        var returnType = methodInfo.ReturnType;
-        var reflectedType = methodInfo.ReflectedType
-            ?? throw new ArgumentException("reflected type is null", nameof(methodInfo));
-        var name = methodInfo.Name;
-        var parameterTypes = methodInfo.GetParameters()
-                                       .Select(item => item.ParameterType)
-                                       .ToArray();
-        return GenerateName(returnType, reflectedType, name, parameterTypes);
+        var parameterTypes = methodInfo.GetParameters().Select(item => item.ParameterType).ToArray();
+        return GenerateName(methodInfo.ReturnType, methodInfo.ReflectedType!, methodInfo.Name, parameterTypes);
     }
 
     public static string GenerateName(MethodInfo methodInfo, Type serviceType)
     {
-        var returnType = methodInfo.ReturnType;
-        var name = methodInfo.Name;
-        var parameterTypes = methodInfo.GetParameters()
-                                       .Select(item => item.ParameterType)
-                                       .ToArray();
-        return GenerateName(returnType, serviceType, name, parameterTypes);
+        var parameterTypes = methodInfo.GetParameters().Select(item => item.ParameterType).ToArray();
+        return GenerateName(methodInfo.ReturnType, serviceType, methodInfo.Name, parameterTypes);
     }
 
-    public static string GenerateName(
-        Type returnType, Type reflectedType, string methodName, params Type[] parameterTypes)
+    public static string GenerateName(Type returnType, Type reflectedType, string methodName, params Type[] parameterTypes)
     {
         var parameterTypeNames = string.Join<Type>(", ", parameterTypes);
         return $"{returnType} {reflectedType}.{methodName}({parameterTypeNames})";
@@ -49,12 +55,8 @@ public static class MethodUtility
     public static bool IsMethodCancelable(MethodInfo methodInfo)
     {
         var parameterInfos = methodInfo.GetParameters();
-        if (parameterInfos.Length > 0
-            && parameterInfos[^1].ParameterType == typeof(CancellationToken))
-        {
+        if (parameterInfos.Length > 0 && parameterInfos[parameterInfos.Length - 1].ParameterType == typeof(CancellationToken))
             return true;
-        }
-
         return false;
     }
 
