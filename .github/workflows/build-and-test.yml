@@ -1,9 +1,6 @@
 name: Build and Test
 
 on:
-  push:
-    branches: 
-      - main
   pull_request: 
 
 jobs:
@@ -11,16 +8,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.7
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v4.0.0
+      - uses: actions/setup-dotnet@v4.0.0
         with:
           dotnet-version: 8.0.100
       - run: dotnet build --configuration Release
       - run: |
           dotnet test --configuration Release --no-restore --no-build \
-                      --logger "trx;LogFileName=$(PWD)/logs/test-results.trx"
-      - uses: actions/upload-artifact@v4  # upload test results
-        if: success() || failure()        # run this step even if previous step failed
+                      --logger "trx;LogFileName=${{ github.workspace }}/logs/test-results.trx"
+      - run: echo "PWD=$(pwd)" >> $GITHUB_ENV
+      - uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: XUnit Tests
+          path: ${{ github.workspace }}/logs/test-results.trx
+          reporter: dotnet-trx
+      - uses: actions/upload-artifact@v4
+        if: success() || failure()
         with:
           name: test-results
-          path: $(PWD)/logs/test-results.trx
+          path: ${{ github.workspace }}/logs/test-results.trx
