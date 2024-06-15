@@ -3,8 +3,11 @@
 //   Licensed under the MIT License. See LICENSE.md in the project root for license information.
 // </copyright>
 
+using Xunit.Abstractions;
+
 namespace JSSoft.Communication.Tests.Exceptions;
 
-public sealed class NotSupportedExceptionTest : ExceptionTestBase<NotSupportedException>
+public sealed class NotSupportedExceptionTest(ITestOutputHelper logger)
+    : ExceptionTestBase<NotSupportedException>(logger)
 {
 }

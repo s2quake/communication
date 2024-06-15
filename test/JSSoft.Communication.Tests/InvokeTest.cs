@@ -3,15 +3,13 @@
 //   Licensed under the MIT License. See LICENSE.md in the project root for license information.
 // </copyright>
 
+using Xunit.Abstractions;
+
 namespace JSSoft.Communication.Tests;
 
-public class InvokeTest : ClientTestBase<InvokeTest.ITestService, InvokeTest.TestServer>
+public class InvokeTest(ITestOutputHelper logger)
+    : ClientTestBase<InvokeTest.ITestService, InvokeTest.TestServer>(logger, new TestServer())
 {
-    public InvokeTest()
-        : base(new TestServer())
-    {
-    }
-
     public interface ITestService
     {
         void Invoke();
