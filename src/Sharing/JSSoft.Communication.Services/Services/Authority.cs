@@ -8,17 +8,17 @@ namespace JSSoft.Communication.Services;
 public enum Authority
 {
     /// <summary>
-    /// Administrator
+    /// Administrator.
     /// </summary>
     Admin,
 
     /// <summary>
-    /// Member
+    /// Member.
     /// </summary>
     Member,
 
     /// <summary>
-    /// Guest
+    /// Guest.
     /// </summary>
     Guest,
 }
