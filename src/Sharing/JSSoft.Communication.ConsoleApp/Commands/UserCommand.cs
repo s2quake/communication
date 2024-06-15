@@ -1,93 +1,112 @@
-// MIT License
-// 
-// Copyright (c) 2024 Jeesu Choi
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// <copyright file="UserCommand.cs" company="JSSoft">
+//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
+//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
+// </copyright>
 
+using System;
+using System.ComponentModel.Composition;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using JSSoft.Commands;
 using JSSoft.Communication.ConsoleApp;
 using JSSoft.Communication.Services;
-using JSSoft.Commands;
-using System;
-using System.Threading.Tasks;
-using System.ComponentModel.Composition;
-using System.Threading;
 
 namespace JSSoft.Communication.Commands;
 
 [Export(typeof(ICommand))]
 [method: ImportingConstructor]
-class UserCommand(Application application, IUserService userService) : CommandMethodBase
+internal class UserCommand(Application application, IUserService userService) : CommandMethodBase
 {
     private readonly Application _application = application;
     private readonly IUserService _userService = userService;
 
+    public override bool IsEnabled => _application.UserToken != Guid.Empty;
+
     [CommandMethod]
-    public Task CreateAsync(string userID, string password, Authority authority, CancellationToken cancellationToken)
+    public Task CreateAsync(
+        string userId, string password, Authority authority, CancellationToken cancellationToken)
     {
-        return _userService.CreateAsync(_application.UserToken, userID, password, authority, cancellationToken);
+        var options = new UserCreateOptions
+        {
+            Token = _application.UserToken,
+            UserId = userId,
+            Password = password,
+            Authority = authority,
+        };
+        return _userService.CreateAsync(options, cancellationToken);
     }
 
     [CommandMethod]
-    public Task DeleteAsync(string userID, CancellationToken cancellationToken)
+    public Task DeleteAsync(string userId, CancellationToken cancellationToken)
     {
-        return _userService.DeleteAsync(_application.UserToken, userID, cancellationToken);
+        var options = new UserDeleteOptions
+        {
+            Token = _application.UserToken,
+            UserId = userId,
+        };
+        return _userService.DeleteAsync(options, cancellationToken);
     }
 
     [CommandMethod]
     public Task RenameAsync(string userName, CancellationToken cancellationToken)
     {
-        return _userService.RenameAsync(_application.UserToken, userName, cancellationToken);
+        var options = new UserRenameOptions
+        {
+            Token = _application.UserToken,
+            UserName = userName,
+        };
+        return _userService.RenameAsync(options, cancellationToken);
     }
 
     [CommandMethod]
-    public Task AuthorityAsync(string userID, Authority authority, CancellationToken cancellationToken)
+    public Task AuthorityAsync(
+        string userId, Authority authority, CancellationToken cancellationToken)
     {
-        return _userService.SetAuthorityAsync(_application.UserToken, userID, authority, cancellationToken);
+        var options = new UserAuthorityOptions
+        {
+            Token = _application.UserToken,
+            UserId = userId,
+            Authority = authority,
+        };
+        return _userService.SetAuthorityAsync(options, cancellationToken);
     }
 
     [CommandMethod]
-    public async Task InfoAsync(string userID, CancellationToken cancellationToken)
+    public async Task InfoAsync(string userId, CancellationToken cancellationToken)
     {
-        var (userName, authority) = await _userService.GetInfoAsync(_application.UserToken, userID, cancellationToken);
-        Out.WriteLine($"UseName: {userName}");
-        Out.WriteLine($"Authority: {authority}");
+        var token = _application.UserToken;
+        var userInfo = await _userService.GetInfoAsync(token, userId, cancellationToken);
+        await Out.WriteLineAsync($"UseName: {userInfo.UserName}");
+        await Out.WriteLineAsync($"Authority: {userInfo.Authority}");
     }
 
     [CommandMethod]
     public async Task ListAsync(CancellationToken cancellationToken)
     {
         var items = await _userService.GetUsersAsync(_application.UserToken, cancellationToken);
+        var sb = new StringBuilder();
         foreach (var item in items)
         {
-            Out.WriteLine(item);
+            sb.AppendLine(item);
         }
+
+        await Out.WriteLineAsync(sb.ToString());
     }
 
     [CommandMethod]
-    public Task SendMessageAsync(string userID, string message, CancellationToken cancellationToken)
+    public Task SendMessageAsync(string userId, string message, CancellationToken cancellationToken)
     {
-        return _userService.SendMessageAsync(_application.UserToken, userID, message, cancellationToken);
+        var options = new UserSendMessageOptions
+        {
+            Token = _application.UserToken,
+            UserId = userId,
+            Message = message,
+        };
+        return _userService.SendMessageAsync(options, cancellationToken);
     }
 
-    public override bool IsEnabled => _application.UserToken != Guid.Empty;
-
-    protected override bool IsMethodEnabled(CommandMethodDescriptor descriptor)
+    protected override bool IsMethodEnabled(CommandMethodDescriptor memberDescriptor)
     {
         return _application.UserToken != Guid.Empty;
     }

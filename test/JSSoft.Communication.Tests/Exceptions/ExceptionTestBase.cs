@@ -1,28 +1,12 @@
-// MIT License
-// 
-// Copyright (c) 2024 Jeesu Choi
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// <copyright file="ExceptionTestBase.cs" company="JSSoft">
+//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
+//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
+// </copyright>
 
 namespace JSSoft.Communication.Tests.Exceptions;
 
-public abstract class ExceptionTestBase<TException> : ClientTestBase<ExceptionTestBase<TException>.ITestService>
+public abstract class ExceptionTestBase<TException>
+    : ClientTestBase<ExceptionTestBase<TException>.ITestService>
     where TException : Exception
 {
     protected ExceptionTestBase()
@@ -32,21 +16,30 @@ public abstract class ExceptionTestBase<TException> : ClientTestBase<ExceptionTe
 
     public interface ITestService
     {
-        void Invoke() => throw (TException)Activator.CreateInstance(typeof(TException), args: [nameof(Invoke)])!;
+        void Invoke()
+            => throw (TException)Activator.CreateInstance(typeof(TException), nameof(Invoke))!;
 
-        Task InvokeAsync() => throw (TException)Activator.CreateInstance(typeof(TException), args: [nameof(Invoke)])!;
+        Task InvokeAsync()
+            => throw (TException)Activator.CreateInstance(typeof(TException), nameof(Invoke))!;
 
-        Task<int> InvokeAndReturnAsync() => throw (TException)Activator.CreateInstance(typeof(TException), args: [nameof(Invoke)])!;
-    }
-
-    sealed class TestServer : ServerService<ITestService>, ITestService
-    {
+        Task<int> InvokeAndReturnAsync()
+            => throw (TException)Activator.CreateInstance(typeof(TException), nameof(Invoke))!;
     }
 
     [Fact]
     public void Invoke_Test()
     {
-        Client.Invoke();
+        var b = true;
+        try
+        {
+            Client.Invoke();
+        }
+        catch
+        {
+            b = false;
+        }
+
+        Assert.True(b);
     }
 
     [Fact]
@@ -71,5 +64,9 @@ public abstract class ExceptionTestBase<TException> : ClientTestBase<ExceptionTe
     public async Task InvokeAndReturnAsyncWithCancellation_Test()
     {
         await Assert.ThrowsAsync<TException>(() => Client.InvokeAndReturnAsync());
+    }
+
+    private sealed class TestServer : ServerService<ITestService>, ITestService
+    {
     }
 }

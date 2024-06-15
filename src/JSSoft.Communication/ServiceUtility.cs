@@ -1,24 +1,7 @@
-// MIT License
-// 
-// Copyright (c) 2024 Jeesu Choi
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// <copyright file="ServiceUtility.cs" company="JSSoft">
+//   Copyright (c) 2024 Jeesu Choi. All Rights Reserved.
+//   Licensed under the MIT License. See LICENSE.md in the project root for license information.
+// </copyright>
 
 using System;
 using System.Reflection;
@@ -27,26 +10,43 @@ namespace JSSoft.Communication;
 
 public static class ServiceUtility
 {
-    public static Type ValidateServerType(Type ServiceType)
+    public static Type ValidateServerType(Type serviceType)
     {
-        if (ServiceType.IsInterface != true)
+        if (serviceType.IsInterface != true)
+        {
             throw new InvalidOperationException("Server type must be interface.");
+        }
 
-        if (IsNestedPublicType(ServiceType) != true && IsPublicType(ServiceType) != true && IsInternalType(ServiceType) != true)
-            throw new InvalidOperationException($"'{ServiceType.Name}' must be public or internal.");
-        return ServiceType;
+        if (IsNestedPublicType(serviceType) != true
+            && IsPublicType(serviceType) != true
+            && IsInternalType(serviceType) != true)
+        {
+            throw new InvalidOperationException(
+                $"'{serviceType.Name}' must be public or internal.");
+        }
+
+        return serviceType;
     }
 
-    public static Type ValidateClientType(Type CallbackType)
+    public static Type ValidateClientType(Type callbackType)
     {
-        if (CallbackType != typeof(void))
+        if (callbackType != typeof(void))
         {
-            if (CallbackType.IsInterface != true)
+            if (callbackType.IsInterface != true)
+            {
                 throw new InvalidOperationException("Client type must be interface.");
-            if (IsNestedPublicType(CallbackType) != true && IsPublicType(CallbackType) != true && IsInternalType(CallbackType) != true)
-                throw new InvalidOperationException($"'{CallbackType.Name}' must be public or internal.");
+            }
+
+            if (IsNestedPublicType(callbackType) != true
+                && IsPublicType(callbackType) != true
+                && IsInternalType(callbackType) != true)
+            {
+                throw new InvalidOperationException(
+                    $"'{callbackType.Name}' must be public or internal.");
+            }
         }
-        return CallbackType;
+
+        return callbackType;
     }
 
     public static bool IsNestedPublicType(Type type)
@@ -60,10 +60,12 @@ public static class ServiceUtility
 
     public static bool IsServer(IService service)
     {
-        if (service.GetType().GetCustomAttribute(typeof(ServiceAttribute)) is ServiceAttribute serviceAttribute)
+        var attribute = service.GetType().GetCustomAttribute(typeof(ServiceAttribute));
+        if (attribute is ServiceAttribute serviceAttribute)
         {
             return serviceAttribute.IsServer;
         }
+
         return false;
     }
 }
