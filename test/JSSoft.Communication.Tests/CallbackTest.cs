@@ -94,20 +94,20 @@ public class CallbackTest : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _logger.WriteLine($"InitializeAsync 1");
         _serverToken = await _serverContext.OpenAsync(CancellationToken.None);
+        _logger.WriteLine($"Server is opened: {_serverToken}");
         _clientToken = await _clientContext.OpenAsync(CancellationToken.None);
+        _logger.WriteLine($"Client is opened: {_clientToken}");
         _server = _testServer;
-        _logger.WriteLine($"InitializeAsync 2");
     }
 
     public async Task DisposeAsync()
     {
-        _logger.WriteLine($"DisposeAsync 1");
         await _serverContext.ReleaseAsync(_serverToken);
+        _logger.WriteLine($"Server is released: {_serverToken}");
         await _clientContext.ReleaseAsync(_clientToken);
+        _logger.WriteLine($"Client is released: {_clientToken}");
         _endPoint.Dispose();
-        _logger.WriteLine($"DisposeAsync 2");
     }
 
     public class ValueEventArgs(object? value) : EventArgs

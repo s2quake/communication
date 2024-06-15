@@ -3,17 +3,14 @@
 //   Licensed under the MIT License. See LICENSE.md in the project root for license information.
 // </copyright>
 
+using Xunit.Abstractions;
+
 namespace JSSoft.Communication.Tests.Exceptions;
 
-public abstract class ExceptionTestBase<TException>
-    : ClientTestBase<ExceptionTestBase<TException>.ITestService>
+public abstract class ExceptionTestBase<TException>(ITestOutputHelper logger)
+    : ClientTestBase<ExceptionTestBase<TException>.ITestService>(logger, new TestServer())
     where TException : Exception
 {
-    protected ExceptionTestBase()
-        : base(new TestServer())
-    {
-    }
-
     public interface ITestService
     {
         void Invoke()

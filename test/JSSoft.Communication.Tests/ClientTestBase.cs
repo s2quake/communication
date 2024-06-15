@@ -7,6 +7,7 @@
 #pragma warning disable SA1402
 
 using JSSoft.Communication.Tests.Extensions;
+using Xunit.Abstractions;
 
 namespace JSSoft.Communication.Tests;
 
@@ -22,12 +23,16 @@ public abstract class ClientTestBase<TService> : IAsyncLifetime
     private Guid _clientToken;
     private Guid _serverToken;
 
-    protected ClientTestBase(ServerService<TService> serverService)
+    protected ClientTestBase(ITestOutputHelper logger, ServerService<TService> serverService)
     {
+        Logger = logger;
         ServerService = serverService;
         _serverContext = new(ServerService) { EndPoint = _endPoint };
         _clientContext = new(_clientService) { EndPoint = _endPoint };
+        Logger.WriteLine($"EndPoint: {_endPoint}");
     }
+
+    protected ITestOutputHelper Logger { get; }
 
     protected TService Client => _client!;
 
@@ -36,14 +41,18 @@ public abstract class ClientTestBase<TService> : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _serverToken = await _serverContext.OpenAsync(cancellationToken: default);
+        Logger.WriteLine($"Server is opened: {_serverToken}");
         _clientToken = await _clientContext.OpenAsync(cancellationToken: default);
+        Logger.WriteLine($"Client is opened: {_clientToken}");
         _client = _clientService.Server;
     }
 
     public async Task DisposeAsync()
     {
         await _serverContext.ReleaseAsync(_serverToken);
+        Logger.WriteLine($"Server is released: {_serverToken}");
         await _clientContext.ReleaseAsync(_clientToken);
+        Logger.WriteLine($"Client is released: {_clientToken}");
         _endPoint.Dispose();
     }
 }
@@ -61,12 +70,15 @@ public abstract class ClientTestBase<TService, TServerSevice> : IAsyncLifetime
     private Guid _clientToken;
     private Guid _serverToken;
 
-    protected ClientTestBase(TServerSevice serverService)
+    protected ClientTestBase(ITestOutputHelper logger, TServerSevice serverService)
     {
+        Logger = logger;
         ServerService = serverService;
         _serverContext = new(ServerService) { EndPoint = _endPoint };
         _clientContext = new(_clientService) { EndPoint = _endPoint };
     }
+
+    protected ITestOutputHelper Logger { get; }
 
     protected TService Client => _client!;
 
