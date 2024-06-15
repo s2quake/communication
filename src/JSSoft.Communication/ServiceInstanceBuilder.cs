@@ -93,7 +93,11 @@ internal sealed class ServiceInstanceBuilder
             }
         }
 
+#if NET7_0_OR_GREATER
         return typeBuilder.CreateType();
+#else
+        return typeBuilder.CreateType() ?? throw new InvalidOperationException("type is null.");
+#endif
     }
 
     private static void CreateInvoke(

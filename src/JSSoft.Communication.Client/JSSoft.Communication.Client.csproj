@@ -26,6 +26,7 @@ SOFTWARE. -->
     <DefineConstants>CLIENT</DefineConstants>
     <AssemblyName>client</AssemblyName>
     <PublishName>communication\client</PublishName>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.ComponentModel.Composition" Version="4.7.0" />

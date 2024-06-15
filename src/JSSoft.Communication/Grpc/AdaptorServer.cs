@@ -34,7 +34,9 @@ internal sealed class AdaptorServer : IAdaptor
     private readonly Timer _timer;
 #if NETSTANDARD
     private Server? _server;
+#pragma warning disable S1450
     private AdaptorServerImpl? _adaptor;
+#pragma warning restore S1450
 #elif NET
     private IHost? _host;
 #endif

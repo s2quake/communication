@@ -82,6 +82,7 @@ public static class EndPointUtility
         {
             return new($"{iPEndPoint.Address}", iPEndPoint.Port, credentials);
         }
+
         throw new NotSupportedException($"'{endPoint}' is not supported.");
     }
 #endif
