@@ -21,11 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. -->
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <DefineConstants>SERVER</DefineConstants>
     <AssemblyName>server</AssemblyName>
     <PublishName>communication\server</PublishName>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.ComponentModel.Composition" Version="4.7.0" />
@@ -41,4 +43,5 @@ SOFTWARE. -->
   </ItemGroup>
   <Import Project="..\Sharing\JSSoft.Communication.Services\JSSoft.Communication.Services.projitems" Label="Shared" />
   <Import Project="..\Sharing\JSSoft.Communication.ConsoleApp\JSSoft.Communication.ConsoleApp.projitems" Label="Shared" />
+
 </Project>

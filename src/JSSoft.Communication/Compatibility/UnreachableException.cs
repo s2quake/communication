@@ -4,11 +4,12 @@
 // </copyright>
 
 #if !NET7_0_OR_GREATER
+#pragma warning disable
 using System;
 
 namespace JSSoft.Communication;
 
-class UnreachableException : SystemException
+internal sealed class UnreachableException : SystemException
 {
     public UnreachableException()
     {
@@ -19,4 +20,4 @@ class UnreachableException : SystemException
     {
     }
 }
-#endif // !NET6_0_OR_GREATER
+#endif // !NET7_0_OR_GREATER
