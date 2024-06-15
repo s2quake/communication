@@ -403,11 +403,6 @@ internal sealed class AdaptorClient : IAdaptor
         }
 
         var methodDescriptors = _methodsByService[service];
-        if (methodDescriptors.Contains(name) != true)
-        {
-            throw new InvalidOperationException("Invalid method name.");
-        }
-
         if (methodDescriptors.Contains(name) == true)
         {
             var methodDescriptor = methodDescriptors[name];

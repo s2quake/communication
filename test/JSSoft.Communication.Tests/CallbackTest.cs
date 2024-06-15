@@ -10,23 +10,28 @@ namespace JSSoft.Communication.Tests;
 
 public class CallbackTest : IAsyncLifetime
 {
-    private const int Timeout = 30000;
+    private const int ClientCount = 2;
     private readonly ITestOutputHelper _logger;
     private readonly TestServer _testServer = new();
-    private readonly TestClient _testClient = new();
     private readonly ServerContext _serverContext;
-    private readonly ClientContext _clientContext;
+    private readonly TestClient[] _testClients = new TestClient[ClientCount];
+    private readonly ClientContext[] _clientContexts = new ClientContext[ClientCount];
+    private readonly Guid[] _clientTokens = new Guid[ClientCount];
     private readonly RandomEndPoint _endPoint = new();
-    private ITestService? _server;
+    private TestServer? _server;
 
-    private Guid _clientToken;
     private Guid _serverToken;
 
     public CallbackTest(ITestOutputHelper logger)
     {
         _logger = logger;
         _serverContext = new(_testServer) { EndPoint = _endPoint };
-        _clientContext = new(_testClient) { EndPoint = _endPoint };
+        for (var i = 0; i < ClientCount; i++)
+        {
+            _testClients[i] = new() { Index = i };
+            _clientContexts[i] = new(_testClients[i]) { EndPoint = _endPoint };
+        }
+
         logger.WriteLine($"{_endPoint}");
     }
 
@@ -49,55 +54,63 @@ public class CallbackTest : IAsyncLifetime
     }
 
     [Fact]
-    public void Callback1_Test()
+    public async Task Callback1_TestAsync()
     {
-        var raised = Assert.Raises<ValueEventArgs>(
-            handler => _testClient.Invoked += handler,
-            handler => _testClient.Invoked -= handler,
-            () =>
+        var raisedCount = await EventTestUtility.RaisesManyAsync<TestClient, ValueEventArgs>(
+            items: _testClients,
+            attach: (item, handler) => item.Invoked += handler,
+            detach: (item, handler) => item.Invoked -= handler,
+            testCode: () =>
             {
                 _server!.Invoke();
-                _testClient.AutoResetEvent.WaitOne(Timeout);
             });
-        Assert.Null(raised.Arguments.Value);
+
+        Assert.Equal(_testClients.Length, raisedCount);
+        Assert.All(_testClients, item => Assert.Null(item.Value));
     }
 
     [Fact]
-    public void Callback2_Test()
+    public async Task Callback2_TestAsync()
     {
         var value = 123;
-        var raised = Assert.Raises<ValueEventArgs>(
-            handler => _testClient.Invoked += handler,
-            handler => _testClient.Invoked -= handler,
-            () =>
+        var raisedCount = await EventTestUtility.RaisesManyAsync<TestClient, ValueEventArgs>(
+            items: _testClients,
+            attach: (item, handler) => item.Invoked += handler,
+            detach: (item, handler) => item.Invoked -= handler,
+            testCode: () =>
             {
                 _server!.Invoke(value);
-                _testClient.AutoResetEvent.WaitOne(Timeout);
             });
-        Assert.Equal(value, raised.Arguments.Value);
+        Assert.Equal(_testClients.Length, raisedCount);
+        Assert.All(_testClients, item => Assert.Equal(value, item.Value));
     }
 
     [Fact]
-    public void Callback3_Test()
+    public async Task Callback3_TestAsync()
     {
         var value = (123, "123");
-        var raised = Assert.Raises<ValueEventArgs>(
-            handler => _testClient.Invoked += handler,
-            handler => _testClient.Invoked -= handler,
-            () =>
+        var raisedCount = await EventTestUtility.RaisesManyAsync<TestClient, ValueEventArgs>(
+            items: _testClients,
+            attach: (item, handler) => item.Invoked += handler,
+            detach: (item, handler) => item.Invoked -= handler,
+            testCode: () =>
             {
                 _server!.Invoke(value);
-                _testClient.AutoResetEvent.WaitOne(Timeout);
             });
-        Assert.Equal(value, raised.Arguments.Value);
+        Assert.Equal(_testClients.Length, raisedCount);
+        Assert.All(_testClients, item => Assert.Equal(value, item.Value));
     }
 
     public async Task InitializeAsync()
     {
         _serverToken = await _serverContext.OpenAsync(CancellationToken.None);
         _logger.WriteLine($"Server is opened: {_serverToken}");
-        _clientToken = await _clientContext.OpenAsync(CancellationToken.None);
-        _logger.WriteLine($"Client is opened: {_clientToken}");
+        for (var i = 0; i < ClientCount; i++)
+        {
+            _clientTokens[i] = await _clientContexts[i].OpenAsync(CancellationToken.None);
+            _logger.WriteLine($"Client #{i} is opened: {_clientTokens[i]}");
+        }
+
         _server = _testServer;
     }
 
@@ -105,8 +118,12 @@ public class CallbackTest : IAsyncLifetime
     {
         await _serverContext.ReleaseAsync(_serverToken);
         _logger.WriteLine($"Server is released: {_serverToken}");
-        await _clientContext.ReleaseAsync(_clientToken);
-        _logger.WriteLine($"Client is released: {_clientToken}");
+        for (var i = 0; i < ClientCount; i++)
+        {
+            await _clientContexts[i].ReleaseAsync(_clientTokens[i]);
+            _logger.WriteLine($"Client #{i} is released: {_clientTokens[i]}");
+        }
+
         _endPoint.Dispose();
     }
 
@@ -130,20 +147,27 @@ public class CallbackTest : IAsyncLifetime
 
         public AutoResetEvent AutoResetEvent { get; } = new(initialState: false);
 
+        public int Index { get; set; } = -1;
+
+        public object? Value { get; private set; } = DBNull.Value;
+
         void ITestCallback.OnInvoked()
         {
+            Value = null;
             Invoked?.Invoke(this, new(null));
             AutoResetEvent.Set();
         }
 
         void ITestCallback.OnInvoked(int value)
         {
+            Value = value;
             Invoked?.Invoke(this, new(value));
             AutoResetEvent.Set();
         }
 
         void ITestCallback.OnInvoked((int Value1, string Value2) value)
         {
+            Value = value;
             Invoked?.Invoke(this, new(value));
             AutoResetEvent.Set();
         }
