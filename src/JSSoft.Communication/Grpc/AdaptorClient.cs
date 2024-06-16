@@ -403,23 +403,31 @@ internal sealed class AdaptorClient : IAdaptor
         }
 
         var methodDescriptors = _methodsByService[service];
-        if (methodDescriptors.Contains(name) != true)
+        if (methodDescriptors.Contains(name) == true)
         {
-            throw new InvalidOperationException("Invalid method name.");
+            var methodDescriptor = methodDescriptors[name];
+            var args = _serializer!.DeserializeMany(methodDescriptor.ParameterTypes, data);
+            var instance = _descriptor!.ClientInstances[service];
+            Task.Run(() => methodDescriptor.InvokeAsync(_serviceContext, instance, args));
         }
-
-        var methodDescriptor = methodDescriptors[name];
-        var args = _serializer!.DeserializeMany(methodDescriptor.ParameterTypes, data);
-        var instance = _descriptor!.ClientInstances[service];
-        Task.Run(() => methodDescriptor.InvokeAsync(_serviceContext, instance, args));
+        else
+        {
+            LogUtility.Warn($"Method '{name}' is not found.");
+        }
     }
 
     private void InvokeCallback(PollReply reply)
     {
         foreach (var item in reply.Items)
         {
-            var service = _serviceByName[item.ServiceName];
-            InvokeCallback(service, item.Name, [.. item.Data]);
+            if (_serviceByName.TryGetValue(item.ServiceName, out var service) == true)
+            {
+                InvokeCallback(service, item.Name, [.. item.Data]);
+            }
+            else
+            {
+                LogUtility.Warn($"Service '{item.ServiceName}' is not found.");
+            }
         }
 
         reply.Items.Clear();
