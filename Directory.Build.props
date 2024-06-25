@@ -51,13 +51,13 @@ SOFTWARE. -->
     <TargetFramework Condition="'$(_IsPacking)'!='true'">net8.0</TargetFramework>
     <AssemblyVersion>2.0</AssemblyVersion>
     <FileVersion>2.0.3</FileVersion>
-	  <RepositoryType>git</RepositoryType>
-	  <RepositoryUrl>https://github.com/s2quake/communication</RepositoryUrl>
-	  <LicenseUrl>https://github.com/s2quake/communication/blob/main/LICENSE.md</LicenseUrl>
-	  <Copyright>Copyright (c) 2024 Jeesu Choi</Copyright>
-	  <Description>grpc-based communication library for crema project</Description>
-	  <Authors>s2quake</Authors>
-	  <PackageVersion>$(FileVersion)</PackageVersion>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/s2quake/communication</RepositoryUrl>
+    <LicenseUrl>https://github.com/s2quake/communication/blob/main/LICENSE.md</LicenseUrl>
+    <Copyright>Copyright (c) 2024 Jeesu Choi</Copyright>
+    <Description>grpc-based communication library for crema project</Description>
+    <Authors>s2quake</Authors>
+    <PackageVersion>$(FileVersion)</PackageVersion>
     <PackageProjectUrl>https://github.com/s2quake/communication</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -67,9 +67,9 @@ SOFTWARE. -->
     <RootPath Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)\</RootPath>
     <ConfigurationType Condition="'$(Configuration)' == ''">Debug</ConfigurationType>
     <ConfigurationType Condition="'$(Configuration)' != ''">$(Configuration)</ConfigurationType>
-	  <DelaySign>true</DelaySign>
-	  <SignAssembly Condition="'$(Configuration)' == 'Release'">true</SignAssembly>
-	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <DelaySign>true</DelaySign>
+    <SignAssembly Condition="'$(Configuration)' == 'Release'">true</SignAssembly>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Nullable>enable</Nullable>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <PublishGroup>communication</PublishGroup>
