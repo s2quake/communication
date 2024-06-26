@@ -4,7 +4,10 @@ Communication changes
 2.0.3
 -------------
 
-To be released.
+Released on June 26, 2024.
+
+* Improve build and test action by @s2quake in https://github.com/s2quake/communication/pull/21
+* Change json library to System.Text.Json by @s2quake in https://github.com/s2quake/communication/pull/22
 
 
 2.0.2
