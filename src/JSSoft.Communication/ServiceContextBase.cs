@@ -51,7 +51,7 @@ public abstract class ServiceContextBase : IServiceContext
 
     public virtual IAdaptorProvider AdaptorProvider => Communication.AdaptorProvider.Default;
 
-    public virtual ISerializerProvider SerializerProvider => JsonSerializerProvider.Default;
+    public virtual ISerializerProvider SerializerProvider => DefaultSerializerProvider.Default;
 
     public ServiceCollection Services { get; }
 
