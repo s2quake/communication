@@ -1,0 +1,14 @@
+name: Publish Test
+
+on:
+  pull_request: 
+  
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.7
+      - uses: actions/setup-dotnet@v4.0.0
+        with:
+          dotnet-version: 8.0.100
+      - run: dotnet publish

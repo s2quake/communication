@@ -47,7 +47,7 @@ internal sealed class Peer(string id) : IPeer
         }
     }
 
-    public void Disconect(int closeCode)
+    public void Disconnect(int closeCode)
     {
         lock (_lockObject)
         {

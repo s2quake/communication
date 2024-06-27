@@ -12,7 +12,7 @@ namespace JSSoft.Communication;
 
 public sealed class MethodDescriptorCollection : IEnumerable<MethodDescriptor>
 {
-    private readonly Dictionary<string, MethodDescriptor> _discriptorByName;
+    private readonly Dictionary<string, MethodDescriptor> _descriptorByName;
 
     internal MethodDescriptorCollection(Type type)
     {
@@ -25,23 +25,23 @@ public sealed class MethodDescriptorCollection : IEnumerable<MethodDescriptor>
         {
             var methodInfos = type.GetMethods();
             var methodDescriptors = methodInfos.Select(item => new MethodDescriptor(item));
-            _discriptorByName = methodDescriptors.ToDictionary(item => item.Name);
+            _descriptorByName = methodDescriptors.ToDictionary(item => item.Name);
         }
         else
         {
-            _discriptorByName = [];
+            _descriptorByName = [];
         }
     }
 
-    public int Count => _discriptorByName.Count;
+    public int Count => _descriptorByName.Count;
 
-    public MethodDescriptor this[string name] => _discriptorByName[name];
+    public MethodDescriptor this[string name] => _descriptorByName[name];
 
-    public bool Contains(string name) => _discriptorByName.ContainsKey(name);
+    public bool Contains(string name) => _descriptorByName.ContainsKey(name);
 
     public IEnumerator<MethodDescriptor> GetEnumerator()
-        => _discriptorByName.Values.GetEnumerator();
+        => _descriptorByName.Values.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator()
-        => _discriptorByName.Values.GetEnumerator();
+        => _descriptorByName.Values.GetEnumerator();
 }
