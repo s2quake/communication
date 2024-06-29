@@ -23,13 +23,13 @@ internal static class ISerializerExtensions
         return items;
     }
 
-    public static object?[] DeserializeMany(this ISerializer @this, Type[] types, string[] datas)
+    public static object?[] DeserializeMany(this ISerializer @this, Type[] types, string[] data)
     {
-        var items = new object?[datas.Length];
-        for (var i = 0; i < datas.Length; i++)
+        var items = new object?[data.Length];
+        for (var i = 0; i < data.Length; i++)
         {
             var type = types[i];
-            var value = datas[i];
+            var value = data[i];
             items[i] = @this.Deserialize(type, value);
         }
 
@@ -37,20 +37,20 @@ internal static class ISerializerExtensions
     }
 
     public static object?[] DeserializeMany(
-        this ISerializer @this, Type[] types, string[] datas, CancellationToken? cancellationToken)
+        this ISerializer @this, Type[] types, string[] data, CancellationToken? cancellationToken)
     {
-        var length = cancellationToken != null ? datas.Length + 1 : datas.Length;
+        var length = cancellationToken != null ? data.Length + 1 : data.Length;
         var items = new object?[length];
-        for (var i = 0; i < datas.Length; i++)
+        for (var i = 0; i < data.Length; i++)
         {
             var type = types[i];
-            var value = datas[i];
+            var value = data[i];
             items[i] = @this.Deserialize(type, value);
         }
 
         if (cancellationToken != null)
         {
-            items[datas.Length] = cancellationToken;
+            items[data.Length] = cancellationToken;
         }
 
         return items;
