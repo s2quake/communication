@@ -5,7 +5,8 @@ param (
     [ValidateScript({ $_ -ge 0 })]
     [int]$PullRequestNumber = 0,
     [ValidateScript({ ($_ -eq "") -or (Test-Path $_) })]
-    [string]$KeyPath = ""
+    [string]$KeyPath = "",
+    [string]$CommitSHA = ""
 )
 
 $namespaces = @{
@@ -18,8 +19,16 @@ if ($null -eq $result) {
     Write-Host "File version not found"
     exit 1
 }
-
 $fileVersion = $result.Node.InnerText
+
+$packageProjectUrlPath = "/ns:Project/ns:PropertyGroup/ns:PackageProjectUrl"
+$result = Select-Xml -Path $propsPath -Namespace $namespaces -XPath $packageProjectUrlPath
+if ($null -eq $result) {
+    Write-Host "Package project URL not found"
+    exit 1
+}
+$packageProjectUrl = $result.Node.InnerText
+
 $KeyPath = $KeyPath ? $(Resolve-Path -Path $KeyPath) : ""
 $OutputPath = $OutputPath ? [System.IO.Path]::GetFullPath($OutputPath) : ""
 $keyPathExits = Test-Path -Path $KeyPath
@@ -30,6 +39,7 @@ $options = @(
     $PullRequestNumber ? "--version-suffix pr.$PullRequestNumber" : ""
     $keyPathExits ? "-p:TreatWarningsAsErrors=true" : ""
     $keyPathExits ? "-p:AssemblyOriginatorKeyFile='$KeyPath'" : ""
+    $CommitSHA ? "-p:PackageProjectUrl='$packageProjectUrl/tree/$CommitSHA'" : ""
 ) | Where-Object { $_ }
 
 Invoke-Expression -Command "dotnet pack $($options -join " ")"

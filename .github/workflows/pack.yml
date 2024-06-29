@@ -34,10 +34,12 @@ jobs:
 
           Remove-Item -Force -Recurse pack -ErrorAction SilentlyContinue  
 
+          $commitSHA = "$(git log -1 --pretty=%H)"
           .github/scripts/pack.ps1 `
             -OutputPath "pack" `
             -PullRequestNumber $matches[1] `
-            -KeyPath "$pwd/private.snk"
+            -KeyPath "$pwd/private.snk" `
+            -CommitSHA $commitSHA
           
           Get-ChildItem -Path pack -Filter "*.nupkg" | ForEach-Object {
             dotnet nuget push `
