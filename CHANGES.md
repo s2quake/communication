@@ -6,9 +6,11 @@ Communication changes
 
 To be released.
 
-* Improve CI to make sure minimal checks are done before merge [[#26]]
+* Improve CI to make sure minimal checks are done before merge  [[#26]]
+* Set actual sha to PackageProjectUrl property  [[#27]]
 
-[26]: https://github.com/s2quake/communication/pull/26
+[#26]: https://github.com/s2quake/communication/pull/26
+[#27]: https://github.com/s2quake/communication/pull/27
 
 
 2.0.2
