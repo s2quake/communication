@@ -21,11 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. -->
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <PublishName>communication\lib</PublishName>
     <IsNet Condition="$(TargetFramework.StartsWith('net')) and !$(TargetFramework.StartsWith('netstandard'))">true</IsNet>
   </PropertyGroup>
+
   <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.3" />
     <PackageReference Include="Google.Protobuf" Version="3.25.1" />
     <PackageReference Condition="'$(IsNet)'=='true'" Include="Grpc.AspNetCore" Version="2.63.0" />
     <PackageReference Condition="'$(IsNet)'=='true'" Include="Grpc.AspNetCore.Server" Version="2.63.0" />
@@ -35,7 +38,7 @@ SOFTWARE. -->
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <Protobuf Include="Grpc\adaptor.proto" GrpcServices="All" />
   </ItemGroup>
+
 </Project>

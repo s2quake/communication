@@ -146,7 +146,7 @@ internal sealed class AdaptorServer : IAdaptor
             var reply = new InvokeReply()
             {
                 ID = string.Empty,
-                Data = _serializer.Serialize(typeof(void), null),
+                Data = string.Empty,
             };
             var methodShortName = methodDescriptor.ShortName;
 
@@ -160,7 +160,9 @@ internal sealed class AdaptorServer : IAdaptor
             var reply = new InvokeReply()
             {
                 ID = result.AssemblyQualifiedName,
-                Data = _serializer.Serialize(result.ValueType, result.Value),
+                Data = result.ValueType == typeof(void)
+                    ? string.Empty
+                    : _serializer.Serialize(result.ValueType, result.Value),
             };
 
             _serviceContext.Debug($"{id} Invoke: {methodDescriptor.Name}");

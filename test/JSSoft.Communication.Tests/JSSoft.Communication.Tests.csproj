@@ -21,12 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. -->
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <NoWarn Condition="'$(_IsPacking)'=='true'">$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
     <PackageReference Include="xunit" Version="2.8.1" />
@@ -40,4 +42,9 @@ SOFTWARE. -->
     </PackageReference>
     <ProjectReference Include="..\..\src\JSSoft.Communication\JSSoft.Communication.csproj" />
   </ItemGroup>
+
+  <Target Name="DisplayName" BeforeTargets="Build">
+    <Message Importance="high" Text="TargetFrameworks: $(TargetFrameworks)" />
+  </Target>
+
 </Project>

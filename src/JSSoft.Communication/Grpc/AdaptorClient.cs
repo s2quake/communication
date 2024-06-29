@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using JSSoft.Communication.Extensions;
 using JSSoft.Communication.Logging;
-using Newtonsoft.Json;
 
 #if NETSTANDARD
 using GrpcChannel = Grpc.Core.Channel;
@@ -448,7 +447,7 @@ internal sealed class AdaptorClient : IAdaptor
             throw new InvalidOperationException("serializer is not set.");
         }
 
-        if (JsonConvert.DeserializeObject(data, exceptionType) is Exception exception)
+        if (_serializer.Deserialize(exceptionType, data) is Exception exception)
         {
             throw exception;
         }

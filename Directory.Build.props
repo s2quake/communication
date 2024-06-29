@@ -68,9 +68,9 @@ SOFTWARE. -->
     <RootPath Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)\</RootPath>
     <ConfigurationType Condition="'$(Configuration)' == ''">Debug</ConfigurationType>
     <ConfigurationType Condition="'$(Configuration)' != ''">$(Configuration)</ConfigurationType>
-	  <DelaySign>true</DelaySign>
-	  <SignAssembly Condition="'$(Configuration)' == 'Release'">true</SignAssembly>
-	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <DelaySign>true</DelaySign>
+    <SignAssembly Condition="'$(Configuration)' == 'Release'">true</SignAssembly>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Nullable>enable</Nullable>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <PublishGroup>communication</PublishGroup>
