@@ -57,7 +57,8 @@ SOFTWARE. -->
 	  <Copyright>Copyright (c) 2024 Jeesu Choi</Copyright>
 	  <Description>grpc-based communication library for crema project</Description>
 	  <Authors>s2quake</Authors>
-	  <PackageVersion>$(FileVersion)</PackageVersion>
+	  <PackageVersion Condition="'$(VersionSuffix)'==''">$(FileVersion)</PackageVersion>
+	  <PackageVersion Condition="'$(VersionSuffix)'!=''">$(FileVersion)-$(VersionSuffix)</PackageVersion>
     <PackageProjectUrl>https://github.com/s2quake/communication</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>

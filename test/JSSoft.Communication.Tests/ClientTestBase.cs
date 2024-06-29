@@ -57,9 +57,9 @@ public abstract class ClientTestBase<TService> : IAsyncLifetime
     }
 }
 
-public abstract class ClientTestBase<TService, TServerSevice> : IAsyncLifetime
+public abstract class ClientTestBase<TService, TServerService> : IAsyncLifetime
     where TService : class
-    where TServerSevice : ServerService<TService>
+    where TServerService : ServerService<TService>
 {
     private readonly ClientService<TService> _clientService = new();
     private readonly ServerContext _serverContext;
@@ -70,7 +70,7 @@ public abstract class ClientTestBase<TService, TServerSevice> : IAsyncLifetime
     private Guid _clientToken;
     private Guid _serverToken;
 
-    protected ClientTestBase(ITestOutputHelper logger, TServerSevice serverService)
+    protected ClientTestBase(ITestOutputHelper logger, TServerService serverService)
     {
         Logger = logger;
         ServerService = serverService;
@@ -82,7 +82,7 @@ public abstract class ClientTestBase<TService, TServerSevice> : IAsyncLifetime
 
     protected TService Client => _client!;
 
-    protected TServerSevice ServerService { get; }
+    protected TServerService ServerService { get; }
 
     public async Task InitializeAsync()
     {

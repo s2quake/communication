@@ -139,7 +139,7 @@ internal sealed class AdaptorServer : IAdaptor
         var instance = peer.Services[service];
         var args = _serializer.DeserializeMany(
             types: methodDescriptor.ParameterTypes,
-            datas: [.. request.Data],
+            data: [.. request.Data],
             cancellationToken: cancellationToken);
         if (methodDescriptor.IsOneWay == true)
         {

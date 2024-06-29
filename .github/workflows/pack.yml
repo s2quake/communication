@@ -1,0 +1,49 @@
+name: Pack
+
+on:
+  pull_request: 
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.7
+      - uses: actions/setup-dotnet@v4.0.0
+        with:
+          dotnet-version: 8.0.100
+      - run: echo "${{ secrets.SNK_FILE }}" | base64 --decode > private.snk
+      - if: ${{ github.event_name == 'pull_request' }}
+        run: | 
+          .github/scripts/pack.ps1 `
+            -OutputPath "pack" `
+            -PullRequestNumber ${{ github.event.pull_request.number }} `
+            -KeyPath "$pwd/private.snk"
+        shell: pwsh
+      - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: | 
+          $commitMessage = "$(git log -1 --pretty=%B)"
+          $pattern = "(?<=Merge pull request #)(\d+)"
+          if (!($commitMessage -match $pattern)) {
+            Write-Error "Commit message does not contain a pull request number."
+          }
+
+          Remove-Item -Force -Recurse pack -ErrorAction SilentlyContinue  
+
+          .github/scripts/pack.ps1 `
+            -OutputPath "pack" `
+            -PullRequestNumber $matches[1] `
+            -KeyPath "$pwd/private.snk"
+          
+          Get-ChildItem -Path pack -Filter "*.nupkg" | ForEach-Object {
+            dotnet nuget push `
+              $_ `
+              --skip-duplicate `
+              --api-key ${{ secrets.NUGET_API_KEY }} `
+              --source https://api.nuget.org/v3/index.json
+          }
+        shell: pwsh

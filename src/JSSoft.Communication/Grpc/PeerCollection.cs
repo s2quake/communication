@@ -38,7 +38,7 @@ internal sealed class PeerCollection(IInstanceContext instanceContext)
         {
             peer.Descriptor = null;
             _instanceContext.DestroyInstance(peer);
-            peer.Disconect(closeCode);
+            peer.Disconnect(closeCode);
             serviceContext.Debug($"{id} Disconnected ({closeCode})");
             return true;
         }
@@ -53,7 +53,7 @@ internal sealed class PeerCollection(IInstanceContext instanceContext)
         using var cancellationTokenSource = new CancellationTokenSource(millisecondsDelay: 3000);
         foreach (var item in items)
         {
-            item.Disconect(closeCode: 0);
+            item.Disconnect(closeCode: 0);
         }
 
         while (Count > 0 && cancellationTokenSource.IsCancellationRequested != true)
