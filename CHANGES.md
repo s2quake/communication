@@ -6,6 +6,10 @@ Communication changes
 
 To be released.
 
+* Improve CI to make sure minimal checks are done before merge [[#26]]
+
+[26]: https://github.com/s2quake/communication/pull/26
+
 
 2.0.2
 -------------
