@@ -1,5 +1,10 @@
 # Communication
 
+[![NuGet](https://img.shields.io/nuget/v/JSSoft.Communication.svg?style=flat)][NuGet]
+[![NuGet (prerelease)](https://img.shields.io/nuget/vpre/JSSoft.Communication.svg?style=flat)][NuGet]
+
+[NuGet]: https://www.nuget.org/packages/JSSoft.Communication/
+
 ## Summary
 
 The Communication library is network module using <https://github.com/grpc/grpc>.
