@@ -29,11 +29,6 @@ SOFTWARE. -->
     <DesiredPublishDirTemp Condition="'$(PublishDir)' != '$(DesiredPublishDir)'">$(PublishDir)</DesiredPublishDirTemp>
     <DesiredPublishDir>$(DesiredPublishDirTemp)</DesiredPublishDir>
   </PropertyGroup>
-  <Target Name="BeforeBuild">
-    <PropertyGroup>
-      <Version>$(FileVersion)-$(TargetFramework)</Version>
-    </PropertyGroup>
-  </Target>
   <Target Name="AfterBuild">
     <PropertyGroup Condition="'$(PublishName)' != ''">
       <PublishDir>$([System.IO.Path]::Combine($(DesiredPublishDir),$(PublishName)))</PublishDir>
