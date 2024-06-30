@@ -9,10 +9,12 @@ To be released.
 * Improve CI to make sure minimal checks are done before merge  [[#26]]
 * Set actual sha to PackageProjectUrl property  [[#27]]
 * Change json library to System.Text.Json  [[#28]]
+* Add github action on push tag  [[#31]]
 
 [#26]: https://github.com/s2quake/communication/pull/26
 [#27]: https://github.com/s2quake/communication/pull/27
 [#28]: https://github.com/s2quake/communication/pull/28
+[#31]: https://github.com/s2quake/communication/pull/31
 
 
 2.0.2
