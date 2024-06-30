@@ -17,16 +17,16 @@ jobs:
       - run: echo "${{ secrets.SNK_FILE }}" | base64 --decode > private.snk
       - run: |
           dotnet build \
-          --configuration Release \
-          -p:TreatWarningsAsErrors=true \
-          -p:TreatWarningsAsErrors=true \
-          -p:AssemblyOriginatorKeyFile=$(pwd)/private.snk
+            --configuration Release \
+            -p:TreatWarningsAsErrors=true \
+            -p:TreatWarningsAsErrors=true \
+            -p:AssemblyOriginatorKeyFile=$(pwd)/private.snk
       - run: |
           dotnet test \
-          --configuration Release \
-          --no-restore \
-          --no-build \
-          --logger "trx;LogFileName=${{ env.TEST_RESULTS_PATH }}"
+            --configuration Release \
+            --no-restore \
+            --no-build \
+            --logger "trx;LogFileName=${{ env.TEST_RESULTS_PATH }}"
       - uses: dorny/test-reporter@v1
         with:
           name: XUnit Tests
