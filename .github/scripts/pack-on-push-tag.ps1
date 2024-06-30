@@ -1,24 +1,32 @@
 #!/usr/local/bin/pwsh
 param (
+    [Parameter(Mandatory = $true)]
     [string]$OutputPath,
-    [string]$KeyPath,
-    [string]$NugetApiKey,
+    [Parameter(Mandatory = $true)]
     [string]$tagName
 )
 
-Remove-Item -Force -Recurse pack -ErrorAction SilentlyContinue  
+if (!$env:PRIVATE_KEY_PATH) {
+    throw "Environment variable 'PRIVATE_KEY_PATH' is not set."
+}
+
+if (!$env:NUGET_API_KEY) {
+    throw "Environment variable 'NUGET_API_KEY' is not set."
+}
+
+Remove-Item -Path $OutputPath -Force -Recurse -ErrorAction SilentlyContinue
 
 .github/scripts/pack.ps1 `
     -OutputPath $OutputPath `
-    -KeyPath $KeyPath `
+    -KeyPath $env:PRIVATE_KEY_PATH `
     -CommitSHA $tagName
 
-$files = Get-ChildItem -Path pack -Filter "*.nupkg" | ForEach-Object {
+$nupkgs = Get-ChildItem -Path $OutputPath -Filter "*.nupkg" | ForEach-Object { $_.FullName }
+$nupkgs | ForEach-Object {
     dotnet nuget push `
         $_ `
-        --api-key $NugetApiKey `
+        --api-key $env:NUGET_API_KEY `
         --source https://api.nuget.org/v3/index.json
-    $_.FullName
 }
 
-gh release create --generate-notes --latest --title "Release $tagName" $tagName $files
+gh release create --generate-notes --latest --title "Release $tagName" $tagName $nupkgs

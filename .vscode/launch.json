@@ -25,16 +25,6 @@
             "cwd": "${workspaceFolder}/src/JSSoft.Communication.Server/bin/Debug/net8.0",
             "console": "integratedTerminal",
             "stopAtEntry": false
-        },
-        {
-            "name": "pwsh-build",
-            "type": "PowerShell",
-            "request": "launch",
-            "script": "${workspaceFolder}/build.ps1",
-            "args": [
-                "-Pack"
-            ],
-            "cwd": "${cwd}"
         }
     ]
 }
