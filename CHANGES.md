@@ -1,7 +1,7 @@
 Communication changes
 ===================
 
-2.0.5
+2.0.6
 -------------
 
 Released on June 30, 2024.
