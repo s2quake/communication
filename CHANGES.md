@@ -4,7 +4,7 @@ Communication changes
 2.0.3
 -------------
 
-To be released.
+Released on June 30, 2024.
 
 * Improve CI to make sure minimal checks are done before merge  [[#26]]
 * Set actual sha to PackageProjectUrl property  [[#27]]
