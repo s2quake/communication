@@ -19,33 +19,24 @@ jobs:
       - run: echo "${{ secrets.SNK_FILE }}" | base64 --decode > private.snk
       - if: ${{ github.event_name == 'pull_request' }}
         run: | 
-          .github/scripts/pack.ps1 `
+          .github/scripts/pack-on-pull-request.ps1 `
             -OutputPath "pack" `
             -PullRequestNumber ${{ github.event.pull_request.number }} `
             -KeyPath "$pwd/private.snk"
         shell: pwsh
       - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: | 
-          $commitMessage = "$(git log -1 --pretty=%B)"
-          $pattern = "(?<=Merge pull request #)(\d+)"
-          if (!($commitMessage -match $pattern)) {
-            Write-Error "Commit message does not contain a pull request number."
-          }
-
-          Remove-Item -Force -Recurse pack -ErrorAction SilentlyContinue  
-
-          $commitSHA = "$(git log -1 --pretty=%H)"
-          .github/scripts/pack.ps1 `
+          .github/scripts/pack-on-push-main.ps1 `
             -OutputPath "pack" `
-            -PullRequestNumber $matches[1] `
             -KeyPath "$pwd/private.snk" `
-            -CommitSHA $commitSHA
-          
-          Get-ChildItem -Path pack -Filter "*.nupkg" | ForEach-Object {
-            dotnet nuget push `
-              $_ `
-              --skip-duplicate `
-              --api-key ${{ secrets.NUGET_API_KEY }} `
-              --source https://api.nuget.org/v3/index.json
-          }
+            -NugetApiKey ${{ secrets.NUGET_API_KEY }}
+        shell: pwsh
+      - if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+        run: | 
+          $tagName = "${{ github.ref }}" -replace "refs/tags/", ""
+          .github/scripts/pack-on-push-tag.ps1 `
+            -OutputPath "pack" `
+            -KeyPath "$pwd/private.snk" `
+            -NugetApiKey ${{ secrets.NUGET_API_KEY }}
+            -TagName $tagName
         shell: pwsh
