@@ -27,6 +27,9 @@ $nupkgs | ForEach-Object {
         $_ `
         --api-key $env:NUGET_API_KEY `
         --source https://api.nuget.org/v3/index.json
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to push $_ to NuGet."
+    }
 }
 
 gh release create --generate-notes --latest --title "Release $tagName" $tagName $nupkgs

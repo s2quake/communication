@@ -45,7 +45,9 @@ $nupkgs = $skipNugetUpload ? @() : $nupkgs
 $nupkgs | ForEach-Object {
     dotnet nuget push `
         $_ `
-        --skip-duplicate `
         --api-key $env:NUGET_API_KEY `
         --source https://api.nuget.org/v3/index.json
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to push $_ to NuGet."
+    }
 }
