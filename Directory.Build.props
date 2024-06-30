@@ -51,6 +51,7 @@ SOFTWARE. -->
     <TargetFramework Condition="'$(_IsPacking)'!='true'">net8.0</TargetFramework>
     <AssemblyVersion>2.0</AssemblyVersion>
     <FileVersion>2.0.5</FileVersion>
+    <Version>$(FileVersion)</Version>
 	  <RepositoryType>git</RepositoryType>
 	  <RepositoryUrl>https://github.com/s2quake/communication</RepositoryUrl>
 	  <LicenseUrl>https://github.com/s2quake/communication/blob/main/LICENSE.md</LicenseUrl>
@@ -59,6 +60,7 @@ SOFTWARE. -->
 	  <Authors>s2quake</Authors>
 	  <PackageVersion Condition="'$(VersionSuffix)'==''">$(FileVersion)</PackageVersion>
 	  <PackageVersion Condition="'$(VersionSuffix)'!=''">$(FileVersion)-$(VersionSuffix)</PackageVersion>
+    <Version>$(PackageVersion)</Version>
     <PackageProjectUrl>https://github.com/s2quake/communication</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
