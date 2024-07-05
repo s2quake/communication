@@ -52,14 +52,14 @@ SOFTWARE. -->
     <AssemblyVersion>2.0</AssemblyVersion>
     <FileVersion>2.0.6</FileVersion>
     <Version>$(FileVersion)</Version>
-	  <RepositoryType>git</RepositoryType>
-	  <RepositoryUrl>https://github.com/s2quake/communication</RepositoryUrl>
-	  <LicenseUrl>https://github.com/s2quake/communication/blob/main/LICENSE.md</LicenseUrl>
-	  <Copyright>Copyright (c) 2024 Jeesu Choi</Copyright>
-	  <Description>grpc-based communication library for crema project</Description>
-	  <Authors>s2quake</Authors>
-	  <PackageVersion Condition="'$(VersionSuffix)'==''">$(FileVersion)</PackageVersion>
-	  <PackageVersion Condition="'$(VersionSuffix)'!=''">$(FileVersion)-$(VersionSuffix)</PackageVersion>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/s2quake/communication</RepositoryUrl>
+    <LicenseUrl>https://github.com/s2quake/communication/blob/main/LICENSE.md</LicenseUrl>
+    <Copyright>Copyright (c) 2024 Jeesu Choi</Copyright>
+    <Description>grpc-based communication library for crema project</Description>
+    <Authors>s2quake</Authors>
+    <PackageVersion Condition="'$(VersionSuffix)'==''">$(FileVersion)</PackageVersion>
+    <PackageVersion Condition="'$(VersionSuffix)'!=''">$(FileVersion)-$(VersionSuffix)</PackageVersion>
     <Version>$(PackageVersion)</Version>
     <PackageProjectUrl>https://github.com/s2quake/communication</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
